@@ -1,2 +1,6 @@
 *.sublime-project
 *.sublime-workspace
+
+main.html
+main.css
+main.js

@@ -1,1 +1,2 @@
-Hello there!
+# project.js
+(stress on 'e')
