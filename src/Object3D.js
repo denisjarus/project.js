@@ -20,9 +20,9 @@ function Object3D() {
 		_concat: { value: false, writable: true },
 		_invert: { value: false, writable: true },
 
-		_visible: { value: true, writable: true },
-
 		_bounds: { value: null, writable: true },
+
+		visible: { value: true, writable: true },
 
 		_parent: { value: null, writable: true },
 		_siblings: { value: [], writable: true }, 
@@ -81,14 +81,6 @@ Object.defineProperties(Object3D.prototype, {
 					this._children[i].invalidate();
 				}
 			}
-		}
-	},
-	visible: {
-		get: function() {
-			return this._visible;
-		},
-		set: function(value) {
-			this._visible = value;
 		}
 	},
 	bounds: {
