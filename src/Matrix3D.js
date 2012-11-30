@@ -13,6 +13,15 @@ Object.defineProperties(Matrix3D.prototype, {
 			return new Matrix3D(this.elements);
 		}
 	},
+	copyFrom: {
+		value: function(matrix) {
+			if (matrix instanceof Matrix3D == false) {
+				throw new Error();
+			}
+			this.elements.set(matrix.elements);
+			return this;
+		}
+	},
 	identity: {
 		value: function() {
 			this.elements.set(IDENTITY);
@@ -164,6 +173,8 @@ Object.defineProperties(Matrix3D.prototype, {
 			m[ 6] = sinXscaleY * cosY;
 			m[10] = cosXscaleZ * cosY;
 			m[14] = z;
+
+			m[3] = m[7] = m[11] = m[15] = 0;
 
 			return this;
 		}
