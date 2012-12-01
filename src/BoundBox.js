@@ -36,7 +36,7 @@ Object.defineProperties(BoundBox.prototype, {
 				throw new Error();
 			}
 			//TO DO
-			return new Vector3D();
+			return new BoundBox();
 		}
 	}
 });
