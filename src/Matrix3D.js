@@ -159,6 +159,8 @@ Object.defineProperties(Matrix3D.prototype, {
 
 				m = this.elements;
 
+			m.set(IDENTITY);
+
 			m[ 0] = cosYscaleX * cosZ;
 			m[ 4] = sinXscaleY * sinYcosZ - cosXscaleY * sinZ;
 			m[ 8] = cosXscaleZ * sinYcosZ + sinXscaleZ * sinZ;
@@ -173,8 +175,6 @@ Object.defineProperties(Matrix3D.prototype, {
 			m[ 6] = sinXscaleY * cosY;
 			m[10] = cosXscaleZ * cosY;
 			m[14] = z;
-
-			m[3] = m[7] = m[11] = m[15] = 0;
 
 			return this;
 		}
