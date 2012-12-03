@@ -20,7 +20,7 @@ Object.defineProperties(BoundBox.prototype, {
 			this.max.copyFrom(boundBox.max);
 			return this;
 		}
-	}
+	},
 	intersects: {
 		value: function(toIntersect) {
 			if (toIntersect instanceof BoundBox == false) {
