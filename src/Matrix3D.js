@@ -178,25 +178,34 @@ Object.defineProperties(Matrix3D.prototype, {
 
 			return this;
 		}
-	},
-	transform: {
-		value: function(vector) {
-			if (vector instanceof Vector3D == false) {
-				throw new Error();
-			}
-			var m = this.elements,
-				x = vector.x,
-				y = vector.y,
-				z = vector.z;
+	}
+});
 
-			//calculate 1 / w
-			var	w = 1 / (m[3] * x + m[7] * y + m[11] * z + m[15]);
+Object.defineProperties(Matrix3D, {
+	perspective: {
+		value: function(fieldOfView, aspectRatio, near, far) {
+			var m = new Float32Array(16);
+			m[ 0] = 1 / Math.tan(fieldOfView / 2);
+			m[ 4] = 0;
+			m[ 8] = 0;
+			m[12] = 0;
 
-			vector.x = (m[0] * x + m[4] * y + m[ 8] * z + m[12]) * w;
-			vector.y = (m[1] * x + m[5] * y + m[ 9] * z + m[13]) * w;
-			vector.z = (m[2] * x + m[6] * y + m[10] * z + m[14]) * w;
+			m[ 1] = 0;
+			m[ 5] = m[0] * aspectRatio;
+			m[ 9] = 0;
+			m[13] = 0;
 
-			return vector;
+			m[ 2] = 0;
+			m[ 6] = 0;
+			m[10] = - (far + near) / (far - near);
+			m[14] = - 2 * far * near / (far - near);
+
+			m[ 3] = 0;
+			m[ 7] = 0;
+			m[11] = - 1;
+			m[15] = 0;
+
+			return new Matrix3D(m);
 		}
 	}
 });

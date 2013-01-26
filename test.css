@@ -7,6 +7,12 @@ html, body {
 	background-color: white;
 
 	overflow: hidden;
+
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
 }
 
 #canvas {

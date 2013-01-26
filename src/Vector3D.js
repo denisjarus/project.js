@@ -113,5 +113,25 @@ Object.defineProperties(Vector3D.prototype, {
 			this.z *= scalar;
 			return this;
 		}
+	},
+	transform: {
+		value: function(matrix) {
+			if (matrix instanceof Matrix3D == false) {
+				throw new Error();
+			}
+			var m = matrix.elements,
+				x = this.x,
+				y = this.y,
+				z = this.z;
+
+			//calculate 1 / w
+			var	w = 1 / (m[3] * x + m[7] * y + m[11] * z + m[15]);
+
+			this.x = (m[0] * x + m[4] * y + m[ 8] * z + m[12]) * w;
+			this.y = (m[1] * x + m[5] * y + m[ 9] * z + m[13]) * w;
+			this.z = (m[2] * x + m[6] * y + m[10] * z + m[14]) * w;
+
+			return this;
+		}
 	}
 });

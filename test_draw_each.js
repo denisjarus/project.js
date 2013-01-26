@@ -6,10 +6,9 @@ var context,
 
 var objects,
 	program,
-	aPosition, aObjectId, uMatrix, uCamera, uColor, uLight, uAmbient,
+	aPosition, uMatrix, uCamera, uColor, uLight, uAmbient,
 	indices, indexData,
 	vertices, vertexData,
-	ids, idData,
 	matrix;
 
 window.onload = function() {
@@ -27,6 +26,9 @@ window.onload = function() {
 	camera.z = 500;
 
 	//test stuff
+	context.enable(context.DEPTH_TEST);
+	context.enable(context.CULL_FACE);
+	context.frontFace(context.CW);
 
 	program = context.createProgram();
 
@@ -46,9 +48,7 @@ window.onload = function() {
 	context.useProgram(program);
 
 	aPosition = context.getAttribLocation(program, 'a_position');
-	aObjectId = context.getAttribLocation(program, 'a_objectid');
 	context.enableVertexAttribArray(aPosition);
-	context.enableVertexAttribArray(aObjectId);
 
 	uMatrix = context.getUniformLocation(program, 'u_matrix');
 	uCamera = context.getUniformLocation(program, 'u_camera');
@@ -61,11 +61,11 @@ window.onload = function() {
 	context.uniform4f(uAmbient, 0.2, 0.2, 0.2, 1.0);
 
 	//creation
-	var segments = 10,
+	var segments = 100,
 		radius = 5;
 
 	//vertices
-	var sphereVertices = [];
+	vertexData = [];
 
 	for (var i = 0; i <= segments; i++) {
 		var phi = i * Math.PI / segments,
@@ -74,39 +74,40 @@ window.onload = function() {
 
 		for (var j = 0; j <= segments; j++) {
 			var lambda = j * Math.PI * 2 / segments;
-			sphereVertices.push(
+			vertexData.push(
 				radius * Math.cos(lambda) * sinPhi,
 				radius * cosPhi,
 				radius * Math.sin(lambda) * sinPhi
 				);
 		}
 	}
-
-	vertexData = [];
+	vertices = context.createBuffer();
+	context.bindBuffer(context.ARRAY_BUFFER, vertices);
+	context.bufferData(context.ARRAY_BUFFER, new Float32Array(vertexData), context.STATIC_DRAW);
+	context.vertexAttribPointer(aPosition, 3, context.FLOAT, false, 0, 0);
 
 	//indices
-	var sphereIndices = [];
+	indexData = [];
 
 	for (i = 0; i < segments; i++) {
 		for (j = 0; j < segments; j++) {
 			var a = i * (segments + 1) + j,
 				b = a + segments + 1;
-			sphereIndices.push(
+			indexData.push(
 				a, b, a + 1,
 				b, b + 1, a + 1
 				);
 		}
 	}
-
-	indexData = [];
+	indices = context.createBuffer();
+	context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, indices);
+	context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), context.STATIC_DRAW);
 
 	//objects
 	var numObjects = 500,
-		distance = 10;
+		distance = 20;
 
 	objects = [new Mesh()];
-
-	idData = [];
 
 	for (i = 0; i < numObjects; ++i) {
 		var object = objects[i].addChild(new Mesh());
@@ -119,34 +120,12 @@ window.onload = function() {
 		objects.push(object);
 
 		//buffer data
-		for (j = 0; j < sphereVertices.length; j++) {
-			vertexData.push(sphereVertices[j]);
-			idData.push(Math.random() * 150);
-		}
-		for (j = 0; j < sphereIndices.length; j++) {
-			indexData.push(sphereIndices[j] + (sphereVertices.length / 3) * i);
-		}
+
 	}
 
-	console.log(sphereVertices.length, vertexData.length);
-	console.log(sphereIndices.length, indexData.length);
+	matrix = new Matrix3D();
 
-	//buffers
-	vertices = context.createBuffer();
-	context.bindBuffer(context.ARRAY_BUFFER, vertices);
-	context.bufferData(context.ARRAY_BUFFER, new Float32Array(vertexData), context.STATIC_DRAW);
-	context.vertexAttribPointer(aPosition, 3, context.FLOAT, false, 0, 0);
-
-	id = context.createBuffer();
-	context.bindBuffer(context.ARRAY_BUFFER, id);
-	context.bufferData(context.ARRAY_BUFFER, new Float32Array(idData), context.STATIC_DRAW);
-	context.vertexAttribPointer(aObjectId, 1, context.FLOAT, false, 0, 0);
-
-	indices = context.createBuffer();
-	context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, indices);
-	context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), context.STATIC_DRAW);
-
-	console.log('vertices:', (vertexData.length / 3));
+	console.log('vertices:', (vertexData.length / 3) * numObjects);
 
 	window.onresize();
 	window.webkitRequestAnimationFrame(enterFrame);
@@ -168,9 +147,6 @@ function enterFrame() {
 	renderer.draw(stage, camera);
 	//test stuff
 	var matrices = [];
-
-	matrix = new Matrix3D();
-
 	for (var i = 0, numObjects = objects.length; i < numObjects; i++) {
 		var object = objects[i];
 
@@ -181,23 +157,23 @@ function enterFrame() {
 
 		context.uniformMatrix4fv(uMatrix, false, object.localToGlobal.elements);
 		context.uniformMatrix4fv(uCamera, false, matrix.elements);
-	}
-	context.uniform4f(uColor, 1.0, 0.0, 0.0, 1.0);
 
-	context.drawElements(context.TRIANGLES, indexData.length, context.UNSIGNED_SHORT, 0);
+		context.uniform4f(uColor, 1.0, 0.0, 0.0, 1.0);
+
+		context.drawElements(context.TRIANGLES, indexData.length, context.UNSIGNED_SHORT, 0);
+	}
 
 	window.webkitRequestAnimationFrame(enterFrame);
 }
 
 const VERTEX_SHADER_CODE = [
 	'attribute vec3 a_position;',
-	'attribute float a_objectid;',
 
 	'uniform mat4 u_matrix;',
 	'uniform mat4 u_camera;',
 	'uniform vec3 u_light;',
 
-	//'uniform mat4 u_matrix[5];',
+	'uniform mat4 test[1024];',
 
 	'varying float v_diffuse;',
 
@@ -206,7 +182,7 @@ const VERTEX_SHADER_CODE = [
 		'vec3 normal = normalize(mat3(u_matrix) * a_position);',
 		'v_diffuse = max(dot(normal, u_light), 0.0);',
 
-		'gl_Position = u_camera * u_matrix * vec4(a_position + a_objectid, 1.0);',
+		'gl_Position = u_camera * u_matrix * vec4(a_position, 1.0);',
 
 	'}'
 ].join('\n');

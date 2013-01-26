@@ -6,10 +6,10 @@ function Camera3D() {
 		_aspectRatio: { value: 1.5, writable: true },
 		_fieldOfView: { value: Math.PI / 2, writable: true },
 
-		_far: { value: 1000, writable: true },
-		_near: { value: 0.1, writable: true },
+		_far: { value: 10000, writable: true },
+		_near: { value: 0.01, writable: true },
 
-		_perspectiveProjection: { value: new Matrix3D() }
+		_projection: { value: null, writable: true }
 	});
 }
 
@@ -20,6 +20,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
 		},
 		set: function(value) {
 			this._aspectRatio = value;
+			this._projection = null;
 		}
 	},
 	fieldOfView: {
@@ -28,6 +29,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
 		},
 		set: function(value) {
 			this._fieldOfView = value;
+			this._projection = null;
 		}
 	},
 	far: {
@@ -36,6 +38,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
 		},
 		set: function(value) {
 			this._far = value;
+			this._projection = null;
 		}
 	},
 	near: {
@@ -44,27 +47,20 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
 		},
 		set: function(value) {
 			this._near = value;
+			this._projection = null;
 		}
 	},
-	perspectiveProjection: {
+	projection: {
 		get: function() {
-			return this._perspectiveProjection;
-		}
-	},
-	project: {
-		value: function(vector) {
-			if (vector instanceof Vector3D == false) {
-				throw new Error();
+			if (! this._projection) {
+				this._projection = Matrix3D.perspective(
+					this._fieldOfView,
+					this._aspectRatio,
+					this._near,
+					this._far
+					);
 			}
-			return vector;
-		}
-	},
-	unproject: {
-		value: function(vector) {
-			if (vector instanceof Vector3D == false) {
-				throw new Error();
-			}
-			return vector;
+			return this._projection;
 		}
 	}
 });

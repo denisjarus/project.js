@@ -1,4 +1,7 @@
 function Object3D() {
+
+	EventDispatcher.call(this);
+
 	Object.defineProperties(this, {
 		_x: { value: 0, writable: true },
 		_y: { value: 0, writable: true },
@@ -25,12 +28,34 @@ function Object3D() {
 		visible: { value: true, writable: true },
 
 		_parent: { value: null, writable: true },
-		_siblings: { value: [], writable: true }, 
 		_children: { value: [] }
 	});
 }
 	
-Object.defineProperties(Object3D.prototype, {
+Object3D.prototype = Object.create(EventDispatcher.prototype, {
+	dispatchEvent: {
+		value: function(event) {
+			if (event instanceof Event3D == false) {
+				throw new Error();
+			}
+			event.target = this;
+
+			var path = [];
+			for (var object = this; object != null; object = object._parent) {
+				path.push(object);
+			}
+
+			//capture phase
+			for (var i = path.length - 1; i >= 0; i--) {
+				var handlers = path[i]._listeners[event.type];
+				if (handlers) {
+					for (var j = 0, length = handlers.length; j < length; j++) {
+						handlers[j](event);
+					}
+				}
+			}
+		}
+	},
 	matrix: {
 		get: function() {
 			if (this._update) {
@@ -54,7 +79,7 @@ Object.defineProperties(Object3D.prototype, {
 		get: function() {
 			if (this._concat) {
 				this._concat = false;
-				this._localToGlobal.elements.set(this.matrix.elements);
+				this._localToGlobal.copyFrom(this.matrix);
 				if (this._parent) {
 					this._localToGlobal.append(this._parent.localToGlobal);
 				}
@@ -66,8 +91,7 @@ Object.defineProperties(Object3D.prototype, {
 		get: function() {
 			if (this._invert) {
 				this._invert = false;
-				this._globalToLocal.elements.set(this.localToGlobal.elements);
-				this._globalToLocal.invert();
+				this._globalToLocal.copyFrom(this.localToGlobal).invert();
 			}
 			return this._globalToLocal;
 		}
@@ -111,6 +135,8 @@ Object.defineProperties(Object3D.prototype, {
 			}
 			if (child._parent != null) {
 				child._parent.removeChild(child);
+			} else {
+				child.dispatchEvent(new Event3D(Event3D.ADDED));
 			}
 			child._parent = this;
 			child.invalidate();
@@ -128,6 +154,8 @@ Object.defineProperties(Object3D.prototype, {
 			if (child._parent != this) {
 				throw new Error();
 			}
+			child.dispatchEvent(new Event3D(Event3D.REMOVED));
+
 			child._parent = null;
 			child.invalidate();
 
