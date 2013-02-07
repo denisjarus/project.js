@@ -49,8 +49,9 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
 			for (var i = path.length - 1; i >= 0; i--) {
 				var handlers = path[i]._listeners[event.type];
 				if (handlers) {
+					event.currentTarget = path[i];
 					for (var j = 0, length = handlers.length; j < length; j++) {
-						handlers[j](event);
+						handlers[j].call(null, event);
 					}
 				}
 			}
@@ -135,13 +136,13 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
 			}
 			if (child._parent != null) {
 				child._parent.removeChild(child);
-			} else {
-				child.dispatchEvent(new Event3D(Event3D.ADDED));
 			}
 			child._parent = this;
 			child.invalidate();
 
 			this._children.push(child);
+
+			child.dispatchEvent(new Event3D(Event3D.ADDED));
 
 			return child;
 		}

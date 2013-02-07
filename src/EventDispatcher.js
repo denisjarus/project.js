@@ -31,7 +31,7 @@ Object.defineProperties(EventDispatcher.prototype, {
 	},
 	hasEventListener: {
 		value: function(type) {
-			return this._listeners[type];
+			return this._listeners[type] != null;
 		}
 	},
 	dispatchEvent: {
@@ -39,11 +39,13 @@ Object.defineProperties(EventDispatcher.prototype, {
 			if (event instanceof Event3D == false) {
 				throw new Error();
 			}
+			event.target = this;
+			event.currentTarget = this;
+
 			var handlers = this._listeners[event.type];
 			if (handlers) {
-				event.target = this;
 				for (var i = 0, length = handlers.length; i < length; i++) {
-					handlers[i](event);
+					handlers[i].call(null, event);
 				}
 			}
 		}

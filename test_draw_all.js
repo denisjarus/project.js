@@ -21,12 +21,13 @@ window.onload = function() {
 	
 	stage = new Object3D();
 
-	light = stage.addChild(new Light3D());
+	light = new Light3D();
 
 	camera = stage.addChild(new Camera3D());
 	camera.z = 500;
 
 	//test stuff
+
 	program = context.createProgram();
 
 	var shader;
@@ -100,14 +101,14 @@ window.onload = function() {
 	indexData = [];
 
 	//objects
-	var numObjects = 5,
+	var numObjects = 500,
 		distance = 10;
 
 	objects = [new Mesh()];
 
 	idData = [];
 
-	for (i = 0; i < numObjects - 1; i++) {
+	for (i = 0; i < numObjects; ++i) {
 		var object = objects[i].addChild(new Mesh());
 		object.x = Math.random() * distance - distance;
 		object.y = Math.random() * distance - distance;
@@ -146,8 +147,6 @@ window.onload = function() {
 	context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), context.STATIC_DRAW);
 
 	console.log('vertices:', (vertexData.length / 3));
-
-	stage.addChild(objects[0]);
 
 	window.onresize();
 	window.webkitRequestAnimationFrame(enterFrame);
@@ -199,7 +198,7 @@ const VERTEX_SHADER_CODE = [
 	'uniform mat4 u_camera;',
 	'uniform vec3 u_light;',
 
-	'uniform mat4 u_matrix[62];',
+	'uniform mat4 u_matrix[50];',
 
 	'varying float v_diffuse;',
 
