@@ -1,14 +1,15 @@
 function GeometryEvent(type, attribute) {
 	
-	Event.call(this, type);
+	Event3D.call(this, type);
 
 	Object.defineProperties(this, {
 		attribute: { value: attribute }
 	});
 }
 
-GeometryEvent.prototype = Object.create(Event.prototype);
+GeometryEvent.prototype = Object.create(Event3D.prototype);
 
 Object.defineProperties(GeometryEvent, {
-	CHANGED: { value: 'changed' }
+	VERTICES_CHANGE: { value: 'geometryVerticesChange' },
+	INDICES_CHANGE: { value: 'geometryIndicesChange' }
 });

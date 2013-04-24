@@ -1,9 +1,9 @@
 function Light3D() {
-
+	
 	Object3D.call(this);
 
 	Object.defineProperties(this, {
-		color: { value: null, writable: true }
+		color: { value: new Float32Array(4) }
 	});
 }
 

@@ -16,7 +16,7 @@ window.onload = function() {
 		console.warn('webgl is not available');
 	}
 
-	renderer = new Renderer(context);
+	//renderer = new Renderer(context);
 	
 	stage = new Object3D();
 
@@ -104,7 +104,7 @@ window.onload = function() {
 	context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), context.STATIC_DRAW);
 
 	//objects
-	var numObjects = 500,
+	var numObjects = 1000,
 		distance = 20;
 
 	objects = [new Mesh()];
@@ -144,7 +144,7 @@ document.oncontextmenu = function() {
 }
 
 function enterFrame() {
-	renderer.draw(stage, camera);
+	//renderer.draw(stage, camera);
 	//test stuff
 	var matrices = [];
 	for (var i = 0, numObjects = objects.length; i < numObjects; i++) {
@@ -172,8 +172,6 @@ const VERTEX_SHADER_CODE = [
 	'uniform mat4 u_matrix;',
 	'uniform mat4 u_camera;',
 	'uniform vec3 u_light;',
-
-	'uniform mat4 test[1024];',
 
 	'varying float v_diffuse;',
 

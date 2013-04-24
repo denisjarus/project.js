@@ -1,5 +1,5 @@
 function Camera3D() {
-
+	
 	Object3D.call(this);
 
 	Object.defineProperties(this, {

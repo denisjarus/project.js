@@ -2,21 +2,16 @@ var context,
 	renderer,
 	stage,
 	light,
-	camera;
+	camera,
+	objects = [];
 
-var objects,
-	program,
-	aPosition, aObjectId, uMatrix, uCamera, uColor, uLight, uAmbient,
-	indices, indexData,
-	vertices, vertexData,
-	ids, idData,
-	matrix;
+var program, uColor, uLight, uAmbient;
 
 window.onload = function() {
 	if (! (context = document.getElementById('canvas').getContext('experimental-webgl'))) {
 		console.warn('webgl is not available');
 	}
-
+		
 	renderer = new Renderer(context);
 	
 	stage = new Object3D();
@@ -26,41 +21,9 @@ window.onload = function() {
 	camera = stage.addChild(new Camera3D());
 	camera.z = 500;
 
-	//test stuff
-	program = context.createProgram();
-
-	var shader;
-
-	shader = context.createShader(context.VERTEX_SHADER);
-	context.shaderSource(shader, VERTEX_SHADER_CODE);
-	context.compileShader(shader);
-	context.attachShader(program, shader);
-
-	shader = context.createShader(context.FRAGMENT_SHADER);
-	context.shaderSource(shader, FRAGMENT_SHADER_CODE);
-	context.compileShader(shader);
-	context.attachShader(program, shader);
-
-	context.linkProgram(program);
-	context.useProgram(program);
-
-	aPosition = context.getAttribLocation(program, 'a_position');
-	aObjectId = context.getAttribLocation(program, 'a_objectid');
-	context.enableVertexAttribArray(aPosition);
-	context.enableVertexAttribArray(aObjectId);
-
-	uMatrix = context.getUniformLocation(program, 'u_matrix');
-	uCamera = context.getUniformLocation(program, 'u_camera');
-
-	uColor = context.getUniformLocation(program, 'u_color');
-	uLight = context.getUniformLocation(program, 'u_light');
-	uAmbient = context.getUniformLocation(program, 'u_ambient');
-
-	context.uniform3f(uLight, 0.0, 1.0, 0.0);
-	context.uniform4f(uAmbient, 0.2, 0.2, 0.2, 1.0);
-
-	//creation
-	var segments = 10,
+	//geometry
+	var geometry = new Geometry(),
+		segments = 100,
 		radius = 5;
 
 	//vertices
@@ -80,8 +43,7 @@ window.onload = function() {
 				);
 		}
 	}
-
-	vertexData = [];
+	geometry.setData(Geometry.POSITION, sphereVertices);
 
 	//indices
 	var sphereIndices = [];
@@ -96,58 +58,29 @@ window.onload = function() {
 				);
 		}
 	}
+	geometry.indices = sphereIndices;
 
-	indexData = [];
+	//material
+	var material = new Material();
+	material.setData('diffuseMap', new Texture());
 
 	//objects
-	var numObjects = 5,
+	var object = stage,
+		numObjects = 1000,
 		distance = 10;
 
-	objects = [new Mesh()];
-
-	idData = [];
-
-	for (i = 0; i < numObjects - 1; i++) {
-		var object = objects[i].addChild(new Mesh());
-		object.x = Math.random() * distance - distance;
-		object.y = Math.random() * distance - distance;
-		object.z = Math.random() * distance - distance;
+	for (i = 0; i < numObjects; i++) {
+		object = object.addChild(new Mesh());
+		object.x = Math.random() * distance;
+		object.y = Math.random() * distance;
+		object.z = Math.random() * distance;
 		object.rotationX = Math.random() * 360;
 		object.rotationY = Math.random() * 360;
 		object.rotationZ = Math.random() * 360;
+		object.geometry = geometry;
+		object.material = material;
 		objects.push(object);
-
-		//buffer data
-		for (j = 0; j < sphereVertices.length; j++) {
-			vertexData.push(sphereVertices[j]);
-			idData.push(i);
-		}
-		for (j = 0; j < sphereIndices.length; j++) {
-			indexData.push(sphereIndices[j] + (sphereVertices.length / 3) * i);
-		}
 	}
-
-	console.log(sphereVertices.length, vertexData.length);
-	console.log(sphereIndices.length, indexData.length);
-
-	//buffers
-	vertices = context.createBuffer();
-	context.bindBuffer(context.ARRAY_BUFFER, vertices);
-	context.bufferData(context.ARRAY_BUFFER, new Float32Array(vertexData), context.STATIC_DRAW);
-	context.vertexAttribPointer(aPosition, 3, context.FLOAT, false, 0, 0);
-
-	id = context.createBuffer();
-	context.bindBuffer(context.ARRAY_BUFFER, id);
-	context.bufferData(context.ARRAY_BUFFER, new Float32Array(idData), context.STATIC_DRAW);
-	context.vertexAttribPointer(aObjectId, 1, context.FLOAT, false, 0, 0);
-
-	indices = context.createBuffer();
-	context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, indices);
-	context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), context.STATIC_DRAW);
-
-	console.log('vertices:', (vertexData.length / 3));
-
-	stage.addChild(objects[0]);
 
 	window.onresize();
 	window.webkitRequestAnimationFrame(enterFrame);
@@ -166,68 +99,10 @@ document.oncontextmenu = function() {
 }
 
 function enterFrame() {
-	renderer.draw(stage, camera);
-	//test stuff
-	var matrices = [];
-
-	for (var i = 0, numObjects = objects.length; i < numObjects; i++) {
-		var object = objects[i];
-
-		object.rotationY += 0.1;
-		matrix = object.localToGlobal.elements;
-		for (var j = 0; j < matrix.length; j++) {
-			matrices.push(matrix[j]);
-		}
+	for (var i = 0, length = objects.length; i < length; i++) {
+		objects[i].rotationY += 0.1;
 	}
-	context.uniformMatrix4fv(uMatrix, false, new Float32Array(matrices));
+	renderer.draw(stage, camera);
 
-	matrix = camera.globalToLocal.clone();
-	matrix.append(camera.projection);
-	context.uniformMatrix4fv(uCamera, false, matrix.elements);
-
-	context.uniform4f(uColor, 1.0, 0.0, 0.0, 1.0);
-
-	context.drawElements(context.TRIANGLES, indexData.length, context.UNSIGNED_SHORT, 0);
-
-	window.webkitRequestAnimationFrame(enterFrame);
+	//window.webkitRequestAnimationFrame(enterFrame);
 }
-
-const VERTEX_SHADER_CODE = [
-	'attribute vec3 a_position;',
-	'attribute float a_objectid;',
-
-	'uniform mat4 u_camera;',
-	'uniform vec3 u_light;',
-
-	'uniform mat4 u_matrix[62];',
-
-	'varying float v_diffuse;',
-
-	'mat4 getMatrix(float i) {',
-		'return u_matrix[int(i)];',
-	'}',
-
-	'void main(void) {',
-
-		'vec3 normal = normalize(mat3(getMatrix(a_objectid)) * a_position);',
-		'v_diffuse = max(dot(normal, u_light), 0.0);',
-
-		'gl_Position = u_camera * getMatrix(a_objectid) * vec4(a_position, 1.0);',
-
-	'}'
-].join('\n');
-
-const FRAGMENT_SHADER_CODE = [
-	'precision mediump float;',
-
-	'uniform vec4 u_color;',
-	'uniform vec4 u_ambient;',
-
-	'varying float v_diffuse;',
-
-	'void main(void) {',
-
-		'gl_FragColor = u_color * (vec4(v_diffuse) + u_ambient);',
-
-	'}'
-].join('\n');

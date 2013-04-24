@@ -10,7 +10,7 @@ Object.defineProperties(EventDispatcher.prototype, {
 			if (! this._listeners[type]) {
 				this._listeners[type] = [];
 			}
-			if (this._listeners[type].indexOf(listener) < 0) {
+			if (this._listeners[type].indexOf(listener) == -1) {
 				this._listeners[type].push(listener);
 			}
 		}
@@ -21,8 +21,8 @@ Object.defineProperties(EventDispatcher.prototype, {
 				return;
 			}
 			var index = this._listeners[type].indexOf(listener);
-			if (index < 0) {
-				this._listeners.splice(index, 1);
+			if (index > -1) {
+				this._listeners[type].splice(index, 1);
 			}
 			if (this._listeners[type].length == 0) {
 				delete this._listeners[type];
@@ -44,10 +44,10 @@ Object.defineProperties(EventDispatcher.prototype, {
 
 			var handlers = this._listeners[event.type];
 			if (handlers) {
-				for (var i = 0, length = handlers.length; i < length; i++) {
+				for (var i = 0, len = handlers.length; i < len; i++) {
 					handlers[i].call(null, event);
 				}
 			}
 		}
-	},
+	}
 });

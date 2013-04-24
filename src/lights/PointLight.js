@@ -1,5 +1,5 @@
 function PointLight() {
-
+	
 	Light3D.call(this);
 
 	Object.defineProperties(this, {

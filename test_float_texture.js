@@ -27,6 +27,7 @@ window.onload = function() {
 	camera.z = 500;
 
 	context.getExtension('OES_element_index_uint');
+	context.getExtension('OES_texture_float');
 
 	//test stuff
 
@@ -63,7 +64,7 @@ window.onload = function() {
 	context.uniform4f(uAmbient, 0.2, 0.2, 0.2, 1.0);
 
 	//creation
-	var segments = 10,
+	var segments = 50,
 		radius = 5;
 
 	//vertices
@@ -103,7 +104,7 @@ window.onload = function() {
 	indexData = [];
 
 	//objects
-	var numObjects = 10000,
+	var numObjects = 1000,
 		distance = 10;
 
 	objects = [new Mesh()];

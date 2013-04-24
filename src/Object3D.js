@@ -1,8 +1,10 @@
 function Object3D() {
-
+	
 	EventDispatcher.call(this);
 
 	Object.defineProperties(this, {
+		id: { value: Object3D._counter++ },
+
 		_x: { value: 0, writable: true },
 		_y: { value: 0, writable: true },
 		_z: { value: 0, writable: true },
@@ -39,7 +41,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
 				throw new Error();
 			}
 			event.target = this;
-
+			
 			var path = [];
 			for (var object = this; object != null; object = object._parent) {
 				path.push(object);
@@ -50,7 +52,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
 				var handlers = path[i]._listeners[event.type];
 				if (handlers) {
 					event.currentTarget = path[i];
-					for (var j = 0, length = handlers.length; j < length; j++) {
+					for (var j = 0, len = handlers.length; j < len; j++) {
 						handlers[j].call(null, event);
 					}
 				}
@@ -102,7 +104,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
 			if (this._concat == false) {
 				this._concat = true;
 				this._invert = true;
-				for (var i = 0; i < this._children.length; i++) {
+				for (var i = 0, len = this._children.length; i < len; i++) {
 					this._children[i].invalidate();
 				}
 			}
@@ -280,4 +282,8 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
 			this.invalidate();
 		} 
 	}
+});
+
+Object.defineProperties(Object3D, {
+	_counter: { value: 0, writable: true }
 });
