@@ -40,7 +40,7 @@ Object.defineProperties(EventDispatcher.prototype, {
     },
     dispatchEvent: {
         value: function(event) {
-            if (event instanceof Event3D == false) {
+            if (event instanceof Event3D === false) {
                 throw new Error();
             }
             event.target = this;
@@ -48,8 +48,8 @@ Object.defineProperties(EventDispatcher.prototype, {
 
             var listeners = this._listeners[event.type];
             if (listeners) {
-                for (var i = 0, len = listeners.length; i < len; i++) {
-                    listeners[i].call(null, event);
+                for (var listener, i = 0; listener = listeners[i]; i++) {
+                    listener.call(null, event);
                 }
             }
         }

@@ -24,7 +24,7 @@ function Renderer(context) {
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.BACK);
         gl.frontFace(gl.CW);
-    }
+    };
 
     this.setContext(context);
 
@@ -72,9 +72,7 @@ function Renderer(context) {
             attributes = [],
             uniforms = [];
 
-        for (var i = 0, len = renderList.length; i < len; i++) {
-            var object = renderList[i];
-
+        for (var object, i = 0; object = renderList[i]; i++) {
             //set program
             if (shader !== object.material.shader) {
                 shader = object.material.shader;
@@ -88,11 +86,11 @@ function Renderer(context) {
                 attributes.length = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
                 uniforms.length = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
-                for (var a = 0; a < attributes.length; a++) {
-                    attributes[a] = gl.getActiveAttrib(program, a);
+                for (var attribute, j = 0; attribute = gl.getActiveAttrib(program, j); j++) {
+                    attributes[j] = attribute;
                 }
-                for (var u = 0; u < uniforms.length; u++) {
-                    uniforms[u] = gl.getActiveUniform(program, u);
+                for (var uniform, j = 0; uniform = gl.getActiveUniform(program, j); j++) {
+                    uniforms[j] = uniform;
                 }
 
                 //set projection
@@ -108,15 +106,14 @@ function Renderer(context) {
                 //glVertexArrayObject.bindVertexArrayOES(getVertexArray(object));
 
                 if (true) {
-                    for (a = 0; a < attributes.length; a++) {
-                        var attribute = attributes[a],
-                            name = attribute.name,
+                    for (var attribute, j = 0; attribute = attributes[j]; j++) {
+                        var name = attribute.name,
                             size = getSize(attribute),
                             type = getType(attribute);
 
-                        gl.enableVertexAttribArray(a);
+                        gl.enableVertexAttribArray(j);
                         gl.bindBuffer(gl.ARRAY_BUFFER, getVertexBuffer(geometry, name));
-                        gl.vertexAttribPointer(a, size, type, false, geometry.getStride(name), geometry.getOffset(name));
+                        gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name), geometry.getOffset(name));
                     }
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(geometry));
@@ -145,7 +142,7 @@ function Renderer(context) {
         glVertexArrayObject.bindVertexArrayOES(null);
         
         //console.log(renderList);
-    }
+    };
 
     function sort(a, b) {
         var compare;
@@ -192,8 +189,8 @@ function Renderer(context) {
             renderList.push(object);
             updateList = true;
         }
-        for (var i = 0, len = object.numChildren; i < len; i++) {
-            addObject(object.getChildAt(i), true);
+        for (var child, i = 0; child = object.getChildAt(i); i++) {
+            addObject(child, true);
         }
     }
 
@@ -205,12 +202,12 @@ function Renderer(context) {
         if (object instanceof Mesh) {
             renderList.splice(renderList.indexOf(object), 1);
         }
-        for (var i = 0, len = object.numChildren; i < len; i++) {
-            removeObject(object.getChildAt(i), true);
+        for (var child, i = 0; child = object.getChildAt(i); i++) {
+            removeObject(child, true);
         }
     }
 
-    function onChange(event) {
+    function onChange() {
         updateList = true;
     }
 
@@ -389,7 +386,7 @@ function Renderer(context) {
         Object.defineProperties(this, {
             object: { value: texture },
             update: { value: true, writable: true },
-        })
+        });
     }
 
     function TextureCube(texture) {

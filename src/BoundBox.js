@@ -42,26 +42,26 @@ Object.defineProperties(BoundBox.prototype, {
     },
     sizeX: {
         get: function() {
-            return max.x - min.x;
+            return this.max.x - this.min.x;
         },
         set: function(value) {
-            max.x = min.x + value;
+            this.max.x = this.min.x + value;
         }
     },
     sizeY: {
         get: function() {
-            return max.y - min.y;
+            return this.max.y - this.min.y;
         },
         set: function(value) {
-            max.y = min.y + value;
+            this.max.y = this.min.y + value;
         }
     },
     sizeZ: {
         get: function() {
-            return max.z - min.z;
+            return this.max.z - this.min.z;
         },
         set: function(value) {
-            max.z = min.z + value;
+            this.max.z = this.min.z + value;
         }
     }
 });

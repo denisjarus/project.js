@@ -47,8 +47,8 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             do {
                 var listeners = event.currentTarget._listeners[event.type];
                 if (listeners) {
-                    for (var i = 0, len = listeners.length; i < len; i++) {
-                        listeners[i].call(null, event);
+                    for (var listener, i = 0; listener = listeners[i]; i++) {
+                        listener.call(null, event);
                     }
                 }
             } while ((event.currentTarget = event.currentTarget._parent));
@@ -99,8 +99,8 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             if (this._concat === false) {
                 this._concat = true;
                 this._invert = true;
-                for (var i = 0, len = this._children.length; i < len; i++) {
-                    this._children[i].invalidate();
+                for (var child, i = 0; child = this._children[i]; i++) {
+                    child.invalidate();
                 }
             }
         }
@@ -147,7 +147,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             if (child instanceof Object3D === false) {
                 throw new Error();
             }
-            if (child._parent != this) {
+            if (child._parent !== this) {
                 throw new Error();
             }
             child.dispatchEvent(new Event3D(Event3D.REMOVED));

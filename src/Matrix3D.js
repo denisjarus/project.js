@@ -112,7 +112,8 @@ Object.defineProperties(Matrix3D.prototype, {
                 a30 = a[3], a31 = a[7], a32 = a[11], a33 = a[15];
 
             //cache only the current line of another matrix 
-            var b = matrix.elements, b0, b1, b2, b3;
+            var b = matrix.elements,
+                b0, b1, b2, b3;
 
             b0 = b[0], b1 = b[4], b2 = b[8], b3 = b[12];
             a[ 0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;

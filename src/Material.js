@@ -9,7 +9,7 @@ function Material(shader) {
         
         _textures: { value: {} },
 
-        _shader: { value: BASIC_SHADER, writable: true }
+        _shader: { value: shader || BASIC_SHADER, writable: true }
     });
 }
 
