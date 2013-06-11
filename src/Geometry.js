@@ -1,63 +1,79 @@
 function Geometry() {
-	
-	EventDispatcher.call(this);
+    
+    EventDispatcher.call(this);
 
-	Object.defineProperties(this, {
-		id: { value: Geometry._counter++ },
+    Object.defineProperties(this, {
+        id: { value: Geometry._counter++ },
 
-		_vertices: { value: {} },
+        _data: { value: {} },
+        _strides: { value: {} },
+        _offsets: { value: {} },
 
-		_indices: { value: null, writable: true }
-	});
+        _indices: { value: null, writable: true }
+    });
 }
 
 Geometry.prototype = Object.create(EventDispatcher.prototype, {
-	getData: {
-		value: function(attribute) {
-			return this._vertices[attribute];
-		}
-	},
-	setData: {
-		value: function(attribute, data) {
-			var array = this._vertices[attribute];
-			if (array && array.length == data.length) {
-				array.set(data);
-			} else {
-				this._vertices[attribute] = new Float32Array(data);
-			}
-			this.dispatchEvent(
-				new GeometryEvent(GeometryEvent.VERTEX_ATTRIBUTE_CHANGE, attribute)
-				);
-		}
-	},
-	attributes: {
-		get: function() {
-			return Object.keys(this._vertices);
-		}
-	},
-	indices: {
-		get: function() {
-			return this._indices;
-		},
-		set: function(data) {
-			var array = this._indices;
-			if (array && array.length == data.length) {
-				array.set(data);
-			} else {
-				this._indices = new Uint32Array(data);
-			}
-			this.dispatchEvent(
-				new GeometryEvent(GeometryEvent.VERTEX_INDICES_CHANGE, null)
-				);
-		}
-	}
+    getData: {
+        value: function(attribute) {
+            return this._data[attribute];
+        }
+    },
+    getStride: {
+        value: function(attribute) {
+            return this._strides[attribute];
+        }
+    },
+    getOffset: {
+        value: function(attribute) {
+            return this._offsets[attribute];
+        }
+    },
+    setData: {
+        value: function(attribute, data, stride, offset) {
+            if (data instanceof Float32Array === false) {
+                throw new Error();
+            }   
+            var resize = this._data[attribute] && this._data[attribute].length !== data.length;
+
+            this._data[attribute] = data;
+            this._strides[attribute] = stride || 0;
+            this._offsets[attribute] = offset || 0;
+
+            this.dispatchEvent(
+                new GeometryEvent(GeometryEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize)
+            );
+        }
+    },
+    clearData: {
+        value: function(attribute) {
+            delete this._data[attribute];
+            delete this._strides[attribute];
+            delete this._offsets[attribute];
+        }
+    },
+    indices: {
+        get: function() {
+            return this._indices;
+        },
+        set: function(data) {
+            if (data instanceof Uint16Array === false) {
+                throw new Error();
+            }
+            var resize = this._indices && this._indices.length !== data.length;
+
+            this._indices = data;
+            
+            this.dispatchEvent(
+                new GeometryEvent(GeometryEvent.VERTEX_INDICES_CHANGE, null, resize)
+            );
+        }
+    }
 });
 
 Object.defineProperties(Geometry, {
-	_counter: { value: 0, writable: true },
+    _counter: { value: 0, writable: true },
 
-	POSITION: { value: 'position' },
-	TEXCOORD: { value: 'texCoord' },
-	NORMAL: { value: 'normal' },
-	TANGENT: { value: 'tangent' }
+    POSITION: { value: 'position' },
+    TEXCOORD: { value: 'texCoord' }
 });

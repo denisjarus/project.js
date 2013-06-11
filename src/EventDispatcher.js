@@ -1,53 +1,57 @@
 function EventDispatcher() {
-	Object.defineProperties(this, {
-		_listeners: { value: {} },
-	});
+    Object.defineProperties(this, {
+        _listeners: { value: {} },
+    });
 }
 
 Object.defineProperties(EventDispatcher.prototype, {
-	addEventListener: {
-		value: function(type, listener) {
-			if (! this._listeners[type]) {
-				this._listeners[type] = [];
-			}
-			if (this._listeners[type].indexOf(listener) == -1) {
-				this._listeners[type].push(listener);
-			}
-		}
-	},
-	removeEventListener: {
-		value: function(type, listener) {
-			if (! this._listeners[type]) {
-				return;
-			}
-			var index = this._listeners[type].indexOf(listener);
-			if (index > -1) {
-				this._listeners[type].splice(index, 1);
-			}
-			if (this._listeners[type].length == 0) {
-				delete this._listeners[type];
-			}
-		}
-	},
-	hasEventListener: {
-		value: function(type) {
-			return this._listeners[type] != null;
-		}
-	},
-	dispatchEvent: {
-		value: function(event) {
-			if (event instanceof Event3D == false) {
-				throw new Error();
-			}
-			event.target = this;
-			event.currentTarget = this;
+    addEventListener: {
+        value: function(type, listener) {
+            var listeners = this._listeners[type];
+            if (listeners === undefined) {
+                listeners = this._listeners[type] = [];
+            }
+            if (listeners.indexOf(listener) === -1) {
+                listeners.push(listener);
+            }
+        }
+    },
+    removeEventListener: {
+        value: function(type, listener) {
+            var listeners = this._listeners[type];
+            if (listeners === undefined) {
+                return;
+            }
+            var index = listeners.indexOf(listener);
+            if (index !== -1) {
 
-			var handlers = this._listeners[event.type];
-			if (handlers) {
-				for (var i = 0, len = handlers.length; i < len; i++) {
-					handlers[i].call(null, event);
-				}
-			}
-		}
-	}
+                listeners.splice(index, 1);
+
+                if (listeners.length === 0) {
+                    delete this._listeners[type];
+                }
+            }
+        }
+    },
+    hasEventListener: {
+        value: function(type) {
+            return this._listeners[type] !== undefined;
+        }
+    },
+    dispatchEvent: {
+        value: function(event) {
+            if (event instanceof Event3D == false) {
+                throw new Error();
+            }
+            event.target = this;
+            event.currentTarget = this;
+
+            var listeners = this._listeners[event.type];
+            if (listeners) {
+                for (var i = 0, len = listeners.length; i < len; i++) {
+                    listeners[i].call(null, event);
+                }
+            }
+        }
+    }
 });
