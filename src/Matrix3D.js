@@ -188,6 +188,7 @@ Object.defineProperties(Matrix3D, {
     perspective: {
         value: function(fieldOfView, aspectRatio, near, far) {
             var m = new Float32Array(16);
+            
             m[ 0] = 1 / Math.tan(fieldOfView / 2);
             m[ 4] = 0;
             m[ 8] = 0;

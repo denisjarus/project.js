@@ -1,20 +1,39 @@
-function Vector3D(x, y, z) {
+function Vector3D(elements) {
     Object.defineProperties(this, {
-        x: { value: x || 0, writable: true },
-        y: { value: y || 0, writable: true },
-        z: { value: z || 0, writable: true }
+        elements: { value: new Float32Array(3) }
     });
+    if (elements) {
+        this.elements.set(elements);
+    }
 }
 
 Object.defineProperties(Vector3D.prototype, {
+    clone: {
+        value: function() {
+            return new Vector3D(this.elements);
+        }
+    },
+    copyFrom: {
+        value: function(vector) {
+            if (vector instanceof Vector3D === false) {
+                throw new Error();
+            }
+            this.elements.set(vector.elements);
+
+            return this;
+        }
+    },
     add: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
-            this.x += vector.x;
-            this.y += vector.y;
-            this.z += vector.z;
+            var a = this.elements,
+                b = vector.elements;
+
+            a[0] += b[0];
+            a[1] += b[1];
+            a[2] += b[2];
             
             return this;
         }
@@ -24,100 +43,112 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
-            this.x -= vector.x;
-            this.y -= vector.y;
-            this.z -= vector.z;
+            var a = this.elements,
+                b = vector.elements;
 
-            return this;
-        }
-    },
-    clone: {
-        value: function() {
-            return new Vector3D(this.x, this.y, this.z);
-        }
-    },
-    copyFrom: {
-        value: function(vector) {
-            if (vector instanceof Vector3D === false) {
-                throw new Error();
-            }
-            this.x = vector.x;
-            this.y = vector.y;
-            this.z = vector.z;
+            a[0] -= b[0];
+            a[1] -= b[1];
+            a[2] -= b[2];
 
             return this;
         }
     },
     cross: {
         value: function(vector) {
-            this.x = this.y * vector.z - this.z * vector.y;
-            this.y = this.z * vector.x - this.x * vector.z;
-            this.z = this.x * vector.y - this.y * vector.x;
+            if (vector instanceof Vector3D === false) {
+                throw new Error();
+            }
+            var a = this.elements,
+                b = vector.elements;
+
+            a[0] = a[1] * b[2] - a[2] * b[1];
+            a[1] = a[2] * b[0] - a[0] * b[2];
+            a[2] = a[0] * b[1] - a[1] * b[0];
 
             return this;
         }
     },
     distance: {
         value: function(vector) {
-            var dx = vector.x - this.x,
-                dy = vector.y - this.y,
-                dz = vector.z - this.z;
-                
-            return Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (vector instanceof Vector3D === false) {
+                throw new Error();
+            }
+            var a = this.elements,
+                b = vector.elements,
+                x = b[0] - a[0],
+                y = b[1] - a[1],
+                z = b[2] - a[2];
+            
+            return Math.sqrt(x * x + y * y + z * z);
         }
     },
     dot: {
         value: function(vector) {
+            if (vector instanceof Vector3D === false) {
+                throw new Error();
+            }
+            var a = this.elements,
+                b = vector.elements;
+
             return (
-                this.x * vector.x +
-                this.y * vector.y +
-                this.z * vector.z
+                a[0] * b[0] +
+                a[1] * b[1] +
+                a[2] * b[2]
             );
         }
     },
     length: {
         get: function() {
+            var vec = this.elements;
+
             return Math.sqrt(
-                this.x * this.x +
-                this.y * this.y +
-                this.z * this.z
+                vec[0] * vec[0] +
+                vec[1] * vec[1] +
+                vec[2] * vec[2]
             );
         }
     },
     lengthSquared: {
         get: function() {
+            var vec = this.elements;
+
             return (
-                this.x * this.x +
-                this.y * this.y +
-                this.z * this.z
+                vec[0] * vec[0] +
+                vec[1] * vec[1] +
+                vec[2] * vec[2]
             );
         }
     },
     negate: {
         value: function() {
-            this.x = - this.x;
-            this.y = - this.y;
-            this.z = - this.z;
+            var vec = this.elements;
+
+            vec[0] = - vec[0];
+            vec[1] = - vec[1];
+            vec[2] = - vec[2];
 
             return this;
         }
     },
     normalize: {
         value: function() {
-            var length = 1 / (this.length || 1);
+            var vec = this.elements,
+                len = 1 / (this.length || 1);
 
-            this.x *= length;
-            this.y *= length;
-            this.z *= length;
+            vec[0] *= len;
+            vec[1] *= len;
+            vec[2] *= len;
 
             return this;
         }
     },
     scale: {
         value: function(scalar) {
-            this.x *= scalar;
-            this.y *= scalar;
-            this.z *= scalar;
+            var vec = this.elements;
+
+            vec[0] *= scalar;
+            vec[1] *= scalar;
+            vec[3] *= scalar;
 
             return this;
         }
@@ -127,19 +158,44 @@ Object.defineProperties(Vector3D.prototype, {
             if (matrix instanceof Matrix3D === false) {
                 throw new Error();
             }
-            var m = matrix.elements,
-                x = this.x,
-                y = this.y,
-                z = this.z;
+            var vec = this.elements,
+                mat = matrix.elements,
+                x = vec[0],
+                y = vec[1],
+                z = vec[2];
 
             //calculate 1 / w
-            var w = 1 / (m[3] * x + m[7] * y + m[11] * z + m[15]);
+            var w = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
 
-            this.x = (m[0] * x + m[4] * y + m[ 8] * z + m[12]) * w;
-            this.y = (m[1] * x + m[5] * y + m[ 9] * z + m[13]) * w;
-            this.z = (m[2] * x + m[6] * y + m[10] * z + m[14]) * w;
+            vec[0] = (mat[0] * x + mat[4] * y + mat[ 8] * z + mat[12]) * w;
+            vec[1] = (mat[1] * x + mat[5] * y + mat[ 9] * z + mat[13]) * w;
+            vec[2] = (mat[2] * x + mat[6] * y + mat[10] * z + mat[14]) * w;
 
             return this;
+        }
+    },
+    x: {
+        get: function() {
+            return this.elements[0];
+        },
+        set: function(value) {
+            this.elements[0] = value;
+        }
+    },
+    y: {
+        get: function() {
+            return this.elements[1];
+        },
+        set: function(value) {
+            this.elements[1] = value;
+        }
+    },
+    z: {
+        get: function() {
+            return this.elements[2];
+        },
+        set: function(value) {
+            this.elements[2] = value;
         }
     }
 });

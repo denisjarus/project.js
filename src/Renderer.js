@@ -61,16 +61,10 @@ function Renderer(context) {
 
         //render objects
 
-        var viewMatrix = camera.globalToLocal,
-            projectionMatrix = camera.projection,
-            modelViewMatrix = new Matrix3D(),
-
-            shader = null,
+        var shader = null,
             geometry = null,
-            material = null,
 
-            attributes = [],
-            uniforms = [];
+            attributes = [];
 
         for (var object, i = 0; object = renderList[i]; i++) {
             //set program
@@ -84,18 +78,9 @@ function Renderer(context) {
                 gl.useProgram(program);
 
                 attributes.length = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
-                uniforms.length = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
-                for (var attribute, j = 0; attribute = gl.getActiveAttrib(program, j); j++) {
-                    attributes[j] = attribute;
-                }
-                for (var uniform, j = 0; uniform = gl.getActiveUniform(program, j); j++) {
-                    uniforms[j] = uniform;
-                }
-
-                //set projection
-                if (uniforms.indexOf('projection') > -1) {
-                    setUniform();
+                for (var attribute, j = 0, len = attributes.length; j < len; j++) {
+                    attribute = attributes[j] = gl.getActiveAttrib(program, j);
                 }
             }
 
@@ -120,15 +105,7 @@ function Renderer(context) {
                 }
             }
 
-            //set properties and textures
-            if (material !== object.material) {
-                material = object.material;
-            }
-
-            //set uniforms
-            modelViewMatrix.copyFrom(object.localToGlobal).append(viewMatrix);
-            gl.uniformMatrix4fv(gl.getUniformLocation(program, 'modelView'), false, modelViewMatrix.elements);
-            gl.uniformMatrix4fv(gl.getUniformLocation(program, 'projection'), false, projectionMatrix.elements);
+            shader.uniform(program.uniforms, object, camera, lights);
 
             //draw
             gl.drawElements(gl.TRIANGLES, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
@@ -140,8 +117,6 @@ function Renderer(context) {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         
         glVertexArrayObject.bindVertexArrayOES(null);
-        
-        //console.log(renderList);
     };
 
     function sort(a, b) {
@@ -156,10 +131,6 @@ function Renderer(context) {
             return compare;
         }
         return 0;
-    }
-
-    function setUniform(uniform) {
-
     }
 
     function getSize(attribute) {
@@ -185,9 +156,15 @@ function Renderer(context) {
     }
 
     function addObject(object) {
+        var list;
         if (object instanceof Mesh) {
-            renderList.push(object);
+            list = renderList;
             updateList = true;
+        } else if (object instanceof Light3D) {
+            list = lights;
+        }
+        if (list) {
+            list.push(object);
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             addObject(child, true);
@@ -199,8 +176,14 @@ function Renderer(context) {
     }
 
     function removeObject(object) {
+        var list;
         if (object instanceof Mesh) {
-            renderList.splice(renderList.indexOf(object), 1);
+            list = renderList;
+        } else if (object instanceof Light3D) {
+            list = lights;
+        }
+        if (list) {
+            list.splice(list.indexOf(object), 1);
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             removeObject(child, true);
@@ -228,6 +211,18 @@ function Renderer(context) {
             if (gl.getProgramParameter(program, gl.LINK_STATUS) === false) {
                 throw new Error(gl.getError());
             }
+
+            var uniforms = {};
+
+            for (var uniform, i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
+                uniform = gl.getActiveUniform(program, i);
+
+                Object.defineProperty(uniforms, uniform.name, {
+                    set: createUniform(uniform, gl.getUniformLocation(program, uniform.name))
+                });
+            }
+
+            program.uniforms = uniforms;
         }
         
         return program;
@@ -244,6 +239,33 @@ function Renderer(context) {
         }
 
         return shader;
+    }
+
+    function createUniform(uniform, location) {
+        var setter = null;
+
+        switch (uniform.type) {
+            case gl.FLOAT: setter = gl.uniform1f; break;
+            case gl.FLOAT_VEC2: setter = gl.uniform2fv; break;
+            case gl.FLOAT_VEC3: setter = gl.uniform3fv; break;
+            case gl.FLOAT_VEC4: setter = gl.uniform4fv; break;
+        }
+
+        if (setter) {
+            return function(value) {
+                setter.call(gl, location, value);
+            };
+        }
+
+        switch (uniform.type) {
+            case gl.FLOAT_MAT2: setter = gl.uniformMatrix2fv; break;
+            case gl.FLOAT_MAT3: setter = gl.uniformMatrix3fv; break;
+            case gl.FLOAT_MAT4: setter = gl.uniformMatrix4fv; break;
+        }
+        
+        return function(matrix) {
+            setter.call(gl, location, false, matrix);
+        };
     }
 
     //vertex arrays

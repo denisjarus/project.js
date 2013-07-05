@@ -1,7 +1,6 @@
 var context,
     renderer,
     stage,
-    light,
     camera,
     objects = [];
 
@@ -15,8 +14,6 @@ window.onload = function() {
     renderer = new Renderer(context);
     
     stage = new Object3D();
-
-    light = stage.addChild(new Light3D());
 
     camera = stage.addChild(new Camera3D());
     camera.z = 500;
@@ -60,10 +57,6 @@ window.onload = function() {
     }
     geometry.indices = new Uint16Array(sphereIndices);
 
-    //material
-    var material = new Material();
-    material.setData('diffuseMap', new Texture());
-
     //objects
     var object = stage,
         numObjects = 1000,
@@ -78,12 +71,19 @@ window.onload = function() {
         object.rotationY = Math.random() * 360;
         object.rotationZ = Math.random() * 360;
         object.geometry = geometry;
-        object.material = material;
+        object.material = new Material();
+        object.material.color = new Float32Array([Math.random(), Math.random(), Math.random()]);
         objects.push(object);
     }
+    //add light to the last object
+    object.addChild(new Light3D(new Float32Array([1, 0, 0, 1])));
 
     window.onresize();
-    window.webkitRequestAnimationFrame(enterFrame);
+    window.requestAnimationFrame(enterFrame);
+
+    var vec = new Float32Array([5])
+    vec[0] *= 2
+    console.log(vec);
 }
 
 window.onresize = function() {
