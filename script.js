@@ -97,7 +97,7 @@ window.onload = function() {
             'precision mediump float;',
             'uniform vec3 color;',
             'void main(void) {',
-            '   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);',
+            '   gl_FragColor = vec4(color, 1.0);',
             '}'
         ].join('\n'),
         function(uniforms, object, camera) {
@@ -105,6 +105,71 @@ window.onload = function() {
             uniforms.view = camera.globalToLocal.elements;
             uniforms.projection = camera.projection.elements;
             uniforms.color = object.material.color;
+        }
+    );
+
+    //texture
+    object = stage.addChild(new Mesh());
+    object.scaleX = object.scaleY = object.scaleZ = 5;
+    object.geometry = new Geometry();
+    object.geometry.setData('position', new Float32Array(
+        [
+            -10, -10, 0,
+            10, -10, 0,
+            -10, 10, 0,
+            10, 10, 0
+        ]
+    ));
+    object.geometry.setData('texcoord', new Float32Array(
+        [
+            0, 0,
+            1, 0,
+            0, 1,
+            1, 1
+        ]
+    ));
+    object.geometry.indices = new Uint16Array(
+        [
+            0, 1, 2,
+            1, 3, 2
+        ]
+    );
+    object.material = new Material()
+    object.material.texture = new Texture();
+
+    var image = new Image();
+    //image.crossOrigin = 'anonymous';
+    image.src = 'test.bmp';
+    image.onload = function() {
+        object.material.texture.setData(image);
+    }
+
+    object.material.shader = new Shader(
+        [
+            'attribute vec3 position;',
+            'attribute vec2 texcoord;',
+            'uniform mat4 model;',
+            'uniform mat4 view;',
+            'uniform mat4 projection;',
+            'varying vec2 uv;',
+            'void main(void) {',
+            '   uv = texcoord;',
+            '   gl_Position = projection * view * model * vec4(position, 1.0);',
+            '}'
+        ].join('\n'),
+        [
+            'precision mediump float;',
+            'uniform sampler2D texture;',
+            'varying vec2 uv;',
+            'void main(void) {',
+            '   gl_FragColor = texture2D(texture, uv);',
+            '}'
+        ].join('\n'),
+        function(uniforms, object, camera) {
+            uniforms.model = object.localToGlobal.elements;
+            uniforms.view = camera.globalToLocal.elements;
+            uniforms.projection = camera.projection.elements;
+            uniforms.texture = object.material.texture;
         }
     );
 

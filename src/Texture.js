@@ -5,22 +5,20 @@ function Texture() {
     Object.defineProperties(this, {
         id: { value: Texture._counter++ },
 
-        _data: { value: {} }
+        _data: { value: null, writable: true }
     });
 }
 
 Texture.prototype = Object.create(EventDispatcher.prototype, {
     getData: {
-        value: function(target) {
-            return this._data[target];
+        value: function() {
+            return this._data;
         }
     },
     setData: {
-        value: function(target, data) {
-            this._data[target] = data;
-            this.dispatchEvent(
-                new Event3D('type', target)
-            );
+        value: function(data) {
+            this._data = data;
+            this.dispatchEvent(new Event3D('type'));
         }
     }
 });
