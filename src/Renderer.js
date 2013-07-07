@@ -21,9 +21,9 @@ function Renderer(context) {
 
         gl.enable(gl.DEPTH_TEST);
 
-        gl.enable(gl.CULL_FACE);
-        gl.cullFace(gl.BACK);
-        gl.frontFace(gl.CW);
+        //gl.enable(gl.CULL_FACE);
+        //gl.cullFace(gl.BACK);
+        //gl.frontFace(gl.CW);
     };
 
     this.setContext(context);
@@ -67,7 +67,6 @@ function Renderer(context) {
             attributes = [];
 
         for (var object, i = 0; object = renderList[i]; i++) {
-            //set program
             if (shader !== object.material.shader) {
                 shader = object.material.shader;
                 geometry = null;
@@ -84,7 +83,6 @@ function Renderer(context) {
                 }
             }
 
-            //set buffers
             if (geometry !== object.geometry) {
                 geometry = object.geometry;
 
@@ -107,7 +105,6 @@ function Renderer(context) {
 
             shader.uniform(program.uniforms, object, camera, lights);
 
-            //draw
             gl.drawElements(gl.TRIANGLES, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
 
@@ -244,6 +241,7 @@ function Renderer(context) {
     function createUniform(uniform, location) {
         var setter = null;
 
+        //vector types
         switch (uniform.type) {
             case gl.FLOAT: setter = gl.uniform1f; break;
             case gl.FLOAT_VEC2: setter = gl.uniform2fv; break;
@@ -257,15 +255,27 @@ function Renderer(context) {
             };
         }
 
+        //matrix types
         switch (uniform.type) {
             case gl.FLOAT_MAT2: setter = gl.uniformMatrix2fv; break;
             case gl.FLOAT_MAT3: setter = gl.uniformMatrix3fv; break;
             case gl.FLOAT_MAT4: setter = gl.uniformMatrix4fv; break;
         }
         
-        return function(matrix) {
-            setter.call(gl, location, false, matrix);
-        };
+        if (setter) {
+            return function(matrix) {
+                setter.call(gl, location, false, matrix);
+            };
+        }
+
+        //sampler types
+        if (uniform.type === gl.SAMPLER_2D) {
+            return function(texture) {
+                gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
+                gl.activeTexture(gl.TEXTURE0);
+                gl.uniform1i(location, 0);
+            };
+        }
     }
 
     //vertex arrays
@@ -364,26 +374,33 @@ function Renderer(context) {
 
     var textures = {};
 
-    function setTexture2D(index, texture) {
-        var texture2D = textures[texture.id];
-        if (texture2D === undefined) {
-            texture2D = textures[texture.id] = new Texture2D(gl.createTexture());
+    function getTexture2D(texture) {
+        var cache = textures[texture.id];
+        if (cache === undefined) {
+            cache = textures[texture.id] = new Cache(gl.createTexture());
 
-            texture.addEventListener('some', onTextureChange);
+            texture.addEventListener('temp', onTextureChange);
         }
 
-        gl.activeTexture(gl.TEXTURE0 + index);
-        gl.bindTexture(gl.TEXTURE_2D, texture2D);
+        if (cache.update) {
 
-        if (texture2D.update) {
-            texture2D.update = false;
+            gl.bindTexture(gl.TEXTURE_2D, cache.object);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 
-            var data = texture.getData(Texture.TEXTURE_2D);
+            if (cache.resize) {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
+            } else {
 
-            if (true) {
-                texture2D.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_INT, data);
             }
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+
+            cache.update = cache.resize = false;
         }
+
+        return cache.object;
     }
 
     function setTextureCube(index, texture) {
@@ -391,7 +408,9 @@ function Renderer(context) {
     }
 
     function onTextureChange(event) {
-
+        var cache = textures[event.target.id];
+        cache.update = true;
+        cache.resize = event.resize;
     }
 
     //internal data structures
@@ -401,29 +420,6 @@ function Renderer(context) {
             object: { value: object },
             update: { value: true, writable: true },
             resize: { value: true, writable: true }
-        });
-    }
-
-    function Texture2D(texture) {
-        Object.defineProperties(this, {
-            object: { value: texture },
-            update: { value: true, writable: true },
-        });
-    }
-
-    function TextureCube(texture) {
-        Object.defineProperties(this, {
-            object: { value: texture },
-            update: { value: true, writable: true },
-
-            updatePositiveX: { value: true, writable: true },
-            updateNegativeX: { value: true, writable: true },
-
-            updatePositiveY: { value: true, writable: true },
-            updateNegativeY: { value: true, writable: true },
-
-            updatePositiveZ: { value: true, writable: true },
-            updateNegativeZ: { value: true, writable: true }
         });
     }
 }

@@ -31,7 +31,7 @@ const BASIC_SHADER = new Shader(
         '   vec4 position = modelView * vec4(position, 1.0);',
         '   vec4 normal = normalize(vec4(mat3(modelView) * normal, 1.0));',
 
-        '   diffuse = dot(normal, normalize(vec4(light, 1.0) - position));',
+        '   diffuse = max(dot(normal, normalize(vec4(light, 1.0) - position)), 0.0);',
 
         '   gl_Position = projection * position;',
 
