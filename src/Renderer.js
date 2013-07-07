@@ -426,10 +426,4 @@ function Renderer(context) {
             updateNegativeZ: { value: true, writable: true }
         });
     }
-
-    function Uniform() {
-        Object.defineProperties(this, {
-            location: {}
-        });
-    }
 }

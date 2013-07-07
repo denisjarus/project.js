@@ -17,6 +17,7 @@ Object.defineProperties(Shader, {
 const BASIC_SHADER = new Shader(
     [
         'attribute vec3 position;',
+        'attribute vec3 normal;',
 
         'uniform mat4 modelView;',
         'uniform mat4 projection;',
@@ -27,10 +28,12 @@ const BASIC_SHADER = new Shader(
 
         'void main(void) {',
 
-        '   vec3 normal = normalize(mat3(modelView) * position);',
-        '   diffuse = 1.0;',
+        '   vec4 position = modelView * vec4(position, 1.0);',
+        '   vec4 normal = normalize(vec4(mat3(modelView) * normal, 1.0));',
 
-        '   gl_Position = projection * modelView * vec4(position, 1.0);',
+        '   diffuse = dot(normal, normalize(vec4(light, 1.0) - position));',
+
+        '   gl_Position = projection * position;',
 
         '}'
 
@@ -51,17 +54,15 @@ const BASIC_SHADER = new Shader(
     ].join('\n'),
     (function() {
         var matrix = new Matrix3D(),
-            light = new Vector3D();
+            vector = new Vector3D();
 
         return function(uniforms, object, camera, lights) {
             uniforms.projection = camera.projection.elements;
 
             uniforms.color = object.material.color;
 
-            light.x = lights[0].x;
-            light.y = lights[0].y;
-            light.z = lights[0].z;
-            uniforms.light = light.elements;
+            vector.copyFrom(lights[0].localToGlobal.position).transform(camera.globalToLocal);
+            uniforms.light = vector.elements;
 
             matrix.copyFrom(object.localToGlobal).append(camera.globalToLocal);
             uniforms.modelView = matrix.elements;

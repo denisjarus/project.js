@@ -7,7 +7,8 @@ var context,
 var program, uColor, uLight, uAmbient;
 
 window.onload = function() {
-    if (! (context = document.getElementById('canvas').getContext('experimental-webgl'))) {
+    var canvas = document.getElementById('canvas');
+    if (!(context = canvas.getContext('experimental-webgl'))) {
         console.warn('webgl is not available');
     }
         
@@ -24,7 +25,8 @@ window.onload = function() {
         radius = 5;
 
     //vertices
-    var sphereVertices = [];
+    var verts = [],
+        norms = [];
 
     for (var i = 0; i <= segments; i++) {
         var phi = i * Math.PI / segments,
@@ -32,15 +34,17 @@ window.onload = function() {
             cosPhi = Math.cos(phi);
 
         for (var j = 0; j <= segments; j++) {
-            var lambda = j * Math.PI * 2 / segments;
-            sphereVertices.push(
-                radius * Math.cos(lambda) * sinPhi,
-                radius * cosPhi,
-                radius * Math.sin(lambda) * sinPhi
-                );
+            var lambda = j * Math.PI * 2 / segments,
+                x = Math.cos(lambda) * sinPhi,
+                y = cosPhi,
+                z = Math.sin(lambda) * sinPhi;
+
+            verts.push(x * radius, y * radius, z * radius);
+            norms.push(x, y, z);
         }
     }
-    geometry.setData(Geometry.POSITION, new Float32Array(sphereVertices));
+    geometry.setData('position', new Float32Array(verts));
+    geometry.setData('normal', new Float32Array(norms));
 
     //indices
     var sphereIndices = [];
@@ -76,14 +80,36 @@ window.onload = function() {
         objects.push(object);
     }
     //add light to the last object
+    object.scaleX = object.scaleY = object.scaleZ = 2;
     object.addChild(new Light3D(new Float32Array([1, 0, 0, 1])));
+    object.material.color = new Float32Array([1,1,1]);
+    object.material.shader = new Shader(
+        [
+            'attribute vec3 position;',
+            'uniform mat4 model;',
+            'uniform mat4 view;',
+            'uniform mat4 projection;',
+            'void main(void) {',
+            '   gl_Position = projection * view * model * vec4(position, 1.0);',
+            '}'
+        ].join('\n'),
+        [
+            'precision mediump float;',
+            'uniform vec3 color;',
+            'void main(void) {',
+            '   gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);',
+            '}'
+        ].join('\n'),
+        function(uniforms, object, camera) {
+            uniforms.model = object.localToGlobal.elements;
+            uniforms.view = camera.globalToLocal.elements;
+            uniforms.projection = camera.projection.elements;
+            uniforms.color = object.material.color;
+        }
+    );
 
     window.onresize();
     window.requestAnimationFrame(enterFrame);
-
-    var vec = new Float32Array([5])
-    vec[0] *= 2
-    console.log(vec);
 }
 
 window.onresize = function() {

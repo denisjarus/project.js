@@ -1,10 +1,12 @@
 function Vector3D(elements) {
-    Object.defineProperties(this, {
-        elements: { value: new Float32Array(3) }
-    });
-    if (elements) {
-        this.elements.set(elements);
+    if (!elements || elements.length !== 3) {
+        elements = new Float32Array(3);
+    } else if (elements instanceof Float32Array === false) {
+        elements = new Float32Array(elements);
     }
+    Object.defineProperties(this, {
+        elements: { value: elements }
+    });
 }
 
 Object.defineProperties(Vector3D.prototype, {

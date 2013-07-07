@@ -1,10 +1,13 @@
 function Matrix3D(elements) {
-    Object.defineProperties(this, {
-        elements: { value: new Float32Array(IDENTITY) }
-    });
-    if (elements) {
-        this.elements.set(elements);
+    if (!elements || elements.length !== 16) {
+        elements = new Float32Array(IDENTITY);
+    } else if (elements instanceof Float32Array === false) {
+        elements = new Float32Array(elements);
     }
+    Object.defineProperties(this, {
+        elements: { value: elements },
+        position: { value: new Vector3D(elements.subarray(12, 15)) }
+    });
 }
 
 Object.defineProperties(Matrix3D.prototype, {
@@ -33,11 +36,11 @@ Object.defineProperties(Matrix3D.prototype, {
     invert: {
         value: function() {
             //cache matrix elements
-            var m = this.elements,
-                m00 = m[0], m01 = m[4], m02 = m[ 8], m03 = m[12],
-                m10 = m[1], m11 = m[5], m12 = m[ 9], m13 = m[13],
-                m20 = m[2], m21 = m[6], m22 = m[10], m23 = m[14],
-                m30 = m[3], m31 = m[7], m32 = m[11], m33 = m[15],
+            var mat = this.elements,
+                m00 = mat[0], m01 = mat[4], m02 = mat[ 8], m03 = mat[12],
+                m10 = mat[1], m11 = mat[5], m12 = mat[ 9], m13 = mat[13],
+                m20 = mat[2], m21 = mat[6], m22 = mat[10], m23 = mat[14],
+                m30 = mat[3], m31 = mat[7], m32 = mat[11], m33 = mat[15],
 
                 d00 = m00 * m11 - m01 * m10,
                 d01 = m00 * m12 - m02 * m10,
@@ -60,41 +63,41 @@ Object.defineProperties(Matrix3D.prototype, {
             
             d = 1 / d;
 
-            m[ 0] = (m11 * d11 - m12 * d10 + m13 * d09) * d;
-            m[ 4] = (m01 * d11 - m02 * d10 + m03 * d09) * (-d);
-            m[ 8] = (m31 * d05 - m32 * d04 + m33 * d03) * d;
-            m[12] = (m21 * d05 - m22 * d04 + m23 * d03) * (-d);
+            mat[ 0] = (m11 * d11 - m12 * d10 + m13 * d09) * d;
+            mat[ 4] = (m01 * d11 - m02 * d10 + m03 * d09) * (-d);
+            mat[ 8] = (m31 * d05 - m32 * d04 + m33 * d03) * d;
+            mat[12] = (m21 * d05 - m22 * d04 + m23 * d03) * (-d);
 
-            m[ 1] = (m10 * d11 - m12 * d08 + m13 * d07) * (-d);
-            m[ 5] = (m00 * d11 - m02 * d08 + m03 * d07) * d;
-            m[ 9] = (m30 * d05 - m32 * d02 + m33 * d01) * (-d);
-            m[13] = (m20 * d05 - m22 * d02 + m23 * d01) * d;
+            mat[ 1] = (m10 * d11 - m12 * d08 + m13 * d07) * (-d);
+            mat[ 5] = (m00 * d11 - m02 * d08 + m03 * d07) * d;
+            mat[ 9] = (m30 * d05 - m32 * d02 + m33 * d01) * (-d);
+            mat[13] = (m20 * d05 - m22 * d02 + m23 * d01) * d;
 
-            m[ 2] = (m10 * d10 - m11 * d08 + m13 * d06) * d;
-            m[ 6] = (m00 * d10 - m01 * d08 + m03 * d06) * (-d);
-            m[10] = (m30 * d04 - m31 * d02 + m33 * d00) * d;
-            m[14] = (m20 * d04 - m21 * d02 + m23 * d00) * (-d);
+            mat[ 2] = (m10 * d10 - m11 * d08 + m13 * d06) * d;
+            mat[ 6] = (m00 * d10 - m01 * d08 + m03 * d06) * (-d);
+            mat[10] = (m30 * d04 - m31 * d02 + m33 * d00) * d;
+            mat[14] = (m20 * d04 - m21 * d02 + m23 * d00) * (-d);
 
-            m[ 3] = (m10 * d09 - m11 * d07 + m12 * d06) * (-d);
-            m[ 7] = (m00 * d09 - m01 * d07 + m02 * d06) * d;
-            m[11] = (m30 * d03 - m31 * d01 + m32 * d00) * (-d);
-            m[15] = (m20 * d03 - m21 * d01 + m22 * d00) * d;
+            mat[ 3] = (m10 * d09 - m11 * d07 + m12 * d06) * (-d);
+            mat[ 7] = (m00 * d09 - m01 * d07 + m02 * d06) * d;
+            mat[11] = (m30 * d03 - m31 * d01 + m32 * d00) * (-d);
+            mat[15] = (m20 * d03 - m21 * d01 + m22 * d00) * d;
 
             return this;
         }
     },
     transpose: {
         value: function() {
-            var m = this.elements, temp;
+            var mat = this.elements, temp;
 
-            temp = m[ 1]; m[ 1] = m[ 4]; m[ 4] = temp;
-            temp = m[ 2]; m[ 2] = m[ 8]; m[ 8] = temp;
-            temp = m[ 3]; m[ 3] = m[12]; m[12] = temp;
+            temp = mat[ 1]; mat[ 1] = mat[ 4]; mat[ 4] = temp;
+            temp = mat[ 2]; mat[ 2] = mat[ 8]; mat[ 8] = temp;
+            temp = mat[ 3]; mat[ 3] = mat[12]; mat[12] = temp;
 
-            temp = m[ 6]; m[ 6] = m[ 9]; m[ 9] = temp;
-            temp = m[ 7]; m[ 7] = m[13]; m[13] = temp;
+            temp = mat[ 6]; mat[ 6] = mat[ 9]; mat[ 9] = temp;
+            temp = mat[ 7]; mat[ 7] = mat[13]; mat[13] = temp;
             
-            temp = m[11]; m[11] = m[14]; m[14] = temp;
+            temp = mat[11]; mat[11] = mat[14]; mat[14] = temp;
 
             return this;
         }
@@ -160,24 +163,24 @@ Object.defineProperties(Matrix3D.prototype, {
 
                 cosYscaleX = cosY * sx,
 
-                m = this.elements;
+                mat = this.elements;
 
-            m.set(IDENTITY);
+            mat.set(IDENTITY);
 
-            m[ 0] = cosYscaleX * cosZ;
-            m[ 4] = sinXscaleY * sinYcosZ - cosXscaleY * sinZ;
-            m[ 8] = cosXscaleZ * sinYcosZ + sinXscaleZ * sinZ;
-            m[12] = x;
+            mat[ 0] = cosYscaleX * cosZ;
+            mat[ 4] = sinXscaleY * sinYcosZ - cosXscaleY * sinZ;
+            mat[ 8] = cosXscaleZ * sinYcosZ + sinXscaleZ * sinZ;
+            mat[12] = x;
 
-            m[ 1] = cosYscaleX * sinZ;
-            m[ 5] = sinXscaleY * sinYsinZ + cosXscaleY * cosZ;
-            m[ 9] = cosXscaleZ * sinYsinZ - sinXscaleZ * cosZ;
-            m[13] = y;
+            mat[ 1] = cosYscaleX * sinZ;
+            mat[ 5] = sinXscaleY * sinYsinZ + cosXscaleY * cosZ;
+            mat[ 9] = cosXscaleZ * sinYsinZ - sinXscaleZ * cosZ;
+            mat[13] = y;
 
-            m[ 2] = - sinY * sx;
-            m[ 6] = sinXscaleY * cosY;
-            m[10] = cosXscaleZ * cosY;
-            m[14] = z;
+            mat[ 2] = - sinY * sx;
+            mat[ 6] = sinXscaleY * cosY;
+            mat[10] = cosXscaleZ * cosY;
+            mat[14] = z;
 
             return this;
         }
@@ -187,29 +190,29 @@ Object.defineProperties(Matrix3D.prototype, {
 Object.defineProperties(Matrix3D, {
     perspective: {
         value: function(fieldOfView, aspectRatio, near, far) {
-            var m = new Float32Array(16);
+            var mat = new Float32Array(16);
             
-            m[ 0] = 1 / Math.tan(fieldOfView / 2);
-            m[ 4] = 0;
-            m[ 8] = 0;
-            m[12] = 0;
+            mat[ 0] = 1 / Math.tan(fieldOfView / 2);
+            mat[ 4] = 0;
+            mat[ 8] = 0;
+            mat[12] = 0;
 
-            m[ 1] = 0;
-            m[ 5] = m[0] * aspectRatio;
-            m[ 9] = 0;
-            m[13] = 0;
+            mat[ 1] = 0;
+            mat[ 5] = mat[0] * aspectRatio;
+            mat[ 9] = 0;
+            mat[13] = 0;
 
-            m[ 2] = 0;
-            m[ 6] = 0;
-            m[10] = - (far + near) / (far - near);
-            m[14] = - 2 * far * near / (far - near);
+            mat[ 2] = 0;
+            mat[ 6] = 0;
+            mat[10] = - (far + near) / (far - near);
+            mat[14] = - 2 * far * near / (far - near);
 
-            m[ 3] = 0;
-            m[ 7] = 0;
-            m[11] = - 1;
-            m[15] = 0;
+            mat[ 3] = 0;
+            mat[ 7] = 0;
+            mat[11] = - 1;
+            mat[15] = 0;
 
-            return new Matrix3D(m);
+            return new Matrix3D(mat);
         }
     }
 });
