@@ -17,7 +17,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
     },
     setData: {
         value: function(data) {
-            var resize = this._data &&
+            var resize = !this._data ||
                 this._data.width !== data.width &&
                 this._data.height !== data.height;
             

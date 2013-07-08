@@ -382,7 +382,7 @@ function Renderer(context) {
         if (cache === undefined) {
             cache = textures[texture.id] = new Cache(gl.createTexture());
 
-            texture.addEventListener('temp', onTextureChange);
+            texture.addEventListener(DataEvent.TEXTURE_CHANGE, onTextureChange);
         }
 
         if (cache.update) {
@@ -395,7 +395,7 @@ function Renderer(context) {
             if (cache.resize) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             } else {
-
+                gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             }
 
             gl.bindTexture(gl.TEXTURE_2D, null);
@@ -414,7 +414,6 @@ function Renderer(context) {
         var cache = textures[event.target.id];
         cache.update = true;
         cache.resize = event.resize;
-        console.log(event.resize)
     }
 
     //internal data structures

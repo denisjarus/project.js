@@ -34,7 +34,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             if (data instanceof Float32Array === false) {
                 throw new Error();
             }   
-            var resize = this._data[attribute] && this._data[attribute].length !== data.length;
+            var resize = !this._data[attribute] || this._data[attribute].length !== data.length;
 
             this._data[attribute] = data;
             this._strides[attribute] = stride || 0;
@@ -58,7 +58,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             if (data instanceof Uint16Array === false) {
                 throw new Error();
             }
-            var resize = this._indices && this._indices.length !== data.length;
+            var resize = !this._indices || this._indices.length !== data.length;
 
             this._indices = data;
             
