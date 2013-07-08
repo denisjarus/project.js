@@ -17,8 +17,13 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
     },
     setData: {
         value: function(data) {
+            var resize = this._data &&
+                this._data.width !== data.width &&
+                this._data.height !== data.height;
+            
             this._data = data;
-            this.dispatchEvent(new Event3D('type'));
+
+            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, resize));
         }
     }
 });

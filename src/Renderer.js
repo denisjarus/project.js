@@ -35,6 +35,9 @@ function Renderer(context) {
         if (stage.parent) {
             throw new Error();
         }
+        if (!stage.contains(camera)) {
+            throw new Error();
+        }
         if (stage3D !== stage) {
             if (stage3D) {
                 stage3D.removeEventListener(Event3D.ADDED, onAdd);
@@ -300,7 +303,7 @@ function Renderer(context) {
         if (buffers === undefined) {
             buffers = vertexBuffers[geometry.id] = {};
 
-            geometry.addEventListener(GeometryEvent.VERTICES_CHANGE, onVerticesChange);
+            geometry.addEventListener(DataEvent.VERTICES_CHANGE, onVerticesChange);
         }
 
         var cache = buffers[attribute];
@@ -343,7 +346,7 @@ function Renderer(context) {
         if (cache === undefined) {
             cache = indexBuffers[geometry.id] = new Cache(gl.createBuffer());
 
-            geometry.addEventListener(GeometryEvent.INDICES_CHANGE, onIndicesChange);
+            geometry.addEventListener(DataEvent.INDICES_CHANGE, onIndicesChange);
         }
 
         if (cache.update) {
@@ -411,6 +414,7 @@ function Renderer(context) {
         var cache = textures[event.target.id];
         cache.update = true;
         cache.resize = event.resize;
+        console.log(event.resize)
     }
 
     //internal data structures

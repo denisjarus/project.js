@@ -19,7 +19,7 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
                 throw new Error();
             }
             this._shader = shader;
-            this.dispatchEvent(new Event3D('temp'));
+            this.dispatchEvent(new Event3D(Event3D.MATERIAL_SHADER_CHANGE));
         }
     }
 });

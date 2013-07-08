@@ -40,9 +40,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             this._strides[attribute] = stride || 0;
             this._offsets[attribute] = offset || 0;
 
-            this.dispatchEvent(
-                new GeometryEvent(GeometryEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize)
-            );
+            this.dispatchEvent(new DataEvent(DataEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize));
         }
     },
     clearData: {
@@ -64,9 +62,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
 
             this._indices = data;
             
-            this.dispatchEvent(
-                new GeometryEvent(GeometryEvent.VERTEX_INDICES_CHANGE, null, resize)
-            );
+            this.dispatchEvent(new DataEvent(DataEvent.VERTEX_INDICES_CHANGE, null, resize));
         }
     }
 });

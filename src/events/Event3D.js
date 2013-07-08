@@ -11,4 +11,5 @@ Object.defineProperties(Event3D, {
     REMOVED: { value: 'removed' },
     GEOMETRY_CHANGE: { value: 'geometryChange' },
     MATERIAL_CHANGE: { value: 'materialChange' },
+    MATERIAL_SHADER_CHANGE: { value: 'materialShaderChange' },
 });
