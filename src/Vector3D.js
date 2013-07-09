@@ -61,11 +61,14 @@ Object.defineProperties(Vector3D.prototype, {
                 throw new Error();
             }
             var a = this.elements,
-                b = vector.elements;
+                b = vector.elements,
+                x = a[0],
+                y = a[1],
+                z = a[2];
 
-            a[0] = a[1] * b[2] - a[2] * b[1];
-            a[1] = a[2] * b[0] - a[0] * b[2];
-            a[2] = a[0] * b[1] - a[1] * b[0];
+            a[0] = y * b[2] - z * b[1];
+            a[1] = z * b[0] - x * b[2];
+            a[2] = x * b[1] - y * b[0];
 
             return this;
         }
@@ -150,7 +153,7 @@ Object.defineProperties(Vector3D.prototype, {
 
             vec[0] *= scalar;
             vec[1] *= scalar;
-            vec[3] *= scalar;
+            vec[2] *= scalar;
 
             return this;
         }
