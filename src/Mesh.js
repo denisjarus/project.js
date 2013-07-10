@@ -1,4 +1,4 @@
-function Mesh() {
+function Mesh(geometry, material) {
 
     Object3D.call(this);
 
@@ -6,6 +6,13 @@ function Mesh() {
         _geometry: { value: null, writable: true },
         _material: { value: null, writable: true }
     });
+
+    if (geometry) {
+        this.geometry = geometry;
+    }
+    if (material) {
+        this.material = material;
+    }
 }
 
 Mesh.prototype = Object.create(Object3D.prototype, {

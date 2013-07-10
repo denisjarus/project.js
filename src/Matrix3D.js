@@ -4,6 +4,7 @@ function Matrix3D(elements) {
     } else if (elements instanceof Float32Array === false) {
         elements = new Float32Array(elements);
     }
+    
     Object.defineProperties(this, {
         elements: { value: elements },
         position: { value: new Vector3D(elements.subarray(12, 15)) }

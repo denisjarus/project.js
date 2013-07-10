@@ -66,14 +66,22 @@ function Renderer(context) {
 
         var shader = null,
             geometry = null,
+            material = null,
 
-            attributes = [];
+            attributes = [],
+
+            mode = null;
 
         for (var object, i = 0; object = renderList[i]; i++) {
-            if (shader !== object.material.shader) {
-                shader = object.material.shader;
+            if (!object.geometry || !object.material) {
+                continue;
+            }
+
+            material = object.material;
+
+            if (shader !== material.shader) {
+                shader = material.shader;
                 geometry = null;
-                material = null;
 
                 var program = getProgram(shader);
 
@@ -108,7 +116,7 @@ function Renderer(context) {
 
             shader.uniform(program.uniforms, object, camera, lights);
 
-            gl.drawElements(gl.TRIANGLES, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(gl.LINE_LOOP, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
 
         gl.useProgram(null);
@@ -120,15 +128,15 @@ function Renderer(context) {
     };
 
     function sort(a, b) {
-        var compare;
-        if ((compare = a.material.shader.id - b.material.shader.id) !== 0) {
-            return compare;
+        var order;
+        if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
+            return order;
         }
-        if ((compare = a.geometry.id - b.geometry.id) !== 0) {
-            return compare;
+        if ((order = a.geometry.id - b.geometry.id) !== 0) {
+            return order;
         }
-        if ((compare = a.material.id - b.material.id) !== 0) {
-            return compare;
+        if ((order = a.material.id - b.material.id) !== 0) {
+            return order;
         }
         return 0;
     }

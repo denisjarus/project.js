@@ -4,6 +4,7 @@ function Vector3D(elements) {
     } else if (elements instanceof Float32Array === false) {
         elements = new Float32Array(elements);
     }
+    
     Object.defineProperties(this, {
         elements: { value: elements }
     });

@@ -43,13 +43,6 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             this.dispatchEvent(new DataEvent(DataEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize));
         }
     },
-    clearData: {
-        value: function(attribute) {
-            delete this._data[attribute];
-            delete this._strides[attribute];
-            delete this._offsets[attribute];
-        }
-    },
     indices: {
         get: function() {
             return this._indices;

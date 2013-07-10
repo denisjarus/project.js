@@ -20,10 +20,10 @@ function test(name, actual, expected, epsilon, key) {
         }
 
     } else if (typeof(actual) === 'object' && typeof(expected) === 'object') {
-        var resultProperties = Object.getOwnPropertyNames(actual),
+        var actualProperties = Object.getOwnPropertyNames(actual),
             expectProperties = Object.getOwnPropertyNames(expected);
 
-        for (var property, i = 0; property = resultProperties[i]; i++) {
+        for (var property, i = 0; property = actualProperties[i]; i++) {
             test(null, actual[property], expected[property], epsilon, key + '[' + property + ']');
         }
 
@@ -35,63 +35,72 @@ function test(name, actual, expected, epsilon, key) {
     return false;
 }
 
-//MATH
+//Vector3D
 var vec = new Vector3D(),
-    mat = new Matrix3D(),
-    a = new Vector3D([111, 222, 333]),
-    b = new Vector3D([444, 555, 666]);
+    a = new Vector3D([1, 2, 3]),
+    b = new Vector3D([4, 5, 6]);
 
+//Vector3D.clone
+test('Vector3D.clone()', a.clone(), a);
+
+//Vector3D.copyFrom
+test('Vector3D.copyFrom()', vec.copyFrom(b), b);
 
 //Vector3D.add
 vec.copyFrom(a);
 vec.add(b);
-test('Vector3D.add()', vec, new Vector3D([555, 777, 999]));
+test('Vector3D.add()', vec, new Vector3D([5, 7, 9]));
 
 //Vector3D.subtract
 vec.copyFrom(b);
 vec.subtract(a);
-test('Vector3D.subtract()', vec, new Vector3D([333, 333, 333]));
+test('Vector3D.subtract()', vec, new Vector3D([3, 3, 3]));
 
 //Vector3D.cross
 vec.copyFrom(a);
 vec.cross(b);
-test('Vector3D.cross()', vec, new Vector3D([-36963, 73926, -36963]));
+test('Vector3D.cross()', vec, new Vector3D([-3, 6, -3]));
 
 //Vector3D.distance
-test('Vector3D.distance()', a.distance(b), 576.773, 0.0001);
+test('Vector3D.distance()', a.distance(b), 5.19615, 0.0001);
 
 //Vector3D.dot
-test('Vector3D.dot()', a.dot(b), 394272);
+test('Vector3D.dot()', a.dot(b), 32);
 
 //Vector3D.length
-test('Vector3D.length', a.length, 415.324, 0.0001);
+test('Vector3D.length', a.length, 3.74166, 0.0001);
 
 //Vector3D.lengthSquared
-test('Vector3D.lengthSquared', a.lengthSquared, 172494);
+test('Vector3D.lengthSquared', a.lengthSquared, 14);
 
 //Vector3D.negate()
 vec.copyFrom(a);
 vec.negate();
-test('Vector3D.negate()', vec, new Vector3D([-111, -222, -333]));
+test('Vector3D.negate()', vec, new Vector3D([-1, -2, -3]));
 
 //Vector3D.normalize()
 vec.copyFrom(a);
 vec.normalize();
-test('Vector3D.normalize()', vec, new Vector3D([0.267261, 0.534522, 0.801784]), 0.000001);
+test('Vector3D.normalize()', vec, new Vector3D([0.26726, 0.53452, 0.80178]), 0.0001);
 
 //Vector3D.scale()
 vec.copyFrom(a);
 vec.scale(2.5);
-test('Vector3D.scale()', vec, new Vector3D([277.5, 555, 832.5]));
+test('Vector3D.scale()', vec, new Vector3D([2.5, 5, 7.5]));
 
 //Vector3D.transform()
 vec.copyFrom(a);
-mat.elements.set(
+vec.transform(new Matrix3D(
     [
         1, 5, 9, 13,
         2, 6, 10, 14,
         3, 7, 11, 15,
         4, 8, 12, 16
     ]
-);
-vec.transform(mat);
+));
+test('Vector3D.transform()', vec, new Vector3D([0.17647, 0.45098, 0.72549]), 0.0001);
+
+//Matrix3D
+var mat = new Matrix3D(),
+    a = new Matrix3D(),
+    b = new Matrix3D();
