@@ -21,7 +21,7 @@ window.onload = function() {
     camera.z = 500;
 
     //sphere
-    sphere = stage.addChild(new Mesh(new SphereGeometry(150, 5, 15), new Material()));
+    sphere = stage.addChild(new Mesh(new SphereGeometry(150, 5, 15, Math.PI / 3, 0, Math.PI, 0), new Material()));
     sphere.material.color = new Float32Array([1, 0, 0]);
     sphere.material.wireframe = true;
 

@@ -20,10 +20,9 @@ function test(name, actual, expected, epsilon, key) {
         }
 
     } else if (typeof(actual) === 'object' && typeof(expected) === 'object') {
-        var actualProperties = Object.getOwnPropertyNames(actual),
-            expectProperties = Object.getOwnPropertyNames(expected);
+        var properties = Object.getOwnPropertyNames(expected);
 
-        for (var property, i = 0; property = actualProperties[i]; i++) {
+        for (var property, i = 0; property = properties[i]; i++) {
             test(null, actual[property], expected[property], epsilon, key + '[' + property + ']');
         }
 

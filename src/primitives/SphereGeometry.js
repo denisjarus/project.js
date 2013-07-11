@@ -19,12 +19,12 @@ function SphereGeometry(radius, latSegments, longSegments, minLat, minLong, maxL
 
     //vertices
     for (var i = 0; i <= latSegments; i++) {
-        var phi = i * Math.PI / latSegments,
+        var phi = i * (maxLat - minLat) / latSegments,
             sinPhi = Math.sin(phi),
             cosPhi = Math.cos(phi);
 
         for (var j = 0; j <= longSegments; j++) {
-            var lambda = j * Math.PI * 2 / longSegments,
+            var lambda = j * (maxLong - minLong) / longSegments,
                 x = Math.cos(lambda) * sinPhi,
                 y = cosPhi,
                 z = Math.sin(lambda) * sinPhi;
