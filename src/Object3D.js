@@ -43,7 +43,8 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             event.target = this;
             event.currentTarget = this;
             
-            //bubble
+            // bubble
+
             do {
                 var listeners = event.currentTarget._listeners[event.type];
                 if (listeners) {

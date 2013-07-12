@@ -20,12 +20,14 @@ window.onload = function() {
     camera = stage.addChild(new Camera3D());
     camera.z = 500;
 
-    //sphere
+    // sphere
+
     sphere = stage.addChild(new Mesh(new SphereGeometry(150, 5, 15, Math.PI / 3, 0, Math.PI, 0), new Material()));
     sphere.material.color = new Float32Array([1, 0, 0]);
     sphere.material.wireframe = true;
 
-    //textured
+    // textured
+    
     var object = stage.addChild(new Mesh());
     object.scaleX = object.scaleY = object.scaleZ = 5;
     object.geometry = new Geometry();

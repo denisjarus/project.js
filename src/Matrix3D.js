@@ -36,7 +36,6 @@ Object.defineProperties(Matrix3D.prototype, {
     },
     invert: {
         value: function() {
-            //cache matrix elements
             var mat = this.elements,
                 m00 = mat[0], m01 = mat[4], m02 = mat[ 8], m03 = mat[12],
                 m10 = mat[1], m11 = mat[5], m12 = mat[ 9], m13 = mat[13],
@@ -57,7 +56,8 @@ Object.defineProperties(Matrix3D.prototype, {
                 d10 = m21 * m33 - m23 * m31,
                 d11 = m22 * m33 - m23 * m32;
 
-            //calculate determinant
+            // calculate determinant
+
             var d = d00 * d11 - d01 * d10 + d02 * d09 + d03 * d08 - d04 * d07 + d05 * d06;
 
             if (d === 0) { console.warn('matrix is singular'); return null; }
@@ -108,14 +108,14 @@ Object.defineProperties(Matrix3D.prototype, {
             if (matrix instanceof Matrix3D === false) {
                 throw new Error();
             }
-            //cache matrix elements
             var a = this.elements,
                 a00 = a[0], a01 = a[4], a02 = a[ 8], a03 = a[12],
                 a10 = a[1], a11 = a[5], a12 = a[ 9], a13 = a[13],
                 a20 = a[2], a21 = a[6], a22 = a[10], a23 = a[14],
                 a30 = a[3], a31 = a[7], a32 = a[11], a33 = a[15];
 
-            //cache only the current line of another matrix 
+            // cache only the current line of another matrix 
+
             var b = matrix.elements,
                 b0, b1, b2, b3;
 
@@ -148,7 +148,6 @@ Object.defineProperties(Matrix3D.prototype, {
     },
     recompose: {
         value: function(x, y, z, rx, ry, rz, sx, sy, sz) {
-            //cache sines and cosines
             var sinX = Math.sin(rx), cosX = Math.cos(rx),
                 sinY = Math.sin(ry), cosY = Math.cos(ry),
                 sinZ = Math.sin(rz), cosZ = Math.cos(rz),

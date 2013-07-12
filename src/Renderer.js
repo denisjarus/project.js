@@ -62,7 +62,7 @@ function Renderer(context) {
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        //render objects
+        // render objects
 
         var shader = null,
             geometry = null,
@@ -157,7 +157,7 @@ function Renderer(context) {
         }
     }
 
-    //objects
+    // objects
 
     function onAdd(event) {
         addObject(event.target);
@@ -202,7 +202,7 @@ function Renderer(context) {
         updateList = true;
     }
 
-    //programs
+    // programs
 
     var programs = {};
 
@@ -252,7 +252,8 @@ function Renderer(context) {
     function createUniform(uniform, location) {
         var setter = null;
 
-        //vector types
+        // vector types
+
         switch (uniform.type) {
             case gl.FLOAT: setter = gl.uniform1f; break;
             case gl.FLOAT_VEC2: setter = gl.uniform2fv; break;
@@ -266,7 +267,8 @@ function Renderer(context) {
             };
         }
 
-        //matrix types
+        // matrix types
+
         switch (uniform.type) {
             case gl.FLOAT_MAT2: setter = gl.uniformMatrix2fv; break;
             case gl.FLOAT_MAT3: setter = gl.uniformMatrix3fv; break;
@@ -279,7 +281,8 @@ function Renderer(context) {
             };
         }
 
-        //sampler types
+        // sampler types
+
         if (uniform.type === gl.SAMPLER_2D) {
             return function(texture) {
                 gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
@@ -289,7 +292,7 @@ function Renderer(context) {
         }
     }
 
-    //vertex arrays
+    // vertex arrays
 
     var vertexArrays = {};
 
@@ -302,7 +305,7 @@ function Renderer(context) {
         return array;
     }
 
-    //vertex buffers
+    // vertex buffers
 
     var vertexBuffers = {};
 
@@ -345,7 +348,7 @@ function Renderer(context) {
         }
     }
 
-    //index buffers
+    // index buffers
 
     var indexBuffers = {};
 
@@ -381,7 +384,7 @@ function Renderer(context) {
         cache.resize = event.resize;
     }
 
-    //textures
+    // textures
 
     var textures = {};
 
@@ -424,7 +427,7 @@ function Renderer(context) {
         cache.resize = event.resize;
     }
 
-    //internal data structures
+    // cache constructor
 
     function Cache(object) {
         Object.defineProperties(this, {

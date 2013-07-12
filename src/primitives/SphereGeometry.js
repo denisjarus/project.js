@@ -17,7 +17,8 @@ function SphereGeometry(radius, latSegments, longSegments, minLat, minLong, maxL
         texcoords = [],
         indices = [];
 
-    //vertices
+    // vertices
+
     for (var i = 0; i <= latSegments; i++) {
         var phi = i * (maxLat - minLat) / latSegments,
             sinPhi = Math.sin(phi),
@@ -33,7 +34,8 @@ function SphereGeometry(radius, latSegments, longSegments, minLat, minLong, maxL
         }
     }
 
-    //indices
+    // indices
+
     for (i = 0; i < latSegments; i++) {
         for (j = 0; j < longSegments; j++) {
             var a = i * (longSegments + 1) + j,
