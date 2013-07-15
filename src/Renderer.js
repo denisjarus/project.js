@@ -116,7 +116,7 @@ function Renderer(context) {
 
             shader.uniform(program.uniforms, object, camera, lights);
 
-            gl.drawElements(gl.LINE_LOOP, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(gl.TRIANGLES, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
 
         gl.useProgram(null);

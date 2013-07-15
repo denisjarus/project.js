@@ -64,5 +64,5 @@ Object.defineProperties(Geometry, {
     _counter: { value: 0, writable: true },
 
     POSITION: { value: 'position' },
-    TEXCOORD: { value: 'texCoord' }
+    TEXCOORD: { value: 'texcoord' }
 });

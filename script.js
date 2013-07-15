@@ -2,8 +2,7 @@ var context,
     renderer,
     stage,
     camera,
-    sphere,
-    plane;
+    surface;
 
 var program, uColor, uLight, uAmbient;
 
@@ -20,76 +19,25 @@ window.onload = function() {
     camera = stage.addChild(new Camera3D());
     camera.z = 500;
 
-    // sphere
+    // surface
 
-    sphere = stage.addChild(new Mesh(new SphereGeometry(150, 5, 15, Math.PI / 3, 0, Math.PI, 0), new Material()));
-    sphere.material.color = new Float32Array([1, 0, 0]);
-    sphere.material.wireframe = true;
-
-    // textured
-    
-    var object = stage.addChild(new Mesh());
-    object.scaleX = object.scaleY = object.scaleZ = 5;
-    object.geometry = new Geometry();
-    object.geometry.setData('position', new Float32Array(
-        [
-            -10, -10, 0,
-            10, -10, 0,
-            -10, 10, 0,
-            10, 10, 0
-        ]
-    ));
-    object.geometry.setData('texcoord', new Float32Array(
-        [
-            0, 0,
-            1, 0,
-            0, 1,
-            1, 1
-        ]
-    ));
-    object.geometry.indices = new Uint16Array(
-        [
-            0, 1, 2,
-            1, 3, 2
-        ]
+    surface = stage.addChild(new Mesh());
+    surface.y = -50;
+    surface.geometry = new SurfaceGeometry(
+        function(x, y) { return x; },
+        function() { return 0; },
+        function(x, y) { return y; },
+        [-100, 100],
+        [-100, 100]
     );
-    object.material = new Material()
-    object.material.texture = new Texture();
+    surface.material = new Material();
+    surface.material.texture = new Texture();
 
     var image = new Image();
     image.src = 'test.bmp';
     image.onload = function() {
-        object.material.texture.setData(image);
+        surface.material.texture.setData(image);
     }
-
-    object.material.shader = new Shader(
-        [
-            'attribute vec3 position;',
-            'attribute vec2 texcoord;',
-            'uniform mat4 model;',
-            'uniform mat4 view;',
-            'uniform mat4 projection;',
-            'varying vec2 uv;',
-            'void main(void) {',
-            '   uv = texcoord;',
-            '   gl_Position = projection * view * model * vec4(position, 1.0);',
-            '}'
-        ].join('\n'),
-        [
-            'precision mediump float;',
-            'uniform sampler2D texture;',
-            'varying vec2 uv;',
-            'void main(void) {',
-            '   gl_FragColor = texture2D(texture, uv);',
-            '}'
-        ].join('\n'),
-        function(uniforms, object, camera) {
-            uniforms.model = object.localToGlobal.elements;
-            uniforms.view = camera.globalToLocal.elements;
-            uniforms.projection = camera.projection.elements;
-            uniforms.texture = object.material.texture;
-        }
-    );
 
     window.onresize();
     window.requestAnimationFrame(enterFrame);
@@ -108,7 +56,7 @@ document.oncontextmenu = function() {
 }
 
 function enterFrame() {
-    sphere.rotationY += 0.1;
+    surface.rotationY += 0.2;
 
     renderer.draw(stage, camera);
 

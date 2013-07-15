@@ -17,12 +17,17 @@ Object.defineProperties(Shader, {
 const BASIC_SHADER = new Shader(
     [
         'attribute vec3 position;',
+        'attribute vec2 texcoord;',
 
         'uniform mat4 model;',
         'uniform mat4 view;',
         'uniform mat4 projection;',
 
+        'varying vec2 uv;',
+
         'void main(void) {',
+
+        '   uv = texcoord;',
 
         '   gl_Position = projection * view * model * vec4(position, 1.0);',
 
@@ -32,11 +37,13 @@ const BASIC_SHADER = new Shader(
     [
         'precision mediump float;',
 
-        'uniform vec3 color;',
+        'uniform sampler2D texture;',
+
+        'varying vec2 uv;',
 
         'void main(void) {',
 
-        '   gl_FragColor = vec4(color, 1.0);',
+        '   gl_FragColor = texture2D(texture, uv);',
 
         '}'
 
@@ -45,6 +52,6 @@ const BASIC_SHADER = new Shader(
         uniforms.model = object.localToGlobal.elements;
         uniforms.view = camera.globalToLocal.elements;
         uniforms.projection = camera.projection.elements;
-        uniforms.color = object.material.color;
+        uniforms.texture = object.material.texture;
     }
 );
