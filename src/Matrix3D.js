@@ -190,15 +190,16 @@ Object.defineProperties(Matrix3D.prototype, {
 Object.defineProperties(Matrix3D, {
     perspective: {
         value: function(fieldOfView, aspectRatio, near, far) {
-            var mat = new Float32Array(16);
+            var mat = new Float32Array(16),
+                tan = Math.tan(fieldOfView * 0.5);
             
-            mat[ 0] = 1 / Math.tan(fieldOfView / 2);
+            mat[ 0] = 1 / (tan * aspectRatio);
             mat[ 4] = 0;
             mat[ 8] = 0;
             mat[12] = 0;
 
             mat[ 1] = 0;
-            mat[ 5] = mat[0] * aspectRatio;
+            mat[ 5] = 1 / tan;
             mat[ 9] = 0;
             mat[13] = 0;
 

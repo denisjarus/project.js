@@ -1,25 +1,18 @@
-function SurfaceGeometry(x, y, z, uArray, vArray) {
+function SurfaceGeometry(slices, stacks) {
 
     Geometry.call(this);
 
-    var uLength = uArray.length,
-        vLength = vArray.length,
+    Object.defineProperties(this, {
+        slices: { value: slices || 16 },
+        stacks: { value: stacks || 16 }
+    });
 
-        positions = [],
-        texcoords = [],
-        indices = [];
+    var indices = [];
 
-    for (var u, i = 0; (u = uArray[i]) !== undefined; i++) {
-        for (var v, j = 0; (v = vArray[j]) !== undefined; j++) {
-            positions.push(x(u, v), y(u, v), z(u, v));
-            texcoords.push(i / (uLength - 1), j / (vLength - 1));
-        }
-    }
-    
-    for (i = 0; i < uLength - 1; i++) {
-        for (j = 0; j < vLength - 1; j++) {
-            var a = i * vLength + j,
-                b = a + vLength;
+    for (var i = 0; i < slices - 1; i++) {
+        for (var j = 0; j < stacks - 1; j++) {
+            var a = i * stacks + j,
+                b = a + stacks;
 
             indices.push(
                 a, a + 1, b,
@@ -27,10 +20,37 @@ function SurfaceGeometry(x, y, z, uArray, vArray) {
             );
         }
     }
-
-    this.setData(Geometry.POSITION, new Float32Array(positions));
-    this.setData(Geometry.TEXCOORD, new Float32Array(texcoords));
+    this.setData(Geometry.POSITION, new Float32Array(slices * stacks * 3));
+    this.setData(Geometry.TEXCOORD, new Float32Array(slices * stacks * 2));
     this.indices = new Uint16Array(indices);
 }
 
-SurfaceGeometry.prototype = Object.create(Geometry.prototype);
+SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
+    set: {
+        value: function(x, y, z, uMin, uMax, vMin, vMax) {
+            var positions = this.getData(Geometry.POSITION),
+                texcoords = this.getData(Geometry.TEXCOORD),
+                index1 = 0,
+                index2 = 0;
+
+            for (var i = 0; i < this.slices; i++) {
+                for (var j = 0; j < this.stacks; j++) {
+                    var u = uMin + (uMax - uMin) * i / (this.slices - 1),
+                        v = vMin + (vMax - vMin) * j / (this.stacks - 1);
+
+                    positions[index1] = x(u, v);
+                    positions[index1 + 1] = y(u, v);
+                    positions[index1 + 2] = z(u, v);
+                    texcoords[index2] = i / (this.slices - 1);
+                    texcoords[index2 + 1] = j / (this.stacks - 1);
+
+                    index1 += 3;
+                    index2 += 2;
+                }
+            }
+
+            this.setData(Geometry.POSITION, positions);
+            this.setData(Geometry.TEXCOORD, texcoords);
+        }
+    }
+});
