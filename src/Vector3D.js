@@ -21,6 +21,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
+
             this.elements.set(vector.elements);
 
             return this;
@@ -31,6 +32,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
+
             var a = this.elements,
                 b = vector.elements;
 
@@ -46,6 +48,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
+
             var a = this.elements,
                 b = vector.elements;
 
@@ -61,6 +64,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
+
             var a = this.elements,
                 b = vector.elements,
                 x = a[0],
@@ -79,6 +83,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
+
             var a = this.elements,
                 b = vector.elements,
                 x = b[0] - a[0],
@@ -93,6 +98,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (vector instanceof Vector3D === false) {
                 throw new Error();
             }
+
             var a = this.elements,
                 b = vector.elements;
 
@@ -164,6 +170,7 @@ Object.defineProperties(Vector3D.prototype, {
             if (matrix instanceof Matrix3D === false) {
                 throw new Error();
             }
+            
             var vec = this.elements,
                 mat = matrix.elements,
                 x = vec[0],

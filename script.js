@@ -22,42 +22,37 @@ window.onload = function() {
     // surface
 
     surface = stage.addChild(new Mesh());
-    surface.geometry = new SurfaceGeometry(35, 5);
+    surface.geometry = new SurfaceGeometry(2, 2);
+    // surface.geometry = new SurfaceGeometry(35, 5);
 
-    surface.geometry.set(
-        function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.cos(s); },
-        function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.sin(s); },
-        function(s, t) { return t * Math.sin(s / 2); },
-        -Math.PI, Math.PI,
-        -50, 50
-    );
+    // surface.geometry.set(
+    //     function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.cos(s); },
+    //     function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.sin(s); },
+    //     function(s, t) { return t * Math.sin(s / 2); },
+    //     -Math.PI, Math.PI,
+    //     -50, 50
+    // );
 
-    /*
     //CYLINDER
 
-    surface.geometry.set(
-        function(y, r) { return 100 * Math.cos(r); },
-        function(y, r) { return y; },
-        function(y, r) { return 100 * Math.sin(r); },
-        100, -100,
-        0, 2 * Math.PI
-    );
+    // surface.geometry.set(
+    //     function(y, r) { return 100 * Math.cos(r); },
+    //     function(y, r) { return y; },
+    //     function(y, r) { return 100 * Math.sin(r); },
+    //     100, -100,
+    //     0, 2 * Math.PI
+    // );
 
-    */
-
-    /*
     //SPHERE
 
-    surface.geometry.set(
-        function(u, v) { return 200 * Math.sin(u) * Math.cos(v); },
-        function(u, v) { return 200 * Math.cos(u); },
-        function(u, v) { return 200 * Math.sin(u) * Math.sin(v); },
-        Math.PI / 4, Math.PI * 3/4,
-        0, 2 * Math.PI
-    );
-    */
+    // surface.geometry.set(
+    //     function(u, v) { return 200 * Math.sin(u) * Math.cos(v); },
+    //     function(u, v) { return 200 * Math.cos(u); },
+    //     function(u, v) { return 200 * Math.sin(u) * Math.sin(v); },
+    //     Math.PI / 4, Math.PI * 3/4,
+    //     0, 2 * Math.PI
+    // );
 
-    /*
     //PLANE
 
     surface.geometry.set(
@@ -65,10 +60,13 @@ window.onload = function() {
         function() { return 0; },
         function(x, y) { return y; },
         -100, 100,
-        100, -100
+        -100, 100
     );
 
-    */
+    surface.y = -100;
+
+    console.log(surface.geometry.getData('position'), Geometry.getNormals(surface.geometry));
+
     surface.material = new Material();
     surface.material.texture = new Texture();
     

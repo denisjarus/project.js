@@ -108,6 +108,7 @@ Object.defineProperties(Matrix3D.prototype, {
             if (matrix instanceof Matrix3D === false) {
                 throw new Error();
             }
+            
             var a = this.elements,
                 a00 = a[0], a01 = a[4], a02 = a[ 8], a03 = a[12],
                 a10 = a[1], a11 = a[5], a12 = a[ 9], a13 = a[13],

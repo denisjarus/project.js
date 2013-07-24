@@ -11,6 +11,7 @@ Object.defineProperties(EventDispatcher.prototype, {
             if (listeners === undefined) {
                 listeners = this._listeners[type] = [];
             }
+
             if (listeners.indexOf(listener) === -1) {
                 listeners.push(listener);
             }
@@ -22,6 +23,7 @@ Object.defineProperties(EventDispatcher.prototype, {
             if (listeners === undefined) {
                 return;
             }
+
             var index = listeners.indexOf(listener);
             if (index !== -1) {
 
@@ -43,6 +45,7 @@ Object.defineProperties(EventDispatcher.prototype, {
             if (event instanceof Event3D === false) {
                 throw new Error();
             }
+            
             event.target = this;
             event.currentTarget = this;
 

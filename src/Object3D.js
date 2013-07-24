@@ -40,6 +40,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             if (event instanceof Event3D === false) {
                 throw new Error();
             }
+
             event.target = this;
             event.currentTarget = this;
             
@@ -133,6 +134,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             if (child._parent !== null) {
                 child._parent.removeChild(child);
             }
+
             child._parent = this;
             child.invalidate();
 
@@ -151,6 +153,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             if (child._parent !== this) {
                 throw new Error();
             }
+            
             child.dispatchEvent(new Event3D(Event3D.REMOVED));
 
             child._parent = null;

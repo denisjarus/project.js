@@ -41,17 +41,18 @@ SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
                     positions[index1++] = x(u, v);
                     positions[index1++] = y(u, v);
                     positions[index1++] = z(u, v);
-                    texcoords[index2++] = 20 * i / (this.slices - 1);
-                    texcoords[index2++] = 2 * j / (this.stacks - 1);
+                    texcoords[index2++] = 5 + i / (this.slices - 1);
+                    texcoords[index2++] = 5 + j / (this.stacks - 1);
                 }
             }
 
-            var vertices = Geometry.interleave(positions, texcoords, 5, 3);
+            this.setData(Geometry.POSITION, positions, 3);
+            this.setData(Geometry.TEXCOORD, texcoords);
 
-            this.setData(Geometry.POSITION, vertices, 5, 0);
-            this.setData(Geometry.TEXCOORD, vertices, 5, 3);
+            // var vertices = Geometry.interleave(positions, texcoords, 5, 3);
 
-            console.log(this.getData(Geometry.POSITION) === this.getData(Geometry.TEXCOORD))
+            // this.setData(Geometry.POSITION, vertices, 5, 0);
+            // this.setData(Geometry.TEXCOORD, vertices, 5, 3);
         }
     }
 });

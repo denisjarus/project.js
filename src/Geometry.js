@@ -33,7 +33,8 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
         value: function(attribute, data, stride, offset) {
             if (data instanceof Float32Array === false) {
                 throw new Error();
-            }   
+            }
+
             var resize = !this._data[attribute] || this._data[attribute].length !== data.length;
 
             this._data[attribute] = data;
@@ -51,16 +52,16 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             if (data instanceof Uint16Array === false) {
                 throw new Error();
             }
+
+            if (data.length % 3 !== 0) {
+                throw new Error();
+            }
+
             var resize = !this._indices || this._indices.length !== data.length;
 
             this._indices = data;
             
             this.dispatchEvent(new DataEvent(DataEvent.VERTEX_INDICES_CHANGE, null, resize));
-        }
-    },
-    computeNormals: {
-        value: function(weighted) {
-            
         }
     }
 });
@@ -73,6 +74,10 @@ Object.defineProperties(Geometry, {
 
     interleave: {
         value: function (a, b, stride, offset) {
+            if (a instanceof Float32Array === false || b instanceof Float32Array === false) {
+                throw new Error();
+            }
+
             var array = new Float32Array(a.length + b.length);
  
             for (var i = 0, j = 0, k = 0, len = array.length; i < len; i++) {
@@ -84,6 +89,75 @@ Object.defineProperties(Geometry, {
             }
  
             return array;
+        }
+    },
+    getNormals: {
+        value: function(geometry, weighted) {
+            if (geometry instanceof Geometry === false) {
+                throw new Error();
+            }
+
+            var positions = geometry.getData(Geometry.POSITION),
+                stride = geometry.getStride(Geometry.POSITION) || 3,
+                offset = geometry.getOffset(Geometry.POSITION),
+
+                normals = new Float32Array(positions.length / stride * 3),
+
+                indices = geometry.indices,
+
+                a = new Vector3D(),
+                ab = new Vector3D(),
+                ac = new Vector3D();
+
+            if (!positions || !indices) {
+                return null;
+            }
+
+            for (var i = 0, len = indices.length; i < len; i += 3) {
+
+                // get positions
+
+                var index = offset + indices[i] * stride;
+                a.elements[0] = positions[index];
+                a.elements[1] = positions[index + 1];
+                a.elements[2] = positions[index + 2];
+
+                index = offset + indices[i + 1] * stride;
+                ab.elements[0] = positions[index];
+                ab.elements[1] = positions[index + 1];
+                ab.elements[2] = positions[index + 2];
+                ab.subtract(a);
+
+                index = offset + indices[i + 2] * stride;
+                ac.elements[0] = positions[index];
+                ac.elements[1] = positions[index + 1];
+                ac.elements[2] = positions[index + 2];
+                ac.subtract(a);
+
+                var normal = ab.cross(ac),
+                    x = normal.elements[0],
+                    y = normal.elements[1],
+                    z = normal.elements[2];
+
+                // set normals
+
+                index = indices[i] * 3;
+                normals[index] += x;
+                normals[index + 1] += y;
+                normals[index + 2] += z;
+
+                index = indices[i + 1] * 3;
+                normals[index] += x;
+                normals[index + 1] += y;
+                normals[index + 2] += z;
+
+                index = indices[i + 2] * 3;
+                normals[index] += x;
+                normals[index + 1] += y;
+                normals[index + 2] += z;
+            }
+
+            return normals;
         }
     }
 });
