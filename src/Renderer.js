@@ -107,7 +107,7 @@ function Renderer(context) {
 
                         gl.enableVertexAttribArray(j);
                         gl.bindBuffer(gl.ARRAY_BUFFER, getVertexBuffer(geometry, name));
-                        gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name), geometry.getOffset(name));
+                        gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name) * 4, geometry.getOffset(name) * 4);
                     }
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(geometry));

@@ -57,6 +57,11 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             
             this.dispatchEvent(new DataEvent(DataEvent.VERTEX_INDICES_CHANGE, null, resize));
         }
+    },
+    computeNormals: {
+        value: function(weighted) {
+            
+        }
     }
 });
 
@@ -64,5 +69,21 @@ Object.defineProperties(Geometry, {
     _counter: { value: 0, writable: true },
 
     POSITION: { value: 'position' },
-    TEXCOORD: { value: 'texcoord' }
+    TEXCOORD: { value: 'texcoord' },
+
+    interleave: {
+        value: function (a, b, stride, offset) {
+            var array = new Float32Array(a.length + b.length);
+ 
+            for (var i = 0, j = 0, k = 0, len = array.length; i < len; i++) {
+                if (i % stride < offset) {
+                    array[i] = a[j++];
+                } else {
+                    array[i] = b[k++];
+                }
+            }
+ 
+            return array;
+        }
+    }
 });

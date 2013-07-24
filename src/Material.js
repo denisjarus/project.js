@@ -1,26 +1,55 @@
-function Material(shader) {
+function Material() {
     
     EventDispatcher.call(this);
 
     Object.defineProperties(this, {
-        id: { value: Material._counter++ },
-        
-        _shader: { value: shader || BASIC_SHADER, writable: true }
+        id: { value: Material._counter++ }
     });
 }
 
 Material.prototype = Object.create(EventDispatcher.prototype, {
     shader: {
-        get: function() {
-            return this._shader;
-        },
-        set: function(shader) {
-            if (shader instanceof Shader === false) {
-                throw new Error();
+        value: new Shader(
+            [
+                'attribute vec3 position;',
+                'attribute vec2 texcoord;',
+
+                'uniform mat4 model;',
+                'uniform mat4 view;',
+                'uniform mat4 projection;',
+
+                'varying vec2 uv;',
+
+                'void main(void) {',
+
+                '   uv = texcoord;',
+
+                '   gl_Position = projection * view * model * vec4(position, 1.0);',
+
+                '}'
+
+            ].join('\n'),
+            [
+                'precision mediump float;',
+
+                'uniform sampler2D texture;',
+
+                'varying vec2 uv;',
+
+                'void main(void) {',
+
+                '   gl_FragColor = texture2D(texture, uv);',
+
+                '}'
+
+            ].join('\n'),
+            function(uniforms, object, camera) {
+                uniforms.model = object.localToGlobal.elements;
+                uniforms.view = camera.globalToLocal.elements;
+                uniforms.projection = camera.projection.elements;
+                uniforms.texture = object.material.texture;
             }
-            this._shader = shader;
-            this.dispatchEvent(new Event3D(Event3D.MATERIAL_SHADER_CHANGE));
-        }
+        )
     }
 });
 

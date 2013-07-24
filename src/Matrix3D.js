@@ -177,7 +177,7 @@ Object.defineProperties(Matrix3D.prototype, {
             mat[ 9] = cosXscaleZ * sinYsinZ - sinXscaleZ * cosZ;
             mat[13] = y;
 
-            mat[ 2] = - sinY * sx;
+            mat[ 2] = -sinY * sx;
             mat[ 6] = sinXscaleY * cosY;
             mat[10] = cosXscaleZ * cosY;
             mat[14] = z;
@@ -205,12 +205,12 @@ Object.defineProperties(Matrix3D, {
 
             mat[ 2] = 0;
             mat[ 6] = 0;
-            mat[10] = - (far + near) / (far - near);
-            mat[14] = - 2 * far * near / (far - near);
+            mat[10] = -(far + near) / (far - near);
+            mat[14] = -2 * far * near / (far - near);
 
             mat[ 3] = 0;
             mat[ 7] = 0;
-            mat[11] = - 1;
+            mat[11] = -1;
             mat[15] = 0;
 
             return new Matrix3D(mat);

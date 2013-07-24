@@ -25,11 +25,11 @@ window.onload = function() {
     surface.geometry = new SurfaceGeometry(35, 5);
 
     surface.geometry.set(
-        function(s, t) { return 50 * (2 * Math.cos(s) + t * Math.cos(s / 2)); },
-        function(s, t) { return 50 * (2 * Math.sin(s) + t * Math.cos(s / 2)); },
-        function(s, t) { return 50 * (t * Math.sin(s / 2)); },
+        function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.cos(s); },
+        function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.sin(s); },
+        function(s, t) { return t * Math.sin(s / 2); },
         -Math.PI, Math.PI,
-        -0.5, 0.5
+        -50, 50
     );
 
     /*
@@ -71,7 +71,7 @@ window.onload = function() {
     */
     surface.material = new Material();
     surface.material.texture = new Texture();
-
+    
     var image = new Image();
     image.src = 'test.bmp';
     image.onload = function() {
