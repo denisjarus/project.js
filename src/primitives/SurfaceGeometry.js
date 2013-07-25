@@ -41,13 +41,15 @@ SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
                     positions[index1++] = x(u, v);
                     positions[index1++] = y(u, v);
                     positions[index1++] = z(u, v);
-                    texcoords[index2++] = 5 + i / (this.slices - 1);
-                    texcoords[index2++] = 5 + j / (this.stacks - 1);
+                    texcoords[index2++] = i / (this.slices - 1);
+                    texcoords[index2++] = j / (this.stacks - 1);
                 }
             }
 
             this.setData(Geometry.POSITION, positions, 3);
             this.setData(Geometry.TEXCOORD, texcoords);
+
+            console.log(positions.length)
 
             // var vertices = Geometry.interleave(positions, texcoords, 5, 3);
 

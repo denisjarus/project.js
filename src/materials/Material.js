@@ -12,7 +12,6 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
         value: new Shader(
             [
                 'attribute vec3 position;',
-                'attribute vec3 normal;',
 
                 'uniform mat4 model;',
                 'uniform mat4 view;',

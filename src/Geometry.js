@@ -166,9 +166,7 @@ Object.defineProperties(Geometry, {
                 
                 a.normalize();
 
-                normals[i] = a.elements[0];
-                normals[i + 1] = a.elements[1];
-                normals[i + 2] = a.elements[2];
+                normals.set(a.elements, i);
             }
 
             return normals;
