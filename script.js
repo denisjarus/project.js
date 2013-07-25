@@ -56,24 +56,24 @@ window.onload = function() {
     //PLANE
 
     surface.geometry.set(
-        function(x, y) { return x; },
+        function(x, z) { return x; },
         function() { return 0; },
-        function(x, y) { return y; },
+        function(x, z) { return z; },
         -100, 100,
         -100, 100
     );
 
     surface.y = -100;
 
-    console.log(surface.geometry.getData('position'), Geometry.getNormals(surface.geometry));
+    console.log(Geometry.getNormals(surface.geometry, false));
 
-    surface.material = new Material();
-    surface.material.texture = new Texture();
+    surface.material = new TextureMaterial();
+    surface.material.diffuseMap = new Texture();
     
     var image = new Image();
     image.src = 'test.bmp';
     image.onload = function() {
-        surface.material.texture.setData(image);
+        surface.material.diffuseMap.setData(image);
     }
 
     window.onresize();

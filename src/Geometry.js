@@ -134,7 +134,7 @@ Object.defineProperties(Geometry, {
                 ac.elements[2] = positions[index + 2];
                 ac.subtract(a);
 
-                var normal = ab.cross(ac),
+                var normal = weighted ? ab.cross(ac) : ab.cross(ac).normalize(),
                     x = normal.elements[0],
                     y = normal.elements[1],
                     z = normal.elements[2];
@@ -155,6 +155,20 @@ Object.defineProperties(Geometry, {
                 normals[index] += x;
                 normals[index + 1] += y;
                 normals[index + 2] += z;
+            }
+
+            // normalize
+
+            for (i = 0, len = normals.length; i < len; i += 3) {
+                a.elements[0] = normals[i];
+                a.elements[1] = normals[i + 1];
+                a.elements[2] = normals[i + 2];
+                
+                a.normalize();
+
+                normals[i] = a.elements[0];
+                normals[i + 1] = a.elements[1];
+                normals[i + 2] = a.elements[2];
             }
 
             return normals;

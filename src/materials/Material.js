@@ -12,19 +12,21 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
         value: new Shader(
             [
                 'attribute vec3 position;',
-                'attribute vec2 texcoord;',
+                'attribute vec3 normal;',
 
                 'uniform mat4 model;',
                 'uniform mat4 view;',
                 'uniform mat4 projection;',
 
-                'varying vec2 uv;',
+                'uniform float far;',
+
+                'varying float depth;',
 
                 'void main(void) {',
 
-                '   uv = texcoord;',
-
                 '   gl_Position = projection * view * model * vec4(position, 1.0);',
+
+                '   depth = gl_Position.z / far;',
 
                 '}'
 
@@ -32,13 +34,11 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
             [
                 'precision mediump float;',
 
-                'uniform sampler2D texture;',
-
-                'varying vec2 uv;',
+                'varying float depth;',
 
                 'void main(void) {',
 
-                '   gl_FragColor = texture2D(texture, uv);',
+                '   gl_FragColor = vec4(vec3(1.0 - depth), 1.0);',
 
                 '}'
 
@@ -47,7 +47,8 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
                 uniforms.model = object.localToGlobal.elements;
                 uniforms.view = camera.globalToLocal.elements;
                 uniforms.projection = camera.projection.elements;
-                uniforms.texture = object.material.texture;
+
+                uniforms.far = camera.far;
             }
         )
     }
