@@ -4,8 +4,6 @@ var context,
     camera,
     surface;
 
-var program, uColor, uLight, uAmbient;
-
 window.onload = function() {
     var canvas = document.getElementById('canvas');
     if (!(context = canvas.getContext('experimental-webgl'))) {
@@ -23,19 +21,28 @@ window.onload = function() {
 
     surface = stage.addChild(new Mesh());
 
-    surface.material = new Material();
+    // surface.material = new Material();
 
-    // surface.material = new TextureMaterial();
-    // surface.material.diffuseMap = new Texture();
+    surface.material = new TextureMaterial();
+    surface.material.diffuseMap = new Texture();
+
+    var img = new Image();
+    img.src = 'test.bmp';
+    img.onload = function() {
+        surface.material.diffuseMap.setData(img);
+    };
 
     // surface.geometry = new SurfaceGeometry(35, 35);
     // surface.geometry = new SurfaceGeometry(2, 2);
-    surface.geometry = new SurfaceGeometry(35, 5);
+    surface.geometry = new SurfaceGeometry(60, 5);
 
-    surface.geometry.set(
-        function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.cos(s); },
-        function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.sin(s); },
-        function(s, t) { return t * Math.sin(s / 2); },
+    surface.geometry.parametrize(
+        Geometry.POSITION,
+        [
+            function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.cos(s); },
+            function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.sin(s); },
+            function(s, t) { return t * Math.sin(s / 2); },
+        ],
         -Math.PI, Math.PI,
         -50, 50
     );
@@ -62,10 +69,13 @@ window.onload = function() {
 
     //PLANE
 
-    // surface.geometry.set(
-    //     function(x, z) { return x; },
-    //     function() { return 0; },
-    //     function(x, z) { return z; },
+    // surface.geometry.parametrize(
+    //     Geometry.POSITION,
+    //     [
+    //         function(x, z) { return x; },
+    //         function() { return 0; },
+    //         function(x, z) { return z; },
+    //     ],
     //     -100, 100,
     //     -100, 100
     // );
@@ -97,6 +107,16 @@ window.onload = function() {
 
     //     surface.material.diffuseMap.setData(image);
     // }
+
+    surface.geometry.parametrize(
+        Geometry.TEXCOORD,
+        [
+            function(u, v) { return u; },
+            function(u, v) { return v; }
+        ],
+        0, 10,
+        0, 1
+    );
 
     window.onresize();
     window.requestAnimationFrame(enterFrame);

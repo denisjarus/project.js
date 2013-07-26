@@ -6,7 +6,7 @@ function Camera3D() {
         _aspectRatio: { value: 1.5, writable: true },
         _fieldOfView: { value: Math.PI / 3, writable: true },
 
-        _far: { value: 5000, writable: true },
+        _far: { value: 2000, writable: true },
         _near: { value: 0.1, writable: true },
 
         _projection: { value: null, writable: true }
