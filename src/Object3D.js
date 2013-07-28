@@ -64,9 +64,9 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
                     this._x,
                     this._y,
                     this._z,
-                    this._rotationX * Math.PI / 180,
-                    this._rotationY * Math.PI / 180,
-                    this._rotationZ * Math.PI / 180,
+                    this._rotationX,
+                    this._rotationY,
+                    this._rotationZ,
                     this._scaleX,
                     this._scaleY,
                     this._scaleZ

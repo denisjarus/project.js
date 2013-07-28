@@ -54,11 +54,9 @@ Object.defineProperties(Matrix3D.prototype, {
                 d08 = m20 * m33 - m23 * m30,
                 d09 = m21 * m32 - m22 * m31,
                 d10 = m21 * m33 - m23 * m31,
-                d11 = m22 * m33 - m23 * m32;
-
-            // calculate determinant
-
-            var d = d00 * d11 - d01 * d10 + d02 * d09 + d03 * d08 - d04 * d07 + d05 * d06;
+                d11 = m22 * m33 - m23 * m32,
+                
+                d = d00 * d11 - d01 * d10 + d02 * d09 + d03 * d08 - d04 * d07 + d05 * d06;
 
             if (d === 0) { console.warn('matrix is singular'); return null; }
             

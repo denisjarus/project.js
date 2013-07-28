@@ -1,11 +1,12 @@
-var context,
+var canvas,
+    context,
     renderer,
     stage,
     camera,
     surface;
 
 window.onload = function() {
-    var canvas = document.getElementById('canvas');
+    canvas = document.getElementById('canvas');
     if (!(context = canvas.getContext('experimental-webgl'))) {
         console.warn('webgl is not available');
     }
@@ -15,7 +16,7 @@ window.onload = function() {
     stage = new Object3D();
 
     camera = stage.addChild(new Camera3D());
-    camera.z = 500;
+    // camera.z = 500;
 
     // surface
 
@@ -130,14 +131,90 @@ window.onresize = function() {
     camera.aspectRatio = context.canvas.width / context.canvas.height;
 }
 
+var keys = {};
+
+window.onmousedown = function() {
+    canvas.webkitRequestPointerLock();
+}
+
+window.onkeydown = function(event) {
+    keys[event.keyCode] = true;
+}
+
+window.onkeyup = function(event) {
+    keys[event.keyCode] = undefined;
+}
+
+document.addEventListener('webkitpointerlockchange', function(event) {
+    if (document.webkitPointerLockElement === canvas) {
+        window.addEventListener('mousemove', mouseMove, false);
+    } else {
+        window.removeEventListener('mousemove', mouseMove);
+    }
+});
+
 document.oncontextmenu = function() {
     return false;
 }
 
 function enterFrame() {
-    surface.rotationY += 0.2;
+    var vec = new Vector3D([0, 0, 1]),
+        mat = new Matrix3D();
+
+    mat.copyFrom(camera.localToGlobal);
+    mat.position.elements.set([0, 0, 0]);
+
+    vec.transform(mat);
+
+    if (keys[Keyboard.W]) {
+        camera.x -= vec.x;
+        camera.y -= vec.y;
+        camera.z -= vec.z;
+    }
+    if (keys[Keyboard.S]) {
+        camera.x += vec.x;
+        camera.y += vec.y;
+        camera.z += vec.z;
+    }
+
+    vec.elements.set([1, 0, 0]);
+    vec.transform(mat);
+
+    if (keys[Keyboard.A]) {
+        camera.x -= vec.x;
+        camera.y -= vec.y;
+        camera.z -= vec.z;
+    }
+    if (keys[Keyboard.D]) {
+        camera.x += vec.x;
+        camera.y += vec.y;
+        camera.z += vec.z;
+    }
+
+    if (keys[Keyboard.SPACE]) {
+        camera.y++;
+    }
+    if (keys[Keyboard.CONTROL]) {
+        camera.y--;
+    }
 
     renderer.draw(stage, camera);
 
     window.requestAnimationFrame(enterFrame);
 }
+
+function mouseMove(event) {
+    camera.rotationY -= 0.2 * event.webkitMovementX * Math.PI / 180;
+    camera.rotationX -= 0.2 * event.webkitMovementY * Math.PI / 180;
+
+    camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
+}
+
+const Keyboard = Object.defineProperties({}, {
+    CONTROL: { value: 17 },
+    SPACE: { value: 32 },
+    A: { value: 65 },
+    D: { value: 68 },
+    S: { value: 83 },
+    W: { value: 87 }
+});

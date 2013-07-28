@@ -175,9 +175,9 @@ Object.defineProperties(Vector3D.prototype, {
                 mat = matrix.elements,
                 x = vec[0],
                 y = vec[1],
-                z = vec[2];
-
-            var w = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
+                z = vec[2],
+                
+                w = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
 
             vec[0] = (mat[0] * x + mat[4] * y + mat[ 8] * z + mat[12]) * w;
             vec[1] = (mat[1] * x + mat[5] * y + mat[ 9] * z + mat[13]) * w;
