@@ -1,9 +1,19 @@
 var canvas,
     context,
+
+    keyboard,
     renderer,
+
     stage,
     camera,
-    surface;
+    surface,
+
+    forwards,
+    backwards,
+    left,
+    right,
+    up,
+    down;
 
 window.onload = function() {
     canvas = document.getElementById('canvas');
@@ -119,6 +129,38 @@ window.onload = function() {
         0, 1
     );
 
+    // controls
+
+    var vec = new Vector3D(),
+        mat = new Matrix3D();
+
+    keyboard = new KeyboardControls(canvas);
+    keyboard.bind('W'.charCodeAt(0),
+        function() { forwards = true; },
+        function() { forwards = false; }
+    );
+    keyboard.bind('S'.charCodeAt(0),
+        function() { backwards = true; },
+        function() { backwards = false; }
+    );
+    keyboard.bind('A'.charCodeAt(0),
+        function() { left = true; },
+        function() { left = false; }
+    );
+    keyboard.bind('D'.charCodeAt(0),
+        function() { right = true; },
+        function() { right = false; }
+    );
+    keyboard.bind(KeyboardControls.SPACE,
+        function() { up = true; },
+        function() { up = false; }
+    );
+    keyboard.bind('C'.charCodeAt(0),
+        function() { down = true; },
+        function() { down = false; }
+    );
+
+
     window.onresize();
     window.requestAnimationFrame(enterFrame);
 }
@@ -131,18 +173,8 @@ window.onresize = function() {
     camera.aspectRatio = context.canvas.width / context.canvas.height;
 }
 
-var keys = {};
-
 window.onmousedown = function() {
     canvas.webkitRequestPointerLock();
-}
-
-window.onkeydown = function(event) {
-    keys[event.keyCode] = true;
-}
-
-window.onkeyup = function(event) {
-    keys[event.keyCode] = undefined;
 }
 
 document.addEventListener('webkitpointerlockchange', function(event) {
@@ -166,12 +198,12 @@ function enterFrame() {
 
     vec.transform(mat);
 
-    if (keys[Keyboard.W]) {
+    if (forwards) {
         camera.x -= vec.x;
         camera.y -= vec.y;
         camera.z -= vec.z;
     }
-    if (keys[Keyboard.S]) {
+    if (backwards) {
         camera.x += vec.x;
         camera.y += vec.y;
         camera.z += vec.z;
@@ -180,21 +212,21 @@ function enterFrame() {
     vec.elements.set([1, 0, 0]);
     vec.transform(mat);
 
-    if (keys[Keyboard.A]) {
+    if (left) {
         camera.x -= vec.x;
         camera.y -= vec.y;
         camera.z -= vec.z;
     }
-    if (keys[Keyboard.D]) {
+    if (right) {
         camera.x += vec.x;
         camera.y += vec.y;
         camera.z += vec.z;
     }
 
-    if (keys[Keyboard.SPACE]) {
+    if (up) {
         camera.y++;
     }
-    if (keys[Keyboard.CONTROL]) {
+    if (down) {
         camera.y--;
     }
 
@@ -209,12 +241,3 @@ function mouseMove(event) {
 
     camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
 }
-
-const Keyboard = Object.defineProperties({}, {
-    CONTROL: { value: 17 },
-    SPACE: { value: 32 },
-    A: { value: 65 },
-    D: { value: 68 },
-    S: { value: 83 },
-    W: { value: 87 }
-});
