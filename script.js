@@ -35,22 +35,15 @@ onload = function() {
     ground.geometry = new SurfaceGeometry(1, 1);
 
     ground.geometry.parametrize(
-        Geometry.POSITION,
-        [
-            function(x, y) { return x; },
-            function(x, y) { return 0; },
-            function(x, y) { return y; }
-        ],
+        Geometry.VERTEX_POSITION,
+        function(x, y) { return [x, 0, y]; },
         -500, 500,
         -500, 500
     );
 
     ground.geometry.parametrize(
-        Geometry.TEXCOORD,
-        [
-            function(u, v) { return u; },
-            function(u, v) { return v; }
-        ],
+        Geometry.VERTEX_TEXCOORD,
+        function(u, v) { return [u, v]; },
         0, 10,
         0, 10
     );
@@ -80,12 +73,14 @@ onload = function() {
     surface.geometry = new SurfaceGeometry(60, 5);
 
     surface.geometry.parametrize(
-        Geometry.POSITION,
-        [
-            function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.cos(s); },
-            function(s, t) { return (150 + t * Math.cos(s / 2)) * Math.sin(s); },
-            function(s, t) { return t * Math.sin(s / 2); },
-        ],
+        Geometry.VERTEX_POSITION,
+        function(s, t) {
+            return [
+                (150 + t * Math.cos(s / 2)) * Math.cos(s),
+                (150 + t * Math.cos(s / 2)) * Math.sin(s),
+                t * Math.sin(s / 2)
+            ];
+        },
         -Math.PI, Math.PI,
         -50, 50
     );
@@ -101,11 +96,8 @@ onload = function() {
     // );
 
     surface.geometry.parametrize(
-        Geometry.TEXCOORD,
-        [
-            function(u, v) { return u; },
-            function(u, v) { return v; }
-        ],
+        Geometry.VERTEX_TEXCOORD,
+        function(u, v) { return [u, v]; },
         0, 10,
         0, 1
     );
@@ -142,8 +134,8 @@ onload = function() {
     );
 
 
-    window.onresize();
-    window.requestAnimationFrame(enterFrame);
+    onresize();
+    requestAnimationFrame(enterFrame);
 }
 
 onresize = function() {
@@ -220,7 +212,7 @@ function enterFrame(frame) {
 
     renderer.draw(stage, camera);
 
-    window.requestAnimationFrame(enterFrame);
+    requestAnimationFrame(enterFrame);
 }
 
 function mouseMove(event) {

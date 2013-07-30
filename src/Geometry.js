@@ -44,7 +44,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             this._strides[attribute] = stride || 0;
             this._offsets[attribute] = offset || 0;
 
-            if (attribute === Geometry.POSITION) {
+            if (attribute === Geometry.VERTEX_POSITION) {
                 this._update = true;
             }
 
@@ -75,9 +75,9 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
     },
     normals: {
         get: function() {
-            var positions = this._data[Geometry.POSITION],
-                stride = this._strides[Geometry.POSITION] || 3,
-                offset = this._offsets[Geometry.POSITION],
+            var positions = this._data[Geometry.VERTEX_POSITION],
+                stride = this._strides[Geometry.VERTEX_POSITION] || 3,
+                offset = this._offsets[Geometry.VERTEX_POSITION],
 
                 indices = this._indices,
                 normals = this._normals;
@@ -129,8 +129,8 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
 Object.defineProperties(Geometry, {
     _counter: { value: 0, writable: true },
 
-    POSITION: { value: 'position' },
-    TEXCOORD: { value: 'texcoord' },
+    VERTEX_POSITION: { value: 'position' },
+    VERTEX_TEXCOORD: { value: 'texcoord' },
 
     interleave: {
         value: function (a, b, stride, offset) {
@@ -157,9 +157,9 @@ Object.defineProperties(Geometry, {
                 throw new Error();
             }
 
-            var positions = geometry.getData(Geometry.POSITION),
-                stride = geometry.getStride(Geometry.POSITION) || 3,
-                offset = geometry.getOffset(Geometry.POSITION),
+            var positions = geometry.getData(Geometry.VERTEX_POSITION),
+                stride = geometry.getStride(Geometry.VERTEX_POSITION) || 3,
+                offset = geometry.getOffset(Geometry.VERTEX_POSITION),
 
                 normals = new Float32Array(positions.length / stride * 3),
 

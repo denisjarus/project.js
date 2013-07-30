@@ -3,25 +3,24 @@ function SurfaceGeometry(slices, stacks) {
     Geometry.call(this);
 
     Object.defineProperties(this, {
-        slices: { value: Math.max(0, slices || 16) },
-        stacks: { value: Math.max(0, stacks || 16) }
+        _slices: { value: Math.max(0, slices || 16) },
+        _stacks: { value: Math.max(0, stacks || 16) }
     });
 
-    var indices = [];
+    var indices = new Float32Array(slices * stacks * 6),
 
-    for (var index = 0, i = 0; i < slices; i++) {
+        offset = 0;
+
+    for (var i = 0; i < slices; i++) {
         for (var j = 0; j < stacks; j++) {
             var a = i * (stacks + 1) + j,
-                b = a + (stacks + 1);
+                b = a + 1,
+                c = a + (stacks + 1),
+                d = c + 1;
 
-            indices.push(
-                a, a + 1, b,
-                a + 1, b + 1, b
-            );
+            indices.set([a, b, c, b, d, c], (offset++) * 6);
         }
     }
-
-    console.log(indices.length / 3, stacks * slices)
 
     this.indices = new Uint16Array(indices);
 }
@@ -29,28 +28,27 @@ function SurfaceGeometry(slices, stacks) {
 SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
     parametrize: {
         value: function(attribute, f, uMin, uMax, vMin, vMax) {
-            var data = this.getData(attribute),
-                slices = this.slices,
-                stacks = this.stacks,
-                stride = f.length,
-                length = (slices + 1) * (stacks + 1) * stride;
+            var vertices = this.getData(attribute),
+                length = (this._slices + 1) * (this._stacks + 1) * f(uMin, vMin).length,
 
-            if (!data || data.length !== length) {
-                data = new Float32Array(length);
+                offset = 0;
+
+            if (!vertices || vertices.length !== length) {
+                vertices = new Float32Array(length);
             }
 
-            for (var index = 0, i = 0; i <= slices; i++) {
-                for (var j = 0; j <= stacks; j++) {
+            for (var i = 0, slices = this._slices; i <= slices; i++) {
+                for (var j = 0, stacks = this._stacks; j <= stacks; j++) {
                     var u = uMin + (uMax - uMin) * i / slices,
-                        v = vMin + (vMax - vMin) * j / stacks;
+                        v = vMin + (vMax - vMin) * j / stacks,
 
-                    for (var k = 0; k < stride; k++) {
-                        data[index++] = f[k](u, v);
-                    }
+                        values = f(u, v);
+
+                    vertices.set(values, (offset++) * values.length);
                 }
             }
 
-            this.setData(attribute, data);
+            this.setData(attribute, vertices);
         }
     }
 });
