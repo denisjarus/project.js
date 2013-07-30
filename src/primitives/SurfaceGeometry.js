@@ -9,7 +9,7 @@ function SurfaceGeometry(slices, stacks) {
 
     var indices = [];
 
-    for (var i = 0; i < slices; i++) {
+    for (var index = 0, i = 0; i < slices; i++) {
         for (var j = 0; j < stacks; j++) {
             var a = i * (stacks + 1) + j,
                 b = a + (stacks + 1);
@@ -21,6 +21,8 @@ function SurfaceGeometry(slices, stacks) {
         }
     }
 
+    console.log(indices.length / 3, stacks * slices)
+
     this.indices = new Uint16Array(indices);
 }
 
@@ -30,19 +32,19 @@ SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
             var data = this.getData(attribute),
                 slices = this.slices,
                 stacks = this.stacks,
-                length = (slices + 1) * (stacks + 1) * f.length,
-                index = 0;
+                stride = f.length,
+                length = (slices + 1) * (stacks + 1) * stride;
 
             if (!data || data.length !== length) {
                 data = new Float32Array(length);
             }
 
-            for (var i = 0; i <= slices; i++) {
+            for (var index = 0, i = 0; i <= slices; i++) {
                 for (var j = 0; j <= stacks; j++) {
                     var u = uMin + (uMax - uMin) * i / slices,
                         v = vMin + (vMax - vMin) * j / stacks;
 
-                    for (var k = 0, len = f.length; k < len; k++) {
+                    for (var k = 0; k < stride; k++) {
                         data[index++] = f[k](u, v);
                     }
                 }

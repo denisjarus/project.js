@@ -9,7 +9,10 @@ function Geometry() {
         _strides: { value: {} },
         _offsets: { value: {} },
 
-        _indices: { value: null, writable: true }
+        _indices: { value: null, writable: true },
+        _normals: { value: null, writable: true },
+
+        _update: { value: false, writable: true }
     });
 }
 
@@ -41,6 +44,10 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             this._strides[attribute] = stride || 0;
             this._offsets[attribute] = offset || 0;
 
+            if (attribute === Geometry.POSITION) {
+                this._update = true;
+            }
+
             this.dispatchEvent(new DataEvent(DataEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize));
         }
     },
@@ -60,8 +67,61 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             var resize = !this._indices || this._indices.length !== data.length;
 
             this._indices = data;
+
+            this._update = true;
             
             this.dispatchEvent(new DataEvent(DataEvent.VERTEX_INDICES_CHANGE, null, resize));
+        }
+    },
+    normals: {
+        get: function() {
+            var positions = this._data[Geometry.POSITION],
+                stride = this._strides[Geometry.POSITION] || 3,
+                offset = this._offsets[Geometry.POSITION],
+
+                indices = this._indices,
+                normals = this._normals;
+
+            if (!indices || !positions) {
+                return null;
+            }
+
+            if (!normals || normals.length !== indices.length) {
+                normals = new Float32Array(indices.length);
+            }
+
+            if (this._update) {
+                this._update = false;
+
+                var a = new Vector3D(),
+                    ab = new Vector3D(),
+                    ac = new Vector3D();
+
+                for (var i = 0, len = indices.length; i < len; i += 3) {
+                    var index = offset + indices[i] * stride;
+                    a.elements[0] = positions[index];
+                    a.elements[1] = positions[index + 1];
+                    a.elements[2] = positions[index + 2];
+
+                    index = offset + indices[i + 1] * stride;
+                    ab.elements[0] = positions[index];
+                    ab.elements[1] = positions[index + 1];
+                    ab.elements[2] = positions[index + 2];
+                    ab.subtract(a);
+
+                    index = offset + indices[i + 2] * stride;
+                    ac.elements[0] = positions[index];
+                    ac.elements[1] = positions[index + 1];
+                    ac.elements[2] = positions[index + 2];
+                    ac.subtract(a);
+
+                    normals.set(ab.cross(ac).normalize().elements, i);
+                }
+
+                this._normals = normals;
+            }
+
+            return normals;
         }
     }
 });
@@ -104,14 +164,11 @@ Object.defineProperties(Geometry, {
                 normals = new Float32Array(positions.length / stride * 3),
 
                 indices = geometry.indices,
+                faceNormals = new Float32Array(indices.length),
 
                 a = new Vector3D(),
                 ab = new Vector3D(),
                 ac = new Vector3D();
-
-            if (!positions || !indices) {
-                return null;
-            }
 
             for (var i = 0, len = indices.length; i < len; i += 3) {
 
