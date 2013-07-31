@@ -5,6 +5,7 @@ var canvas,
     renderer,
 
     stage,
+    light,
     camera,
     surface,
 
@@ -25,6 +26,8 @@ onload = function() {
     
     stage = new Object3D();
 
+    light = stage.addChild(new Light3D());
+
     camera = stage.addChild(new Camera3D());
     // camera.z = 500;
 
@@ -32,12 +35,12 @@ onload = function() {
 
     var ground = stage.addChild(new Mesh());
     ground.y = - 200;
-    ground.geometry = new SurfaceGeometry(1, 1);
+    ground.geometry = new SurfaceGeometry(10, 10);
 
     ground.geometry.parametrize(
         Geometry.VERTEX_POSITION,
         function(x, y) { return [x, 0, y]; },
-        -500, 500,
+        500, -500,
         -500, 500
     );
 
@@ -48,9 +51,9 @@ onload = function() {
         0, 10
     );
 
-    console.log(ground.geometry.indices, ground.geometry.normals);
+    ground.geometry.setData('normal', Geometry.getNormals(ground.geometry));
 
-    ground.material = new TextureMaterial();
+    ground.material = new GouraudMaterial();
     ground.material.diffuseMap = new Texture();
 
     var img = new Image();
@@ -64,9 +67,8 @@ onload = function() {
 
     surface = stage.addChild(new Mesh());
 
-    // surface.material = new Material();
-
-    surface.material = ground.material;
+    surface.material = new Material();
+    surface.material.diffuseMap = ground.material.diffuseMap;
 
     // surface.geometry = new SurfaceGeometry(35, 35);
     // surface.geometry = new SurfaceGeometry(2, 2);
@@ -133,7 +135,6 @@ onload = function() {
         function() { down = false; }
     );
 
-
     onresize();
     requestAnimationFrame(enterFrame);
 }
@@ -152,15 +153,11 @@ onmousedown = function() {
 
 document.addEventListener('webkitpointerlockchange', function(event) {
     if (document.webkitPointerLockElement === canvas) {
-        window.addEventListener('mousemove', mouseMove, false);
+        addEventListener('mousemove', mouseMove, false);
     } else {
-        window.removeEventListener('mousemove', mouseMove);
+        removeEventListener('mousemove', mouseMove);
     }
 });
-
-document.oncontextmenu = function() {
-    return false;
-}
 
 var lastFrame = 0;
 
@@ -209,6 +206,8 @@ function enterFrame(frame) {
     if (down) {
         camera.y--;
     }
+
+    surface.rotationY += 0.1 * Math.PI / 180;
 
     renderer.draw(stage, camera);
 

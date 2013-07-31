@@ -43,7 +43,7 @@ Object.defineProperties(EventDispatcher.prototype, {
     dispatchEvent: {
         value: function(event) {
             if (event instanceof Event3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
             
             event.target = this;

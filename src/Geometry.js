@@ -35,7 +35,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
     setData: {
         value: function(attribute, data, stride, offset) {
             if (data instanceof Float32Array === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var resize = !this._data[attribute] || this._data[attribute].length !== data.length;
@@ -57,7 +57,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(data) {
             if (data instanceof Uint16Array === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             if (data.length % 3 !== 0) {
@@ -135,7 +135,7 @@ Object.defineProperties(Geometry, {
     interleave: {
         value: function (a, b, stride, offset) {
             if (a instanceof Float32Array === false || b instanceof Float32Array === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var array = new Float32Array(a.length + b.length);
@@ -154,7 +154,7 @@ Object.defineProperties(Geometry, {
     getNormals: {
         value: function(geometry, weighted) {
             if (geometry instanceof Geometry === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var positions = geometry.getData(Geometry.VERTEX_POSITION),

@@ -20,7 +20,7 @@ Object.defineProperties(Matrix3D.prototype, {
     copyFrom: {
         value: function(matrix) {
             if (matrix instanceof Matrix3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this.elements.set(matrix.elements);
 
@@ -104,7 +104,7 @@ Object.defineProperties(Matrix3D.prototype, {
     append: {
         value: function(matrix) {
             if (matrix instanceof Matrix3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
             
             var a = this.elements,

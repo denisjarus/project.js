@@ -14,7 +14,7 @@ TextureMaterial.prototype = Object.create(Material.prototype, {
         },
         set: function(texture) {
             if (texture instanceof Texture === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this._diffuseMap = texture;
         }

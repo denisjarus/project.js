@@ -19,7 +19,7 @@ Object.defineProperties(Vector3D.prototype, {
     copyFrom: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             this.elements.set(vector.elements);
@@ -30,7 +30,7 @@ Object.defineProperties(Vector3D.prototype, {
     add: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var a = this.elements,
@@ -46,7 +46,7 @@ Object.defineProperties(Vector3D.prototype, {
     subtract: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var a = this.elements,
@@ -62,7 +62,7 @@ Object.defineProperties(Vector3D.prototype, {
     cross: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var a = this.elements,
@@ -81,7 +81,7 @@ Object.defineProperties(Vector3D.prototype, {
     distance: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var a = this.elements,
@@ -96,7 +96,7 @@ Object.defineProperties(Vector3D.prototype, {
     dot: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
 
             var a = this.elements,
@@ -168,7 +168,7 @@ Object.defineProperties(Vector3D.prototype, {
     transform: {
         value: function(matrix) {
             if (matrix instanceof Matrix3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
             
             var vec = this.elements,

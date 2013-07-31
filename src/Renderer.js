@@ -11,7 +11,7 @@ function Renderer(context) {
 
     this.setContext = function(context) {
         if (context instanceof WebGLRenderingContext === false) {
-            throw new Error();
+            throw new TypeError();
         }
         gl = context;
 
@@ -30,7 +30,7 @@ function Renderer(context) {
 
     this.draw = function(stage, camera) {
         if (stage instanceof Object3D === false || camera instanceof Camera3D === false) {
-            throw new Error();
+            throw new TypeError();
         }
         if (stage.parent) {
             throw new Error();
@@ -68,13 +68,11 @@ function Renderer(context) {
             geometry = null,
             material = null,
 
-            attributes = [],
-
-            mode = null;
+            attributes = [];
 
         for (var object, i = 0; object = renderList[i]; i++) {
             if (!object.geometry || !object.material) {
-                continue;
+                break;
             }
 
             material = object.material;
@@ -129,6 +127,12 @@ function Renderer(context) {
 
     function sort(a, b) {
         var order;
+        if (!(a.geometry && a.material)) {
+            return 1;
+        }
+        if (!(b.geometry && b.material)) {
+            return -1;
+        }
         if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
             return order;
         }
@@ -225,9 +229,7 @@ function Renderer(context) {
             for (var uniform, i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
                 uniform = gl.getActiveUniform(program, i);
 
-                Object.defineProperty(uniforms, uniform.name, {
-                    set: createUniform(uniform, gl.getUniformLocation(program, uniform.name))
-                });
+                Object.defineProperty(uniforms, uniform.name, createUniform(program, uniform));
             }
 
             program.uniforms = uniforms;
@@ -249,46 +251,72 @@ function Renderer(context) {
         return shader;
     }
 
-    function createUniform(uniform, location) {
-        var setter = null;
-
-        // vector types
-
-        switch (uniform.type) {
-            case gl.FLOAT: setter = gl.uniform1f; break;
-            case gl.FLOAT_VEC2: setter = gl.uniform2fv; break;
-            case gl.FLOAT_VEC3: setter = gl.uniform3fv; break;
-            case gl.FLOAT_VEC4: setter = gl.uniform4fv; break;
-        }
-
-        if (setter) {
-            return function(value) {
-                setter.call(gl, location, value);
-            };
-        }
-
-        // matrix types
+    function createUniform(program, uniform) {
+        var location = gl.getUniformLocation(program, uniform.name),
+            setter = null,
+            getter = null;
 
         switch (uniform.type) {
-            case gl.FLOAT_MAT2: setter = gl.uniformMatrix2fv; break;
-            case gl.FLOAT_MAT3: setter = gl.uniformMatrix3fv; break;
-            case gl.FLOAT_MAT4: setter = gl.uniformMatrix4fv; break;
-        }
-        
-        if (setter) {
-            return function(matrix) {
-                setter.call(gl, location, false, matrix);
-            };
+
+            // vector types
+
+            case gl.FLOAT:
+                setter = function(value) {
+                    gl.uniform1f(location, value);
+                };
+                break;
+
+            case gl.FLOAT_VEC2:
+                setter = function(value) {
+                    gl.uniform2fv(location, value);
+                };
+                break;
+
+            case gl.FLOAT_VEC3:
+                setter = function(value) {
+                    gl.uniform3fv(location, value);
+                };
+                break;
+
+            case gl.FLOAT_VEC4:
+                setter = function(value) {
+                    gl.uniform4fv(location, value);
+                };
+                break;
+
+            // matrix types
+
+            case gl.FLOAT_MAT2:
+                setter = function(matrix) {
+                    gl.uniformMatrix2fv(location, false, matrix);
+                };
+                break;
+
+            case gl.FLOAT_MAT3:
+                setter = function(matrix) {
+                    gl.uniformMatrix3fv(location, false, matrix);
+                };
+                break;
+
+            case gl.FLOAT_MAT4:
+                setter = function(matrix) {
+                    gl.uniformMatrix4fv(location, false, matrix);
+                };
+                break;
+
+            // sampler types
+
+            case gl.SAMPLER_2D:
+                setter = function(texture) {
+                    gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.uniform1i(location, 0);
+                };
+                break;
         }
 
-        // sampler types
-
-        if (uniform.type === gl.SAMPLER_2D) {
-            return function(texture) {
-                gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
-                gl.activeTexture(gl.TEXTURE0);
-                gl.uniform1i(location, 0);
-            };
+        return {
+            set: setter
         }
     }
 

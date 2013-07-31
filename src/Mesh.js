@@ -22,7 +22,7 @@ Mesh.prototype = Object.create(Object3D.prototype, {
         },
         set: function(geometry) {
             if (geometry instanceof Geometry === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this._geometry = geometry;
             this.dispatchEvent(new Event3D(Event3D.GEOMETRY_CHANGE));
@@ -34,7 +34,7 @@ Mesh.prototype = Object.create(Object3D.prototype, {
         },
         set: function(material) {
             if (material instanceof Material === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this._material = material;
             this.dispatchEvent(new Event3D(Event3D.MATERIAL_CHANGE));
