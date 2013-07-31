@@ -4,6 +4,7 @@ function Matrix3D(elements) {
     } else if (elements instanceof Float32Array === false) {
         elements = new Float32Array(elements);
     }
+    
     Object.defineProperties(this, {
         elements: { value: elements },
         position: { value: new Vector3D(elements.subarray(12, 15)) }
@@ -19,7 +20,7 @@ Object.defineProperties(Matrix3D.prototype, {
     copyFrom: {
         value: function(matrix) {
             if (matrix instanceof Matrix3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this.elements.set(matrix.elements);
 
@@ -35,7 +36,6 @@ Object.defineProperties(Matrix3D.prototype, {
     },
     invert: {
         value: function() {
-            //cache matrix elements
             var mat = this.elements,
                 m00 = mat[0], m01 = mat[4], m02 = mat[ 8], m03 = mat[12],
                 m10 = mat[1], m11 = mat[5], m12 = mat[ 9], m13 = mat[13],
@@ -54,10 +54,9 @@ Object.defineProperties(Matrix3D.prototype, {
                 d08 = m20 * m33 - m23 * m30,
                 d09 = m21 * m32 - m22 * m31,
                 d10 = m21 * m33 - m23 * m31,
-                d11 = m22 * m33 - m23 * m32;
-
-            //calculate determinant
-            var d = d00 * d11 - d01 * d10 + d02 * d09 + d03 * d08 - d04 * d07 + d05 * d06;
+                d11 = m22 * m33 - m23 * m32,
+                
+                d = d00 * d11 - d01 * d10 + d02 * d09 + d03 * d08 - d04 * d07 + d05 * d06;
 
             if (d === 0) { console.warn('matrix is singular'); return null; }
             
@@ -105,16 +104,17 @@ Object.defineProperties(Matrix3D.prototype, {
     append: {
         value: function(matrix) {
             if (matrix instanceof Matrix3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
-            //cache matrix elements
+            
             var a = this.elements,
                 a00 = a[0], a01 = a[4], a02 = a[ 8], a03 = a[12],
                 a10 = a[1], a11 = a[5], a12 = a[ 9], a13 = a[13],
                 a20 = a[2], a21 = a[6], a22 = a[10], a23 = a[14],
                 a30 = a[3], a31 = a[7], a32 = a[11], a33 = a[15];
 
-            //cache only the current line of another matrix 
+            // cache only the current line of another matrix 
+
             var b = matrix.elements,
                 b0, b1, b2, b3;
 
@@ -147,7 +147,6 @@ Object.defineProperties(Matrix3D.prototype, {
     },
     recompose: {
         value: function(x, y, z, rx, ry, rz, sx, sy, sz) {
-            //cache sines and cosines
             var sinX = Math.sin(rx), cosX = Math.cos(rx),
                 sinY = Math.sin(ry), cosY = Math.cos(ry),
                 sinZ = Math.sin(rz), cosZ = Math.cos(rz),
@@ -177,7 +176,7 @@ Object.defineProperties(Matrix3D.prototype, {
             mat[ 9] = cosXscaleZ * sinYsinZ - sinXscaleZ * cosZ;
             mat[13] = y;
 
-            mat[ 2] = - sinY * sx;
+            mat[ 2] = -sinY * sx;
             mat[ 6] = sinXscaleY * cosY;
             mat[10] = cosXscaleZ * cosY;
             mat[14] = z;
@@ -190,26 +189,27 @@ Object.defineProperties(Matrix3D.prototype, {
 Object.defineProperties(Matrix3D, {
     perspective: {
         value: function(fieldOfView, aspectRatio, near, far) {
-            var mat = new Float32Array(16);
+            var mat = new Float32Array(16),
+                tan = Math.tan(fieldOfView * 0.5);
             
-            mat[ 0] = 1 / Math.tan(fieldOfView / 2);
+            mat[ 0] = 1 / (tan * aspectRatio);
             mat[ 4] = 0;
             mat[ 8] = 0;
             mat[12] = 0;
 
             mat[ 1] = 0;
-            mat[ 5] = mat[0] * aspectRatio;
+            mat[ 5] = 1 / tan;
             mat[ 9] = 0;
             mat[13] = 0;
 
             mat[ 2] = 0;
             mat[ 6] = 0;
-            mat[10] = - (far + near) / (far - near);
-            mat[14] = - 2 * far * near / (far - near);
+            mat[10] = -(far + near) / (far - near);
+            mat[14] = -2 * far * near / (far - near);
 
             mat[ 3] = 0;
             mat[ 7] = 0;
-            mat[11] = - 1;
+            mat[11] = -1;
             mat[15] = 0;
 
             return new Matrix3D(mat);

@@ -4,6 +4,7 @@ function Vector3D(elements) {
     } else if (elements instanceof Float32Array === false) {
         elements = new Float32Array(elements);
     }
+    
     Object.defineProperties(this, {
         elements: { value: elements }
     });
@@ -18,8 +19,9 @@ Object.defineProperties(Vector3D.prototype, {
     copyFrom: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
+
             this.elements.set(vector.elements);
 
             return this;
@@ -28,8 +30,9 @@ Object.defineProperties(Vector3D.prototype, {
     add: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
+
             var a = this.elements,
                 b = vector.elements;
 
@@ -43,8 +46,9 @@ Object.defineProperties(Vector3D.prototype, {
     subtract: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
+
             var a = this.elements,
                 b = vector.elements;
 
@@ -58,14 +62,18 @@ Object.defineProperties(Vector3D.prototype, {
     cross: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
-            var a = this.elements,
-                b = vector.elements;
 
-            a[0] = a[1] * b[2] - a[2] * b[1];
-            a[1] = a[2] * b[0] - a[0] * b[2];
-            a[2] = a[0] * b[1] - a[1] * b[0];
+            var a = this.elements,
+                b = vector.elements,
+                x = a[0],
+                y = a[1],
+                z = a[2];
+
+            a[0] = y * b[2] - z * b[1];
+            a[1] = z * b[0] - x * b[2];
+            a[2] = x * b[1] - y * b[0];
 
             return this;
         }
@@ -73,8 +81,9 @@ Object.defineProperties(Vector3D.prototype, {
     distance: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
+
             var a = this.elements,
                 b = vector.elements,
                 x = b[0] - a[0],
@@ -87,8 +96,9 @@ Object.defineProperties(Vector3D.prototype, {
     dot: {
         value: function(vector) {
             if (vector instanceof Vector3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
+
             var a = this.elements,
                 b = vector.elements;
 
@@ -125,9 +135,9 @@ Object.defineProperties(Vector3D.prototype, {
         value: function() {
             var vec = this.elements;
 
-            vec[0] = - vec[0];
-            vec[1] = - vec[1];
-            vec[2] = - vec[2];
+            vec[0] = -vec[0];
+            vec[1] = -vec[1];
+            vec[2] = -vec[2];
 
             return this;
         }
@@ -150,7 +160,7 @@ Object.defineProperties(Vector3D.prototype, {
 
             vec[0] *= scalar;
             vec[1] *= scalar;
-            vec[3] *= scalar;
+            vec[2] *= scalar;
 
             return this;
         }
@@ -158,16 +168,16 @@ Object.defineProperties(Vector3D.prototype, {
     transform: {
         value: function(matrix) {
             if (matrix instanceof Matrix3D === false) {
-                throw new Error();
+                throw new TypeError();
             }
+            
             var vec = this.elements,
                 mat = matrix.elements,
                 x = vec[0],
                 y = vec[1],
-                z = vec[2];
-
-            //calculate 1 / w
-            var w = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
+                z = vec[2],
+                
+                w = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
 
             vec[0] = (mat[0] * x + mat[4] * y + mat[ 8] * z + mat[12]) * w;
             vec[1] = (mat[1] * x + mat[5] * y + mat[ 9] * z + mat[13]) * w;

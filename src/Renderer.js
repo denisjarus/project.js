@@ -11,7 +11,7 @@ function Renderer(context) {
 
     this.setContext = function(context) {
         if (context instanceof WebGLRenderingContext === false) {
-            throw new Error();
+            throw new TypeError();
         }
         gl = context;
 
@@ -30,7 +30,7 @@ function Renderer(context) {
 
     this.draw = function(stage, camera) {
         if (stage instanceof Object3D === false || camera instanceof Camera3D === false) {
-            throw new Error();
+            throw new TypeError();
         }
         if (stage.parent) {
             throw new Error();
@@ -62,18 +62,24 @@ function Renderer(context) {
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        //render objects
+        // render objects
 
         var shader = null,
             geometry = null,
+            material = null,
 
             attributes = [];
 
         for (var object, i = 0; object = renderList[i]; i++) {
-            if (shader !== object.material.shader) {
-                shader = object.material.shader;
+            if (!object.geometry || !object.material) {
+                break;
+            }
+
+            material = object.material;
+
+            if (shader !== material.shader) {
+                shader = material.shader;
                 geometry = null;
-                material = null;
 
                 var program = getProgram(shader);
 
@@ -99,7 +105,7 @@ function Renderer(context) {
 
                         gl.enableVertexAttribArray(j);
                         gl.bindBuffer(gl.ARRAY_BUFFER, getVertexBuffer(geometry, name));
-                        gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name), geometry.getOffset(name));
+                        gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name) * 4, geometry.getOffset(name) * 4);
                     }
 
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(geometry));
@@ -120,15 +126,21 @@ function Renderer(context) {
     };
 
     function sort(a, b) {
-        var compare;
-        if ((compare = a.material.shader.id - b.material.shader.id) !== 0) {
-            return compare;
+        var order;
+        if (!(a.geometry && a.material)) {
+            return 1;
         }
-        if ((compare = a.geometry.id - b.geometry.id) !== 0) {
-            return compare;
+        if (!(b.geometry && b.material)) {
+            return -1;
         }
-        if ((compare = a.material.id - b.material.id) !== 0) {
-            return compare;
+        if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
+            return order;
+        }
+        if ((order = a.geometry.id - b.geometry.id) !== 0) {
+            return order;
+        }
+        if ((order = a.material.id - b.material.id) !== 0) {
+            return order;
         }
         return 0;
     }
@@ -149,7 +161,7 @@ function Renderer(context) {
         }
     }
 
-    //objects
+    // objects
 
     function onAdd(event) {
         addObject(event.target);
@@ -194,7 +206,7 @@ function Renderer(context) {
         updateList = true;
     }
 
-    //programs
+    // programs
 
     var programs = {};
 
@@ -217,9 +229,7 @@ function Renderer(context) {
             for (var uniform, i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
                 uniform = gl.getActiveUniform(program, i);
 
-                Object.defineProperty(uniforms, uniform.name, {
-                    set: createUniform(uniform, gl.getUniformLocation(program, uniform.name))
-                });
+                Object.defineProperty(uniforms, uniform.name, createUniform(program, uniform));
             }
 
             program.uniforms = uniforms;
@@ -241,47 +251,76 @@ function Renderer(context) {
         return shader;
     }
 
-    function createUniform(uniform, location) {
-        var setter = null;
+    function createUniform(program, uniform) {
+        var location = gl.getUniformLocation(program, uniform.name),
+            setter = null,
+            getter = null;
 
-        //vector types
         switch (uniform.type) {
-            case gl.FLOAT: setter = gl.uniform1f; break;
-            case gl.FLOAT_VEC2: setter = gl.uniform2fv; break;
-            case gl.FLOAT_VEC3: setter = gl.uniform3fv; break;
-            case gl.FLOAT_VEC4: setter = gl.uniform4fv; break;
+
+            // vector types
+
+            case gl.FLOAT:
+                setter = function(value) {
+                    gl.uniform1f(location, value);
+                };
+                break;
+
+            case gl.FLOAT_VEC2:
+                setter = function(value) {
+                    gl.uniform2fv(location, value);
+                };
+                break;
+
+            case gl.FLOAT_VEC3:
+                setter = function(value) {
+                    gl.uniform3fv(location, value);
+                };
+                break;
+
+            case gl.FLOAT_VEC4:
+                setter = function(value) {
+                    gl.uniform4fv(location, value);
+                };
+                break;
+
+            // matrix types
+
+            case gl.FLOAT_MAT2:
+                setter = function(matrix) {
+                    gl.uniformMatrix2fv(location, false, matrix);
+                };
+                break;
+
+            case gl.FLOAT_MAT3:
+                setter = function(matrix) {
+                    gl.uniformMatrix3fv(location, false, matrix);
+                };
+                break;
+
+            case gl.FLOAT_MAT4:
+                setter = function(matrix) {
+                    gl.uniformMatrix4fv(location, false, matrix);
+                };
+                break;
+
+            // sampler types
+
+            case gl.SAMPLER_2D:
+                setter = function(texture) {
+                    gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
+                    gl.activeTexture(gl.TEXTURE0);
+                    gl.uniform1i(location, 0);
+                };
+                break;
         }
 
-        if (setter) {
-            return function(value) {
-                setter.call(gl, location, value);
-            };
-        }
-
-        //matrix types
-        switch (uniform.type) {
-            case gl.FLOAT_MAT2: setter = gl.uniformMatrix2fv; break;
-            case gl.FLOAT_MAT3: setter = gl.uniformMatrix3fv; break;
-            case gl.FLOAT_MAT4: setter = gl.uniformMatrix4fv; break;
-        }
-        
-        if (setter) {
-            return function(matrix) {
-                setter.call(gl, location, false, matrix);
-            };
-        }
-
-        //sampler types
-        if (uniform.type === gl.SAMPLER_2D) {
-            return function(texture) {
-                gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
-                gl.activeTexture(gl.TEXTURE0);
-                gl.uniform1i(location, 0);
-            };
+        return {
+            set: setter
         }
     }
 
-    //vertex arrays
+    // vertex arrays
 
     var vertexArrays = {};
 
@@ -294,7 +333,7 @@ function Renderer(context) {
         return array;
     }
 
-    //vertex buffers
+    // vertex buffers
 
     var vertexBuffers = {};
 
@@ -337,7 +376,7 @@ function Renderer(context) {
         }
     }
 
-    //index buffers
+    // index buffers
 
     var indexBuffers = {};
 
@@ -373,7 +412,7 @@ function Renderer(context) {
         cache.resize = event.resize;
     }
 
-    //textures
+    // textures
 
     var textures = {};
 
@@ -389,14 +428,16 @@ function Renderer(context) {
 
             gl.bindTexture(gl.TEXTURE_2D, cache.object);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
             if (cache.resize) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             } else {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             }
+
+            gl.generateMipmap(gl.TEXTURE_2D);
 
             gl.bindTexture(gl.TEXTURE_2D, null);
 
@@ -416,7 +457,7 @@ function Renderer(context) {
         cache.resize = event.resize;
     }
 
-    //internal data structures
+    // cache constructor
 
     function Cache(object) {
         Object.defineProperties(this, {

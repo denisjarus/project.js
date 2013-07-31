@@ -4,9 +4,9 @@ function Camera3D() {
 
     Object.defineProperties(this, {
         _aspectRatio: { value: 1.5, writable: true },
-        _fieldOfView: { value: Math.PI / 2, writable: true },
+        _fieldOfView: { value: Math.PI / 3, writable: true },
 
-        _far: { value: 1000, writable: true },
+        _far: { value: 2000, writable: true },
         _near: { value: 0.1, writable: true },
 
         _projection: { value: null, writable: true }

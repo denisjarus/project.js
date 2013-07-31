@@ -1,13 +1,23 @@
-var context,
+var canvas,
+    context,
+
+    keyboard,
     renderer,
+
     stage,
+    light,
     camera,
-    objects = [];
+    surface,
 
-var program, uColor, uLight, uAmbient;
+    forwards,
+    backwards,
+    left,
+    right,
+    up,
+    down;
 
-window.onload = function() {
-    var canvas = document.getElementById('canvas');
+onload = function() {
+    canvas = document.getElementById('canvas');
     if (!(context = canvas.getContext('experimental-webgl'))) {
         console.warn('webgl is not available');
     }
@@ -16,168 +26,120 @@ window.onload = function() {
     
     stage = new Object3D();
 
+    light = stage.addChild(new Light3D());
+
     camera = stage.addChild(new Camera3D());
-    camera.z = 500;
+    // camera.z = 500;
 
-    //geometry
-    var geometry = new Geometry(),
-        segments = 50,
-        radius = 5;
+    // ground
 
-    //vertices
-    var verts = [],
-        norms = [];
+    var ground = stage.addChild(new Mesh());
+    ground.y = - 200;
+    ground.geometry = new SurfaceGeometry(10, 10);
 
-    for (var i = 0; i <= segments; i++) {
-        var phi = i * Math.PI / segments,
-            sinPhi = Math.sin(phi),
-            cosPhi = Math.cos(phi);
-
-        for (var j = 0; j <= segments; j++) {
-            var lambda = j * Math.PI * 2 / segments,
-                x = Math.cos(lambda) * sinPhi,
-                y = cosPhi,
-                z = Math.sin(lambda) * sinPhi;
-
-            verts.push(x * radius, y * radius, z * radius);
-            norms.push(x, y, z);
-        }
-    }
-    geometry.setData('position', new Float32Array(verts));
-    geometry.setData('normal', new Float32Array(norms));
-
-    //indices
-    var sphereIndices = [];
-
-    for (i = 0; i < segments; i++) {
-        for (j = 0; j < segments; j++) {
-            var a = i * (segments + 1) + j,
-                b = a + segments + 1;
-            sphereIndices.push(
-                a, b, a + 1,
-                b, b + 1, a + 1
-                );
-        }
-    }
-    geometry.indices = new Uint16Array(sphereIndices);
-
-    //objects
-    var object = stage,
-        numObjects = 1000,
-        distance = 10;
-
-    for (i = 0; i < numObjects; i++) {
-        object = object.addChild(new Mesh());
-        object.x = Math.random() * distance;
-        object.y = Math.random() * distance;
-        object.z = Math.random() * distance;
-        object.rotationX = Math.random() * 360;
-        object.rotationY = Math.random() * 360;
-        object.rotationZ = Math.random() * 360;
-        object.geometry = geometry;
-        object.material = new Material();
-        object.material.color = new Float32Array([Math.random(), Math.random(), Math.random()]);
-        objects.push(object);
-    }
-    //add light to the last object
-    object.scaleX = object.scaleY = object.scaleZ = 2;
-    object.addChild(new Light3D(new Float32Array([1, 0, 0, 1])));
-    object.material.color = new Float32Array([1,1,1]);
-    object.material.shader = new Shader(
-        [
-            'attribute vec3 position;',
-            'uniform mat4 model;',
-            'uniform mat4 view;',
-            'uniform mat4 projection;',
-            'void main(void) {',
-            '   gl_Position = projection * view * model * vec4(position, 1.0);',
-            '}'
-        ].join('\n'),
-        [
-            'precision mediump float;',
-            'uniform vec3 color;',
-            'void main(void) {',
-            '   gl_FragColor = vec4(color, 1.0);',
-            '}'
-        ].join('\n'),
-        function(uniforms, object, camera) {
-            uniforms.model = object.localToGlobal.elements;
-            uniforms.view = camera.globalToLocal.elements;
-            uniforms.projection = camera.projection.elements;
-            uniforms.color = object.material.color;
-        }
+    ground.geometry.parametrize(
+        Geometry.VERTEX_POSITION,
+        function(x, y) { return [x, 0, y]; },
+        500, -500,
+        -500, 500
     );
 
-    //texture
-    object = stage.addChild(new Mesh());
-    object.scaleX = object.scaleY = object.scaleZ = 5;
-    object.geometry = new Geometry();
-    object.geometry.setData('position', new Float32Array(
-        [
-            -10, -10, 0,
-            10, -10, 0,
-            -10, 10, 0,
-            10, 10, 0
-        ]
-    ));
-    object.geometry.setData('texcoord', new Float32Array(
-        [
-            0, 0,
-            1, 0,
-            0, 1,
-            1, 1
-        ]
-    ));
-    object.geometry.indices = new Uint16Array(
-        [
-            0, 1, 2,
-            1, 3, 2
-        ]
-    );
-    object.material = new Material()
-    object.material.texture = new Texture();
-
-    var image = new Image();
-    //image.crossOrigin = 'anonymous';
-    image.src = 'test.bmp';
-    image.onload = function() {
-        object.material.texture.setData(image);
-    }
-
-    object.material.shader = new Shader(
-        [
-            'attribute vec3 position;',
-            'attribute vec2 texcoord;',
-            'uniform mat4 model;',
-            'uniform mat4 view;',
-            'uniform mat4 projection;',
-            'varying vec2 uv;',
-            'void main(void) {',
-            '   uv = texcoord;',
-            '   gl_Position = projection * view * model * vec4(position, 1.0);',
-            '}'
-        ].join('\n'),
-        [
-            'precision mediump float;',
-            'uniform sampler2D texture;',
-            'varying vec2 uv;',
-            'void main(void) {',
-            '   gl_FragColor = texture2D(texture, uv);',
-            '}'
-        ].join('\n'),
-        function(uniforms, object, camera) {
-            uniforms.model = object.localToGlobal.elements;
-            uniforms.view = camera.globalToLocal.elements;
-            uniforms.projection = camera.projection.elements;
-            uniforms.texture = object.material.texture;
-        }
+    ground.geometry.parametrize(
+        Geometry.VERTEX_TEXCOORD,
+        function(u, v) { return [u, v]; },
+        0, 10,
+        0, 10
     );
 
-    window.onresize();
-    window.requestAnimationFrame(enterFrame);
+    ground.geometry.setData('normal', Geometry.getNormals(ground.geometry));
+
+    ground.material = new GouraudMaterial();
+    ground.material.diffuseMap = new Texture();
+
+    var img = new Image();
+    img.src = 'test.bmp';
+    img.onload = function() {
+        ground.material.diffuseMap.setData(img);
+    };
+
+
+    // surface
+
+    surface = stage.addChild(new Mesh());
+
+    surface.material = new Material();
+    surface.material.diffuseMap = ground.material.diffuseMap;
+
+    // surface.geometry = new SurfaceGeometry(35, 35);
+    // surface.geometry = new SurfaceGeometry(2, 2);
+    surface.geometry = new SurfaceGeometry(60, 5);
+
+    surface.geometry.parametrize(
+        Geometry.VERTEX_POSITION,
+        function(s, t) {
+            return [
+                (150 + t * Math.cos(s / 2)) * Math.cos(s),
+                (150 + t * Math.cos(s / 2)) * Math.sin(s),
+                t * Math.sin(s / 2)
+            ];
+        },
+        -Math.PI, Math.PI,
+        -50, 50
+    );
+
+    //SPHERE
+
+    // surface.geometry.set(
+    //     function(u, v) { return 200 * Math.sin(u) * Math.cos(v); },
+    //     function(u, v) { return 200 * Math.cos(u); },
+    //     function(u, v) { return 200 * Math.sin(u) * Math.sin(v); },
+    //     Math.PI / 4, Math.PI * 3/4,
+    //     0, 2 * Math.PI
+    // );
+
+    surface.geometry.parametrize(
+        Geometry.VERTEX_TEXCOORD,
+        function(u, v) { return [u, v]; },
+        0, 10,
+        0, 1
+    );
+
+    // controls
+
+    var vec = new Vector3D(),
+        mat = new Matrix3D();
+
+    keyboard = new KeyboardControls(canvas);
+    keyboard.bind('W'.charCodeAt(0),
+        function() { forwards = true; },
+        function() { forwards = false; }
+    );
+    keyboard.bind('S'.charCodeAt(0),
+        function() { backwards = true; },
+        function() { backwards = false; }
+    );
+    keyboard.bind('A'.charCodeAt(0),
+        function() { left = true; },
+        function() { left = false; }
+    );
+    keyboard.bind('D'.charCodeAt(0),
+        function() { right = true; },
+        function() { right = false; }
+    );
+    keyboard.bind(KeyboardControls.SPACE,
+        function() { up = true; },
+        function() { up = false; }
+    );
+    keyboard.bind('C'.charCodeAt(0),
+        function() { down = true; },
+        function() { down = false; }
+    );
+
+    onresize();
+    requestAnimationFrame(enterFrame);
 }
 
-window.onresize = function() {
+onresize = function() {
     context.canvas.width = context.canvas.clientWidth;
     context.canvas.height = context.canvas.clientHeight;
     context.viewport(0, 0, context.canvas.width, context.canvas.height);
@@ -185,15 +147,76 @@ window.onresize = function() {
     camera.aspectRatio = context.canvas.width / context.canvas.height;
 }
 
-document.oncontextmenu = function() {
-    return false;
+onmousedown = function() {
+    canvas.webkitRequestPointerLock();
 }
 
-function enterFrame() {
-    for (var i = 0, length = objects.length; i < length; i++) {
-        objects[i].rotationY += 0.1;
+document.addEventListener('webkitpointerlockchange', function(event) {
+    if (document.webkitPointerLockElement === canvas) {
+        addEventListener('mousemove', mouseMove, false);
+    } else {
+        removeEventListener('mousemove', mouseMove);
     }
+});
+
+var lastFrame = 0;
+
+function enterFrame(frame) {
+    var delta = frame - lastFrame;
+    lastFrame = frame;
+
+    // controls
+
+    var vec = new Vector3D([0, 0, 1]),
+        mat = new Matrix3D();
+
+    mat.copyFrom(camera.localToGlobal);
+    mat.position.elements.set([0, 0, 0]);
+
+    vec.transform(mat);
+
+    if (forwards) {
+        camera.x -= vec.x;
+        camera.y -= vec.y;
+        camera.z -= vec.z;
+    }
+    if (backwards) {
+        camera.x += vec.x;
+        camera.y += vec.y;
+        camera.z += vec.z;
+    }
+
+    vec.elements.set([1, 0, 0]);
+    vec.transform(mat);
+
+    if (left) {
+        camera.x -= vec.x;
+        camera.y -= vec.y;
+        camera.z -= vec.z;
+    }
+    if (right) {
+        camera.x += vec.x;
+        camera.y += vec.y;
+        camera.z += vec.z;
+    }
+
+    if (up) {
+        camera.y++;
+    }
+    if (down) {
+        camera.y--;
+    }
+
+    surface.rotationY += 0.1 * Math.PI / 180;
+
     renderer.draw(stage, camera);
 
-    window.requestAnimationFrame(enterFrame);
+    requestAnimationFrame(enterFrame);
+}
+
+function mouseMove(event) {
+    camera.rotationY -= 0.2 * event.webkitMovementX * Math.PI / 180;
+    camera.rotationX -= 0.2 * event.webkitMovementY * Math.PI / 180;
+
+    camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
 }

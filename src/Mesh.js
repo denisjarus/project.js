@@ -1,4 +1,4 @@
-function Mesh() {
+function Mesh(geometry, material) {
 
     Object3D.call(this);
 
@@ -6,6 +6,13 @@ function Mesh() {
         _geometry: { value: null, writable: true },
         _material: { value: null, writable: true }
     });
+
+    if (geometry) {
+        this.geometry = geometry;
+    }
+    if (material) {
+        this.material = material;
+    }
 }
 
 Mesh.prototype = Object.create(Object3D.prototype, {
@@ -15,7 +22,7 @@ Mesh.prototype = Object.create(Object3D.prototype, {
         },
         set: function(geometry) {
             if (geometry instanceof Geometry === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this._geometry = geometry;
             this.dispatchEvent(new Event3D(Event3D.GEOMETRY_CHANGE));
@@ -27,7 +34,7 @@ Mesh.prototype = Object.create(Object3D.prototype, {
         },
         set: function(material) {
             if (material instanceof Material === false) {
-                throw new Error();
+                throw new TypeError();
             }
             this._material = material;
             this.dispatchEvent(new Event3D(Event3D.MATERIAL_CHANGE));
