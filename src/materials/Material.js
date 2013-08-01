@@ -17,15 +17,9 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
                 'uniform mat4 view;',
                 'uniform mat4 projection;',
 
-                'uniform float far;',
-
-                'varying float depth;',
-
                 'void main(void) {',
 
                 '   gl_Position = projection * view * model * vec4(position, 1.0);',
-
-                '   depth = gl_Position.z / far;',
 
                 '}'
 
@@ -33,11 +27,13 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
             [
                 'precision mediump float;',
 
-                'varying float depth;',
+                'uniform float far;',
 
                 'void main(void) {',
 
-                '   gl_FragColor = vec4(vec3(1.0 - depth), 1.0);',
+                '   float depth = gl_FragCoord.z / gl_FragCoord.w;',
+
+                '   gl_FragColor = vec4(vec3(1.0 - depth / far), 1.0);',
 
                 '}'
 

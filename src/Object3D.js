@@ -220,7 +220,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._z = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     rotationX: {
         get: function() {
@@ -230,7 +230,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._rotationX = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     rotationY: {
         get: function() {
@@ -240,7 +240,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._rotationY = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     rotationZ: {
         get: function() {
@@ -250,7 +250,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._rotationZ = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     scaleX: {
         get: function() {
@@ -260,7 +260,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._scaleX = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     scaleY: {
         get: function() {
@@ -270,7 +270,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._scaleY = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     scaleZ: {
         get: function() {
@@ -280,7 +280,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._scaleZ = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     }
 });
 

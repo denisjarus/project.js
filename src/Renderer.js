@@ -28,8 +28,14 @@ function Renderer(context) {
 
     this.setContext(context);
 
-    this.draw = function(stage, camera) {
-        if (stage instanceof Object3D === false || camera instanceof Camera3D === false) {
+    this.draw = function(stage, camera, target) {
+        if (stage instanceof Object3D === false) {
+            throw new TypeError();
+        }
+        if (camera instanceof Camera3D === false) {
+            throw new TypeError();
+        }
+        if (target && target instanceof Texture === false) {
             throw new TypeError();
         }
         if (stage.parent) {
@@ -38,6 +44,7 @@ function Renderer(context) {
         if (!stage.contains(camera)) {
             throw new Error();
         }
+
         if (stage3D !== stage) {
             if (stage3D) {
                 stage3D.removeEventListener(Event3D.ADDED, onAdd);
@@ -142,6 +149,7 @@ function Renderer(context) {
         if ((order = a.material.id - b.material.id) !== 0) {
             return order;
         }
+        
         return 0;
     }
 
