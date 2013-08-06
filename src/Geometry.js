@@ -48,7 +48,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
                 this._update = true;
             }
 
-            this.dispatchEvent(new DataEvent(DataEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize));
+            this.dispatchEvent(new DataEvent(DataEvent.VERTICES_CHANGE, attribute, resize));
         }
     },
     indices: {
@@ -70,7 +70,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
 
             this._update = true;
             
-            this.dispatchEvent(new DataEvent(DataEvent.VERTEX_INDICES_CHANGE, null, resize));
+            this.dispatchEvent(new DataEvent(DataEvent.INDICES_CHANGE, null, resize));
         }
     },
     normals: {

@@ -38,12 +38,19 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
                 '}'
 
             ].join('\n'),
-            function(uniforms, object, camera) {
-                uniforms.model = object.localToGlobal.elements;
-                uniforms.view = camera.globalToLocal.elements;
-                uniforms.projection = camera.projection.elements;
+            function(context, program) {
+                var model = context.getUniformLocation(program, 'model'),
+                    view = context.getUniformLocation(program, 'view'),
+                    projection = context.getUniformLocation(program, 'projection'),
+                    far = context.getUniformLocation(program, 'far');
 
-                uniforms.far = camera.far;
+                return function(object, camera) {
+                    context.uniformMatrix4fv(model, false, object.localToGlobal.elements);
+                    context.uniformMatrix4fv(view, false, camera.globalToLocal.elements);
+                    context.uniformMatrix4fv(projection, false, camera.projection.elements);
+
+                    context.uniform1f(far, camera.far);
+                }
             }
         )
     }

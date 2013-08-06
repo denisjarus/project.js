@@ -54,6 +54,7 @@ onload = function() {
     ground.geometry.setData('normal', Geometry.getNormals(ground.geometry));
 
     ground.material = new GouraudMaterial();
+    // ground.material = new Material();
     ground.material.diffuseMap = new Texture();
 
     var img = new Image();
@@ -62,12 +63,17 @@ onload = function() {
         ground.material.diffuseMap.setData(img);
     };
 
+    // second instance of ground
+
+    var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
+    instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
+    instance.y = -50;
 
     // surface
 
     surface = stage.addChild(new Mesh());
 
-    surface.material = new Material();
+    surface.material = new TextureMaterial();
     surface.material.diffuseMap = ground.material.diffuseMap;
 
     // surface.geometry = new SurfaceGeometry(35, 35);
@@ -208,6 +214,10 @@ function enterFrame(frame) {
     }
 
     surface.rotationY += 0.1 * Math.PI / 180;
+
+    light.x = camera.x;
+    light.y = camera.y;
+    light.z = camera.z;
 
     renderer.draw(stage, camera);
 

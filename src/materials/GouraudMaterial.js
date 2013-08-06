@@ -27,7 +27,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
 
 				'void main(void) {',
                 '   vec4 global_position = model * vec4(position, 1.0);',
-                '   vec4 global_normal = vec4(mat3(model) * normal, 1.0);',
+                '   vec4 global_normal = normalize(vec4(mat3(model) * normal, 1.0));',
 
                 '   uv = texcoord;',
 
@@ -60,7 +60,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
 
                 uniforms.diffuseMap = object.material.diffuseMap;
 
-                uniforms['pointLights[0]'] = lights[0].localToGlobal.position.elements;
+                uniforms.pointLights = lights[0].localToGlobal.position.elements;
 			}
 		)
 	}
