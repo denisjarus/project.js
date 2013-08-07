@@ -182,17 +182,20 @@ function Renderer(context) {
 
     function addObject(object) {
         var list;
+
         if (object instanceof Mesh) {
             list = renderList;
             updateList = true;
         } else if (object instanceof Light3D) {
             list = lights;
         }
+
         if (list) {
             list.push(object);
         }
+
         for (var child, i = 0; child = object.getChildAt(i); i++) {
-            addObject(child, true);
+            addObject(child);
         }
     }
 
@@ -202,16 +205,19 @@ function Renderer(context) {
 
     function removeObject(object) {
         var list;
+
         if (object instanceof Mesh) {
             list = renderList;
         } else if (object instanceof Light3D) {
             list = lights;
         }
+        
         if (list) {
             list.splice(list.indexOf(object), 1);
         }
+
         for (var child, i = 0; child = object.getChildAt(i); i++) {
-            removeObject(child, true);
+            removeObject(child);
         }
     }
 

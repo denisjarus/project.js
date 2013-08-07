@@ -3,11 +3,11 @@ function SurfaceGeometry(slices, stacks) {
     Geometry.call(this);
 
     Object.defineProperties(this, {
-        _slices: { value: Math.max(0, slices || 16) },
-        _stacks: { value: Math.max(0, stacks || 16) }
+        _slices: { value: slices = Math.max(0, slices || 16) },
+        _stacks: { value: stacks = Math.max(0, stacks || 16) }
     });
 
-    var indices = new Float32Array(slices * stacks * 6),
+    var indices = new Uint16Array(slices * stacks * 6),
 
         offset = 0;
 
@@ -22,14 +22,16 @@ function SurfaceGeometry(slices, stacks) {
         }
     }
 
-    this.indices = new Uint16Array(indices);
+    this._indices = indices;
 }
 
 SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
     parametrize: {
         value: function(attribute, f, uMin, uMax, vMin, vMax) {
             var vertices = this.getData(attribute),
-                length = (this._slices + 1) * (this._stacks + 1) * f(uMin, vMin).length,
+                slices = this._slices,
+                stacks = this._stacks,
+                length = (slices + 1) * (stacks + 1) * f(uMin, vMin).length,
 
                 offset = 0;
 
@@ -37,8 +39,8 @@ SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
                 vertices = new Float32Array(length);
             }
 
-            for (var i = 0, slices = this._slices; i <= slices; i++) {
-                for (var j = 0, stacks = this._stacks; j <= stacks; j++) {
+            for (var i = 0; i <= slices; i++) {
+                for (var j = 0; j <= stacks; j++) {
                     var u = uMin + (uMax - uMin) * i / slices,
                         v = vMin + (vMax - vMin) * j / stacks,
 
@@ -49,6 +51,14 @@ SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
             }
 
             this.setData(attribute, vertices);
+        }
+    },
+    indices: {
+        get: function() {
+            return this._indices;
+        },
+        set: function() {
+            console.warn('parametric geometry indices are immutable');
         }
     }
 });

@@ -35,7 +35,7 @@ onload = function() {
 
     var ground = stage.addChild(new Mesh());
     ground.y = - 200;
-    ground.geometry = new SurfaceGeometry(10, 10);
+    ground.geometry = new SurfaceGeometry();
 
     ground.geometry.parametrize(
         Geometry.VERTEX_POSITION,

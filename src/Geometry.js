@@ -131,6 +131,7 @@ Object.defineProperties(Geometry, {
 
     VERTEX_POSITION: { value: 'position' },
     VERTEX_TEXCOORD: { value: 'texcoord' },
+    VERTEX_NORMAL: { value: 'normal' }
 
     interleave: {
         value: function (a, b, stride, offset) {

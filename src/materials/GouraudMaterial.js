@@ -27,14 +27,14 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
 
 				'void main(void) {',
                 '   vec4 global_position = model * vec4(position, 1.0);',
-                '   vec4 global_normal = normalize(vec4(mat3(model) * normal, 1.0));',
+                '   vec4 global_normal = normalize(vec4(mat3(model) * normal, 0.0));',
 
                 '   uv = texcoord;',
 
                 '   intensity = 0.0;',
 
                 '   for (int i = 0; i < 1; i++) {',
-                '       intensity += dot(global_normal, normalize(global_position - vec4(pointLights[i], 1.0)));',
+                '       intensity += dot(global_normal, normalize(global_position - vec4(pointLights[i], 0.0)));',
                 '   }',
 
 				'	gl_Position = projection * view * global_position;',
@@ -50,7 +50,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                 'varying float intensity;',
 
 				'void main(void) {',
-				'	gl_FragColor = texture2D(diffuseMap, uv) * vec4(vec3(intensity), 1.0);',
+				'	gl_FragColor = texture2D(diffuseMap, uv) * vec4(vec3(min(intensity, 1.0)), 1.0);',
 				'}'
 			].join('\n'),
 			function(uniforms, object, camera, lights) {
