@@ -60,7 +60,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
 
                 uniforms.diffuseMap = object.material.diffuseMap;
 
-                uniforms.pointLights = lights[0].localToGlobal.position.elements;
+                uniforms['pointLights[0]'] = lights[0].localToGlobal.position.elements;
 			}
 		)
 	}

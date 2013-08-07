@@ -35,23 +35,26 @@ onload = function() {
 
     var ground = stage.addChild(new Mesh());
     ground.y = - 200;
-    ground.geometry = new SurfaceGeometry();
+    ground.geometry = new SurfaceGeometry(1, 1);
 
     ground.geometry.parametrize(
-        Geometry.VERTEX_POSITION,
+        Geometry.VERTEX_POSITIONS,
         function(x, y) { return [x, 0, y]; },
         500, -500,
         -500, 500
     );
 
     ground.geometry.parametrize(
-        Geometry.VERTEX_TEXCOORD,
+        Geometry.VERTEX_TEXCOORDS,
         function(u, v) { return [u, v]; },
         0, 10,
         0, 10
     );
 
-    ground.geometry.setData('normal', Geometry.getNormals(ground.geometry));
+    Geometry.getNormals(ground.geometry);
+
+    console.log(ground.geometry.getData('normal'))
+    console.log(ground.geometry.getData('faceNormal'))
 
     ground.material = new GouraudMaterial();
     // ground.material = new Material();
@@ -81,7 +84,7 @@ onload = function() {
     surface.geometry = new SurfaceGeometry(60, 5);
 
     surface.geometry.parametrize(
-        Geometry.VERTEX_POSITION,
+        Geometry.VERTEX_POSITIONS,
         function(s, t) {
             return [
                 (150 + t * Math.cos(s / 2)) * Math.cos(s),
@@ -104,7 +107,7 @@ onload = function() {
     // );
 
     surface.geometry.parametrize(
-        Geometry.VERTEX_TEXCOORD,
+        Geometry.VERTEX_TEXCOORDS,
         function(u, v) { return [u, v]; },
         0, 10,
         0, 1
