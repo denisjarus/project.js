@@ -37,7 +37,7 @@ function Object3D() {
 Object3D.prototype = Object.create(EventDispatcher.prototype, {
     dispatchEvent: {
         value: function(event) {
-            if (event instanceof Event3D === false) {
+            if (!(event instanceof Event3D)) {
                 throw new TypeError();
             }
 
@@ -112,7 +112,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             return this._bounds;
         },
         set: function(bounds) {
-            if (BoundBox instanceof BoundBox === false) {
+            if (!(bounds instanceof BoundBox)) {
                 return new TypeError();
             }
             this._bounds = bounds;
@@ -125,7 +125,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     addChild: {
         value: function(child) {
-            if (child instanceof Object3D === false) {
+            if (!(child instanceof Object3D)) {
                 throw new TypeError();
             }
             if (child.contains(this)) {
@@ -147,7 +147,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     removeChild: {
         value: function(child) {
-            if (child instanceof Object3D === false) {
+            if (!(child instanceof Object3D)) {
                 throw new TypeError();
             }
             if (child._parent !== this) {
@@ -181,7 +181,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     contains: {
         value: function(child) {
-            if (child instanceof Object3D === false) {
+            if (!(child instanceof Object3D)) {
                 throw new TypeError();
             }
             for (var object = child; object !== null; object = object._parent) {

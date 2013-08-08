@@ -13,7 +13,7 @@ TextureMaterial.prototype = Object.create(Material.prototype, {
             return this._diffuseMap;
         },
         set: function(texture) {
-            if (texture instanceof Texture === false) {
+            if (!(texture instanceof Texture)) {
                 throw new TypeError();
             }
             this._diffuseMap = texture;

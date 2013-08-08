@@ -10,7 +10,7 @@ function Renderer(context) {
         updateList = false;
 
     this.setContext = function(context) {
-        if (context instanceof WebGLRenderingContext === false) {
+        if (!(context instanceof WebGLRenderingContext)) {
             throw new TypeError();
         }
         gl = context;
@@ -29,13 +29,13 @@ function Renderer(context) {
     this.setContext(context);
 
     this.draw = function(stage, camera, target) {
-        if (stage instanceof Object3D === false) {
+        if (!(stage instanceof Object3D)) {
             throw new TypeError();
         }
-        if (camera instanceof Camera3D === false) {
+        if (!(camera instanceof Camera3D)) {
             throw new TypeError();
         }
-        if (target && target instanceof Texture === false) {
+        if (target && !(target instanceof Texture)) {
             throw new TypeError();
         }
         if (stage.parent) {

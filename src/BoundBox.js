@@ -13,7 +13,7 @@ Object.defineProperties(BoundBox.prototype, {
     },
     copyFrom: {
         value: function(boundBox) {
-            if (boundBox instanceof BoundBox === false) {
+            if (!(boundBox instanceof BoundBox)) {
                 throw new TypeError();
             }
             this.min.copyFrom(boundBox.min);
@@ -24,7 +24,7 @@ Object.defineProperties(BoundBox.prototype, {
     },
     intersects: {
         value: function(toIntersect) {
-            if (toIntersect instanceof BoundBox === false) {
+            if (!(toIntersect instanceof BoundBox)) {
                 throw new TypeError();
             }
             //TO DO
@@ -33,7 +33,7 @@ Object.defineProperties(BoundBox.prototype, {
     },
     intersection: {
         value: function(toIntersect) {
-            if (toIntersect instanceof BoundBox === false) {
+            if (!(toIntersect instanceof BoundBox)) {
                 throw new TypeError();
             }
             //TO DO

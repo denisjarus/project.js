@@ -14,7 +14,9 @@ var canvas,
     left,
     right,
     up,
-    down;
+    down,
+
+    physics;
 
 onload = function() {
     canvas = document.getElementById('canvas');
@@ -29,13 +31,13 @@ onload = function() {
     light = stage.addChild(new Light3D());
 
     camera = stage.addChild(new Camera3D());
-    // camera.z = 500;
 
     // ground
 
     var ground = stage.addChild(new Mesh());
     ground.y = - 200;
-    ground.geometry = new SurfaceGeometry(1, 1);
+
+    ground.geometry = new SurfaceGeometry();
 
     ground.geometry.parametrize(
         Geometry.VERTEX_POSITIONS,
@@ -52,9 +54,6 @@ onload = function() {
     );
 
     Geometry.getNormals(ground.geometry);
-
-    console.log(ground.geometry.getData('normal'))
-    console.log(ground.geometry.getData('faceNormal'))
 
     ground.material = new GouraudMaterial();
     // ground.material = new Material();
@@ -76,11 +75,6 @@ onload = function() {
 
     surface = stage.addChild(new Mesh());
 
-    surface.material = new TextureMaterial();
-    surface.material.diffuseMap = ground.material.diffuseMap;
-
-    // surface.geometry = new SurfaceGeometry(35, 35);
-    // surface.geometry = new SurfaceGeometry(2, 2);
     surface.geometry = new SurfaceGeometry(60, 5);
 
     surface.geometry.parametrize(
@@ -96,16 +90,6 @@ onload = function() {
         -50, 50
     );
 
-    //SPHERE
-
-    // surface.geometry.set(
-    //     function(u, v) { return 200 * Math.sin(u) * Math.cos(v); },
-    //     function(u, v) { return 200 * Math.cos(u); },
-    //     function(u, v) { return 200 * Math.sin(u) * Math.sin(v); },
-    //     Math.PI / 4, Math.PI * 3/4,
-    //     0, 2 * Math.PI
-    // );
-
     surface.geometry.parametrize(
         Geometry.VERTEX_TEXCOORDS,
         function(u, v) { return [u, v]; },
@@ -113,10 +97,13 @@ onload = function() {
         0, 1
     );
 
-    // controls
+    Geometry.getNormals(surface.geometry);
 
-    var vec = new Vector3D(),
-        mat = new Matrix3D();
+    surface.material = new TextureMaterial();
+    // surface.material = new GouraudMaterial();
+    surface.material.diffuseMap = ground.material.diffuseMap;
+
+    // controls
 
     keyboard = new KeyboardControls(canvas);
     keyboard.bind('W'.charCodeAt(0),
@@ -142,6 +129,10 @@ onload = function() {
     keyboard.bind('C'.charCodeAt(0),
         function() { down = true; },
         function() { down = false; }
+    );
+
+    keyboard.bind(KeyboardControls.ENTER,
+        function() { physics = !physics; }
     );
 
     onresize();
@@ -184,36 +175,40 @@ function enterFrame(frame) {
 
     vec.transform(mat);
 
-    if (forwards) {
-        camera.x -= vec.x;
-        camera.y -= vec.y;
-        camera.z -= vec.z;
-    }
-    if (backwards) {
-        camera.x += vec.x;
-        camera.y += vec.y;
-        camera.z += vec.z;
-    }
-
-    vec.elements.set([1, 0, 0]);
-    vec.transform(mat);
-
-    if (left) {
-        camera.x -= vec.x;
-        camera.y -= vec.y;
-        camera.z -= vec.z;
-    }
-    if (right) {
-        camera.x += vec.x;
-        camera.y += vec.y;
-        camera.z += vec.z;
-    }
-
-    if (up) {
-        camera.y++;
-    }
-    if (down) {
+    if (physics) {
         camera.y--;
+    } else {
+        if (forwards) {
+            camera.x -= vec.x;
+            camera.y -= vec.y;
+            camera.z -= vec.z;
+        }
+        if (backwards) {
+            camera.x += vec.x;
+            camera.y += vec.y;
+            camera.z += vec.z;
+        }
+
+        vec.elements.set([1, 0, 0]);
+        vec.transform(mat);
+
+        if (left) {
+            camera.x -= vec.x;
+            camera.y -= vec.y;
+            camera.z -= vec.z;
+        }
+        if (right) {
+            camera.x += vec.x;
+            camera.y += vec.y;
+            camera.z += vec.z;
+        }
+
+        if (up) {
+            camera.y++;
+        }
+        if (down) {
+            camera.y--;
+        }
     }
 
     surface.rotationY += 0.1 * Math.PI / 180;

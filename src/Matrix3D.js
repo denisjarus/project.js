@@ -1,7 +1,7 @@
 function Matrix3D(elements) {
     if (!elements || elements.length !== 16) {
         elements = new Float32Array(IDENTITY);
-    } else if (elements instanceof Float32Array === false) {
+    } else if (!(elements instanceof Float32Array)) {
         elements = new Float32Array(elements);
     }
     
@@ -12,6 +12,32 @@ function Matrix3D(elements) {
 }
 
 Object.defineProperties(Matrix3D.prototype, {
+    set: {
+        value: function(array, offset) {
+            var mat = this.elements;
+
+            offset = offset || 0;
+
+            mat[ 0] = array[offset];
+            mat[ 1] = array[offset + 1];
+            mat[ 2] = array[offset + 2];
+            mat[ 3] = array[offset + 3];
+            mat[ 4] = array[offset + 4];
+            mat[ 5] = array[offset + 5];
+            mat[ 6] = array[offset + 6];
+            mat[ 7] = array[offset + 7];
+            mat[ 8] = array[offset + 8];
+            mat[ 9] = array[offset + 9];
+            mat[10] = array[offset + 10];
+            mat[11] = array[offset + 11];
+            mat[12] = array[offset + 12];
+            mat[13] = array[offset + 13];
+            mat[14] = array[offset + 14];
+            mat[15] = array[offset + 15];
+
+            return this;
+        }
+    },
     clone: {
         value: function() {
             return new Matrix3D(this.elements);
@@ -19,7 +45,7 @@ Object.defineProperties(Matrix3D.prototype, {
     },
     copyFrom: {
         value: function(matrix) {
-            if (matrix instanceof Matrix3D === false) {
+            if (!(matrix instanceof Matrix3D)) {
                 throw new TypeError();
             }
             this.elements.set(matrix.elements);
@@ -103,7 +129,7 @@ Object.defineProperties(Matrix3D.prototype, {
     },
     append: {
         value: function(matrix) {
-            if (matrix instanceof Matrix3D === false) {
+            if (!(matrix instanceof Matrix3D)) {
                 throw new TypeError();
             }
             

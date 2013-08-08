@@ -21,7 +21,7 @@ Mesh.prototype = Object.create(Object3D.prototype, {
             return this._geometry;
         },
         set: function(geometry) {
-            if (geometry instanceof Geometry === false) {
+            if (!(geometry instanceof Geometry)) {
                 throw new TypeError();
             }
             this._geometry = geometry;
@@ -33,7 +33,7 @@ Mesh.prototype = Object.create(Object3D.prototype, {
             return this._material;
         },
         set: function(material) {
-            if (material instanceof Material === false) {
+            if (!(material instanceof Material)) {
                 throw new TypeError();
             }
             this._material = material;

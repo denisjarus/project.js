@@ -4,7 +4,7 @@ function Light3D(color) {
 
     if (!color || color.length !== 4) {
         color = new Float32Array(4);
-    } else if (color instanceof Float32Array === false) {
+    } else if (!(color instanceof Float32Array)) {
         color = new Float32Array(color);
     }
 

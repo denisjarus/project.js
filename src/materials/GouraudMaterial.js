@@ -27,14 +27,14 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
 
 				'void main(void) {',
                 '   vec4 global_position = model * vec4(position, 1.0);',
-                '   vec4 global_normal = normalize(vec4(mat3(model) * normal, 0.0));',
+                '   vec3 global_normal = normalize(mat3(model) * normal);',
 
                 '   uv = texcoord;',
 
                 '   intensity = 0.0;',
 
                 '   for (int i = 0; i < 1; i++) {',
-                '       intensity += dot(global_normal, normalize(global_position - vec4(pointLights[i], 0.0)));',
+                '       intensity += dot(global_normal, normalize(pointLights[i] - global_position.xyz));',
                 '   }',
 
 				'	gl_Position = projection * view * global_position;',
