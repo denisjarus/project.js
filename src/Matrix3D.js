@@ -209,13 +209,10 @@ Object.defineProperties(Matrix3D.prototype, {
 
             return this;
         }
-    }
-});
-
-Object.defineProperties(Matrix3D, {
+    },
     perspective: {
         value: function(fieldOfView, aspectRatio, near, far) {
-            var mat = new Float32Array(16),
+            var mat = this.elements,
                 tan = Math.tan(fieldOfView * 0.5);
             
             mat[ 0] = 1 / (tan * aspectRatio);
@@ -238,7 +235,16 @@ Object.defineProperties(Matrix3D, {
             mat[11] = -1;
             mat[15] = 0;
 
-            return new Matrix3D(mat);
+            return this;
+        }
+    },
+    normalMatrix: {
+        value: function(matrix) {
+            if (!(matrix instanceof Matrix3D)) {
+                throw new TypeError();
+            }
+
+            return this;
         }
     }
 });

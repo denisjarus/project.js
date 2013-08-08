@@ -23,7 +23,7 @@ function Renderer(context) {
 
         // gl.enable(gl.CULL_FACE);
         // gl.cullFace(gl.BACK);
-        // gl.frontFace(gl.CW);
+        gl.frontFace(gl.CW);
     };
 
     this.setContext(context);

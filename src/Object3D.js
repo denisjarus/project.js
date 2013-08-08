@@ -30,6 +30,7 @@ function Object3D() {
         visible: { value: true, writable: true },
 
         _parent: { value: null, writable: true },
+        
         _children: { value: [] }
     });
 }
@@ -58,9 +59,12 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     matrix: {
         get: function() {
+            var matrix = this._matrix;
+
             if (this._update) {
                 this._update = false;
-                this._matrix.recompose(
+
+                matrix.recompose(
                     this._x,
                     this._y,
                     this._z,
@@ -72,36 +76,47 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
                     this._scaleZ
                 );
             }
-            return this._matrix;
+            return matrix;
         }
     },
     localToGlobal: {
         get: function() {
+            var localToGlobal = this._localToGlobal,
+                parent = this._parent;
+
             if (this._concat) {
                 this._concat = false;
-                this._localToGlobal.copyFrom(this.matrix);
-                if (this._parent) {
-                    this._localToGlobal.append(this._parent.localToGlobal);
+
+                localToGlobal.copyFrom(this.matrix);
+
+                if (parent) {
+                    localToGlobal.append(parent.localToGlobal);
                 }
             }
-            return this._localToGlobal;
+            return localToGlobal;
         }
     },
     globalToLocal: {
         get: function() {
+            var globalToLocal = this._globalToLocal;
+
             if (this._invert) {
                 this._invert = false;
-                this._globalToLocal.copyFrom(this.localToGlobal).invert();
+
+                globalToLocal.copyFrom(this.localToGlobal).invert();
             }
-            return this._globalToLocal;
+            return globalToLocal;
         }
     },
     invalidate: {
         value: function() {
+            var children = this._children;
+
             if (this._concat === false) {
                 this._concat = true;
                 this._invert = true;
-                for (var child, i = 0; child = this._children[i]; i++) {
+
+                for (var child, i = 0; child = children[i]; i++) {
                     child.invalidate();
                 }
             }
