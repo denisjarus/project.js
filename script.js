@@ -103,6 +103,22 @@ onload = function() {
     surface.material = new GouraudMaterial();
     surface.material.diffuseMap = ground.material.diffuseMap;
 
+    // add colored point lights
+    var red = stage.addChild(new Light3D([1, 0, 0]));
+    red.x = 500;
+    red.z = 500;
+    red.y = -150;
+
+    var green = stage.addChild(new Light3D([0, 1, 0]));
+    green.x = 500;
+    green.z = -500;
+    green.y = -150;
+
+    var blue = stage.addChild(new Light3D([0, 0, 1]));
+    blue.x = -500;
+    blue.z = 500;
+    blue.y = -150;
+
     // controls
 
     keyboard = new KeyboardControls(canvas);

@@ -38,6 +38,8 @@ function test(name, actual, expected, epsilon, key) {
     return false;
 }
 
+const EPSILON = 0.0001;
+
 // Vector3D
 
 var vec = new Vector3D(),
@@ -72,7 +74,7 @@ test('Vector3D.cross()', vec, new Vector3D([-3, 6, -3]));
 
 // Vector3D.distance
 
-test('Vector3D.distance()', a.distance(b), 5.19615, 0.0001);
+test('Vector3D.distance()', a.distance(b), 5.19615, EPSILON);
 
 // Vector3D.dot
 
@@ -80,7 +82,7 @@ test('Vector3D.dot()', a.dot(b), 32);
 
 // Vector3D.length
 
-test('Vector3D.length', a.length, 3.74166, 0.0001);
+test('Vector3D.length', a.length, 3.74166, EPSILON);
 
 // Vector3D.lengthSquared
 
@@ -96,7 +98,7 @@ test('Vector3D.negate()', vec, new Vector3D([-1, -2, -3]));
 
 vec.copyFrom(a);
 vec.normalize();
-test('Vector3D.normalize()', vec, new Vector3D([0.26726, 0.53452, 0.80178]), 0.0001);
+test('Vector3D.normalize()', vec, new Vector3D([0.26726, 0.53452, 0.80178]), EPSILON);
 
 // Vector3D.scale()
 
@@ -115,10 +117,41 @@ vec.transform(new Matrix3D(
         4, 8, 12, 16
     ]
 ));
-test('Vector3D.transform()', vec, new Vector3D([0.17647, 0.45098, 0.72549]), 0.0001);
+test('Vector3D.transform()', vec, new Vector3D([0.17647, 0.45098, 0.72549]), EPSILON);
 
 // Matrix3D
 
 var mat = new Matrix3D(),
-    a = new Matrix3D(),
-    b = new Matrix3D();
+    a = new Matrix3D([
+        1, 0, 0, 0,
+        0, 2, 0, 0,
+        0, 0, 3, 0,
+        11, 22, 33, 1
+    ]);
+
+// Matrix3D.invert()
+
+mat.copyFrom(a).invert();
+
+test('Matrix3D.invert()', mat, new Matrix3D([
+    1, 0, 0, 0,
+    0, 0.5, 0, 0,
+    0, 0, 2/6, 0,
+    -11, -11, -11, 1
+]));
+
+// Matrix3D.normalMatrix();
+
+mat.set([
+    1, 3, 0, 0,
+    2, 2, 0, 0,
+    3, 1, 1, 0,
+    0, 0, 0, 1
+]).normalMatrix();
+
+test('Matrix3D.normalMatrix()', mat, new Matrix3D([
+    -2/4, 2/4, 1, 0,
+    3/4, -1/4, -8/4, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+]));
