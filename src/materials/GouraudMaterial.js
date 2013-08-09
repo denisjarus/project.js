@@ -1,67 +1,112 @@
 function GouraudMaterial() {
 
-	TextureMaterial.call(this);
+    TextureMaterial.call(this);
 
-	Object.defineProperties(this, {
+    Object.defineProperties(this, {
 
-	});
+    });
 }
 
 GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
-	shader: {
-		value: new Shader(
-			[
-				'attribute vec3 position;',
-				'attribute vec2 texcoord;',
-				'attribute vec3 normal;',
+    shader: {
+        value: new Shader(
+            [
+                '#define NUM_POINT_LIGHTS 5',
 
-				'uniform mat4 model;',
-				'uniform mat4 view;',
-				'uniform mat4 projection;',
+                'attribute vec3 position;',
+                'attribute vec2 texcoord;',
+                'attribute vec3 normal;',
 
-                'uniform vec3 pointLights[2];',
+                'uniform mat4 modelView;',
+                'uniform mat4 projection;',
+
+                'uniform mat4 view;',
+                'uniform mat4 normalMatrix;',
+
+                'uniform vec3 pointLightPositions[NUM_POINT_LIGHTS];',
+                'uniform vec3 pointLightColors[NUM_POINT_LIGHTS];',
 
                 'varying vec2 uv;',
 
-                'varying float intensity;',
+                'varying vec3 lightFront;',
+                'varying vec3 lightBack;',
 
-				'void main(void) {',
-                '   vec4 global_position = model * vec4(position, 1.0);',
-                '   vec4 global_normal = vec4(mat3(model) * normal, 1.0);',
+                'void main(void) {',
+                '   vec4 view_position = modelView * vec4(position, 1.0);',
+                '   vec4 view_normal = normalize(normalMatrix * vec4(normal, 0.0));',
 
                 '   uv = texcoord;',
 
-                '   intensity = 0.0;',
+                '   lightFront = vec3(0.0);',
+                '   lightBack = vec3(0.0);',
 
-                '   for (int i = 0; i < 1; i++) {',
-                '       intensity += dot(global_normal, normalize(global_position - vec4(pointLights[i], 1.0)));',
+                '   for (int i = 0; i < NUM_POINT_LIGHTS; i++) {',
+                '       vec4 view_light = view * vec4(pointLightPositions[i], 1.0);',
+
+                '       float dot = dot(view_normal, normalize(view_light - view_position));',
+
+                '       lightFront += max(dot, 0.0) * pointLightColors[i];',
+                '       lightBack += max(-dot, 0.0) * pointLightColors[i];',
                 '   }',
 
-				'	gl_Position = projection * view * global_position;',
-				'}'
-			].join('\n'),
-			[
-				'precision mediump float;',
+                '   gl_Position = projection * view_position;',
+                '}'
+            ].join('\n'),
+            [
+                'precision mediump float;',
 
                 'uniform sampler2D diffuseMap;',
 
                 'varying vec2 uv;',
 
-                'varying float intensity;',
+                'varying vec3 lightFront;',
+                'varying vec3 lightBack;',
 
-				'void main(void) {',
-				'	gl_FragColor = texture2D(diffuseMap, uv) * vec4(vec3(intensity), 1.0);',
-				'}'
-			].join('\n'),
-			function(uniforms, object, camera, lights) {
-				uniforms.model = object.localToGlobal.elements;
-				uniforms.view = camera.globalToLocal.elements;
-				uniforms.projection = camera.projection.elements;
+                'void main(void) {',
+                '   vec3 light = gl_FrontFacing ? lightFront : lightBack;',
+                '   gl_FragColor = texture2D(diffuseMap, uv) * vec4(light, 1.0);',
+                '}'
+            ].join('\n'),
+            (function() {
+                var matrix = new Matrix3D(),
+                    pointLightPositions,
+                    pointLightColors;
 
-                uniforms.diffuseMap = object.material.diffuseMap;
+                return function(uniforms, object, camera, lights) {
+                    // modelView matrix
+                    matrix.copyFrom(object.localToGlobal).append(camera.globalToLocal);
+                    uniforms.modelView = matrix.elements;
 
-                uniforms['pointLights[0]'] = lights[0].localToGlobal.position.elements;
-			}
-		)
-	}
+                    uniforms.view = camera.globalToLocal.elements;
+                    uniforms.projection = camera.projection.elements;
+
+                    // normal matrix
+                    matrix.normalMatrix();
+                    uniforms.normalMatrix = matrix.elements;
+
+                    uniforms.diffuseMap = object.material.diffuseMap;
+
+                    // for (var light, i = 0; light = lights[i]; i++) {
+                    //     uniforms['pointLightPositions[' + i +']'] = light.localToGlobal.position.elements;
+                    //     uniforms['pointLightColors[' + i + ']'] = light.color;
+                    // }
+                    if (!pointLightPositions || pointLightPositions.length < lights.length * 3) {
+                        pointLightPositions = new Float32Array(lights.length * 3);
+                    }
+                    if (!pointLightColors || pointLightColors.length < lights.length * 3) {
+                        pointLightColors = new Float32Array(lights.length * 3);
+                    }
+
+                    for (var light, i = 0; light = lights[i]; i++) {
+                        pointLightPositions.set(light.localToGlobal.position.elements, i * 3);
+                        pointLightColors.set(light.color, i * 3);
+                    }
+
+                    uniforms['pointLightPositions[0]'] = pointLightPositions;
+                    uniforms['pointLightColors[0]'] = pointLightColors;
+                }
+            })()
+
+        )
+    }
 });

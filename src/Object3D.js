@@ -30,6 +30,7 @@ function Object3D() {
         visible: { value: true, writable: true },
 
         _parent: { value: null, writable: true },
+        
         _children: { value: [] }
     });
 }
@@ -37,7 +38,7 @@ function Object3D() {
 Object3D.prototype = Object.create(EventDispatcher.prototype, {
     dispatchEvent: {
         value: function(event) {
-            if (event instanceof Event3D === false) {
+            if (!(event instanceof Event3D)) {
                 throw new TypeError();
             }
 
@@ -58,9 +59,12 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     matrix: {
         get: function() {
+            var matrix = this._matrix;
+
             if (this._update) {
                 this._update = false;
-                this._matrix.recompose(
+
+                matrix.recompose(
                     this._x,
                     this._y,
                     this._z,
@@ -72,36 +76,47 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
                     this._scaleZ
                 );
             }
-            return this._matrix;
+            return matrix;
         }
     },
     localToGlobal: {
         get: function() {
+            var localToGlobal = this._localToGlobal,
+                parent = this._parent;
+
             if (this._concat) {
                 this._concat = false;
-                this._localToGlobal.copyFrom(this.matrix);
-                if (this._parent) {
-                    this._localToGlobal.append(this._parent.localToGlobal);
+
+                localToGlobal.copyFrom(this.matrix);
+
+                if (parent) {
+                    localToGlobal.append(parent.localToGlobal);
                 }
             }
-            return this._localToGlobal;
+            return localToGlobal;
         }
     },
     globalToLocal: {
         get: function() {
+            var globalToLocal = this._globalToLocal;
+
             if (this._invert) {
                 this._invert = false;
-                this._globalToLocal.copyFrom(this.localToGlobal).invert();
+
+                globalToLocal.copyFrom(this.localToGlobal).invert();
             }
-            return this._globalToLocal;
+            return globalToLocal;
         }
     },
     invalidate: {
         value: function() {
+            var children = this._children;
+
             if (this._concat === false) {
                 this._concat = true;
                 this._invert = true;
-                for (var child, i = 0; child = this._children[i]; i++) {
+
+                for (var child, i = 0; child = children[i]; i++) {
                     child.invalidate();
                 }
             }
@@ -112,7 +127,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             return this._bounds;
         },
         set: function(bounds) {
-            if (BoundBox instanceof BoundBox === false) {
+            if (!(bounds instanceof BoundBox)) {
                 return new TypeError();
             }
             this._bounds = bounds;
@@ -125,7 +140,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     addChild: {
         value: function(child) {
-            if (child instanceof Object3D === false) {
+            if (!(child instanceof Object3D)) {
                 throw new TypeError();
             }
             if (child.contains(this)) {
@@ -147,7 +162,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     removeChild: {
         value: function(child) {
-            if (child instanceof Object3D === false) {
+            if (!(child instanceof Object3D)) {
                 throw new TypeError();
             }
             if (child._parent !== this) {
@@ -181,7 +196,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
     },
     contains: {
         value: function(child) {
-            if (child instanceof Object3D === false) {
+            if (!(child instanceof Object3D)) {
                 throw new TypeError();
             }
             for (var object = child; object !== null; object = object._parent) {
@@ -220,7 +235,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._z = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     rotationX: {
         get: function() {
@@ -230,7 +245,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._rotationX = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     rotationY: {
         get: function() {
@@ -240,7 +255,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._rotationY = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     rotationZ: {
         get: function() {
@@ -250,7 +265,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._rotationZ = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     scaleX: {
         get: function() {
@@ -260,7 +275,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._scaleX = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     scaleY: {
         get: function() {
@@ -270,7 +285,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._scaleY = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     },
     scaleZ: {
         get: function() {
@@ -280,7 +295,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             this._scaleZ = value;
             this._update = true;
             this.invalidate();
-        } 
+        }
     }
 });
 

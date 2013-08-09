@@ -1,7 +1,7 @@
 function Shader(vertex, fragment, uniform) {
-	if (!vertex || !fragment || !uniform) {
-		throw new Error();
-	}
+    if (!vertex || !fragment || !uniform) {
+        throw new Error();
+    }
 
     Object.defineProperties(this, {
         id: { value: Shader._counter++ },

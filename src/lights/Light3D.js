@@ -2,9 +2,9 @@ function Light3D(color) {
     
     Object3D.call(this);
 
-    if (!color || color.length !== 4) {
-        color = new Float32Array(4);
-    } else if (color instanceof Float32Array === false) {
+    if (!color || color.length !== 3) {
+        color = new Float32Array([1, 1, 1]);
+    } else if (!(color instanceof Float32Array)) {
         color = new Float32Array(color);
     }
 

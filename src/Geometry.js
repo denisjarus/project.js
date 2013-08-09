@@ -10,7 +10,6 @@ function Geometry() {
         _offsets: { value: {} },
 
         _indices: { value: null, writable: true },
-        _normals: { value: null, writable: true },
 
         _update: { value: false, writable: true }
     });
@@ -34,7 +33,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
     },
     setData: {
         value: function(attribute, data, stride, offset) {
-            if (data instanceof Float32Array === false) {
+            if (!(data instanceof Float32Array)) {
                 throw new TypeError();
             }
 
@@ -48,7 +47,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
                 this._update = true;
             }
 
-            this.dispatchEvent(new DataEvent(DataEvent.VERTEX_ATTRIBUTE_CHANGE, attribute, resize));
+            this.dispatchEvent(new DataEvent(DataEvent.VERTICES_CHANGE, attribute, resize));
         }
     },
     indices: {
@@ -56,7 +55,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             return this._indices;
         },
         set: function(data) {
-            if (data instanceof Uint16Array === false) {
+            if (!(data instanceof Uint16Array)) {
                 throw new TypeError();
             }
 
@@ -70,58 +69,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
 
             this._update = true;
             
-            this.dispatchEvent(new DataEvent(DataEvent.VERTEX_INDICES_CHANGE, null, resize));
-        }
-    },
-    normals: {
-        get: function() {
-            var positions = this._data[Geometry.VERTEX_POSITION],
-                stride = this._strides[Geometry.VERTEX_POSITION] || 3,
-                offset = this._offsets[Geometry.VERTEX_POSITION],
-
-                indices = this._indices,
-                normals = this._normals;
-
-            if (!indices || !positions) {
-                return null;
-            }
-
-            if (!normals || normals.length !== indices.length) {
-                normals = new Float32Array(indices.length);
-            }
-
-            if (this._update) {
-                this._update = false;
-
-                var a = new Vector3D(),
-                    ab = new Vector3D(),
-                    ac = new Vector3D();
-
-                for (var i = 0, len = indices.length; i < len; i += 3) {
-                    var index = offset + indices[i] * stride;
-                    a.elements[0] = positions[index];
-                    a.elements[1] = positions[index + 1];
-                    a.elements[2] = positions[index + 2];
-
-                    index = offset + indices[i + 1] * stride;
-                    ab.elements[0] = positions[index];
-                    ab.elements[1] = positions[index + 1];
-                    ab.elements[2] = positions[index + 2];
-                    ab.subtract(a);
-
-                    index = offset + indices[i + 2] * stride;
-                    ac.elements[0] = positions[index];
-                    ac.elements[1] = positions[index + 1];
-                    ac.elements[2] = positions[index + 2];
-                    ac.subtract(a);
-
-                    normals.set(ab.cross(ac).normalize().elements, i);
-                }
-
-                this._normals = normals;
-            }
-
-            return normals;
+            this.dispatchEvent(new DataEvent(DataEvent.INDICES_CHANGE, null, resize));
         }
     }
 });
@@ -129,12 +77,15 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
 Object.defineProperties(Geometry, {
     _counter: { value: 0, writable: true },
 
-    VERTEX_POSITION: { value: 'position' },
-    VERTEX_TEXCOORD: { value: 'texcoord' },
+    VERTEX_POSITIONS: { value: 'position' },
+    VERTEX_TEXCOORDS: { value: 'texcoord' },
+    VERTEX_NORMALS: { value: 'normal' },
+
+    FACE_NORMALS: { value: 'faceNormal' },
 
     interleave: {
         value: function (a, b, stride, offset) {
-            if (a instanceof Float32Array === false || b instanceof Float32Array === false) {
+            if (!(a instanceof Float32Array) || !(b instanceof Float32Array)) {
                 throw new TypeError();
             }
 
@@ -152,81 +103,77 @@ Object.defineProperties(Geometry, {
         }
     },
     getNormals: {
-        value: function(geometry, weighted) {
-            if (geometry instanceof Geometry === false) {
-                throw new TypeError();
-            }
+        value: (function() {
+            var a = new Vector3D(),
+                b = new Vector3D(),
+                c = new Vector3D(),
 
-            var positions = geometry.getData(Geometry.VERTEX_POSITION),
-                stride = geometry.getStride(Geometry.VERTEX_POSITION) || 3,
-                offset = geometry.getOffset(Geometry.VERTEX_POSITION),
+                normal = new Vector3D();
 
-                normals = new Float32Array(positions.length / stride * 3),
+            return function(geometry, weighted) {
+                var positions = geometry._data[Geometry.VERTEX_POSITIONS],
+                    stride = geometry._strides[Geometry.VERTEX_POSITIONS] || 3,
+                    offset = geometry._offsets[Geometry.VERTEX_POSITIONS],
+                    length = positions.length / stride,
 
-                indices = geometry.indices,
-                faceNormals = new Float32Array(indices.length),
+                    indices = geometry._indices,
 
-                a = new Vector3D(),
-                ab = new Vector3D(),
-                ac = new Vector3D();
+                    faceNormals = geometry._data[Geometry.FACE_NORMALS],
+                    vertexNormals = geometry._data[Geometry.VERTEX_NORMALS];
 
-            for (var i = 0, len = indices.length; i < len; i += 3) {
+                if (!positions || !indices) {
+                    return;
+                }
+                if (!faceNormals || faceNormals.length !== indices.length) {
+                    faceNormals = new Float32Array(indices.length);
+                }
+                if (!vertexNormals || vertexNormals.length !== length * 3) {
+                    vertexNormals = new Float32Array(length * 3);
+                } else {
+                    for (var i = 0, len = vertexNormals.length; i < len; i++) {
+                        vertexNormals[i] = 0;
+                    }
+                }
 
-                // get positions
+                for (var i = 0, len = indices.length; i < len; i += 3) {
 
-                var index = offset + indices[i] * stride;
-                a.elements[0] = positions[index];
-                a.elements[1] = positions[index + 1];
-                a.elements[2] = positions[index + 2];
+                    // get positions of vertices forming a face
 
-                index = offset + indices[i + 1] * stride;
-                ab.elements[0] = positions[index];
-                ab.elements[1] = positions[index + 1];
-                ab.elements[2] = positions[index + 2];
-                ab.subtract(a);
+                    a.set(positions, offset + indices[i] * stride);
+                    b.set(positions, offset + indices[i + 1] * stride).subtract(a);
+                    c.set(positions, offset + indices[i + 2] * stride).subtract(a);
 
-                index = offset + indices[i + 2] * stride;
-                ac.elements[0] = positions[index];
-                ac.elements[1] = positions[index + 1];
-                ac.elements[2] = positions[index + 2];
-                ac.subtract(a);
+                    // calculate face normal
 
-                var normal = weighted ? ab.cross(ac) : ab.cross(ac).normalize(),
-                    x = normal.elements[0],
-                    y = normal.elements[1],
-                    z = normal.elements[2];
+                    normal.copyFrom(weighted ? b.cross(c).negate() : b.cross(c).negate().normalize());
 
-                // set normals
+                    // get normals of vertices forming a face, append face normal and store the results
 
-                index = indices[i] * 3;
-                normals[index] += x;
-                normals[index + 1] += y;
-                normals[index + 2] += z;
+                    var index = indices[i] * 3;
+                    a.set(vertexNormals, index).add(normal);
+                    vertexNormals.set(a.elements, index);
 
-                index = indices[i + 1] * 3;
-                normals[index] += x;
-                normals[index + 1] += y;
-                normals[index + 2] += z;
+                    index = indices[i + 1] * 3;
+                    b.set(vertexNormals, index).add(normal);
+                    vertexNormals.set(b.elements, index);
 
-                index = indices[i + 2] * 3;
-                normals[index] += x;
-                normals[index + 1] += y;
-                normals[index + 2] += z;
-            }
+                    index = indices[i + 2] * 3;
+                    c.set(vertexNormals, index).add(normal);
+                    vertexNormals.set(c.elements, index);
 
-            // normalize
+                    faceNormals.set(weighted ? normal.normalize().elements : normal.elements, i);
+                }
 
-            for (i = 0, len = normals.length; i < len; i += 3) {
-                a.elements[0] = normals[i];
-                a.elements[1] = normals[i + 1];
-                a.elements[2] = normals[i + 2];
-                
-                a.normalize();
+                // normalize vertex normals
 
-                normals.set(a.elements, i);
-            }
+                for (var i = 0, len = vertexNormals.length; i < len; i += 3) {
+                    normal.set(vertexNormals, i).normalize();
+                    vertexNormals.set(normal.elements, i);
+                }
 
-            return normals;
-        }
+                geometry.setData(Geometry.VERTEX_NORMALS, vertexNormals);
+                geometry.setData(Geometry.FACE_NORMALS, faceNormals);
+            };
+        })()
     }
 });

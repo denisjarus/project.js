@@ -42,7 +42,7 @@ Object.defineProperties(EventDispatcher.prototype, {
     },
     dispatchEvent: {
         value: function(event) {
-            if (event instanceof Event3D === false) {
+            if (!(event instanceof Event3D)) {
                 throw new TypeError();
             }
             

@@ -10,7 +10,7 @@ function Renderer(context) {
         updateList = false;
 
     this.setContext = function(context) {
-        if (context instanceof WebGLRenderingContext === false) {
+        if (!(context instanceof WebGLRenderingContext)) {
             throw new TypeError();
         }
         gl = context;
@@ -21,15 +21,21 @@ function Renderer(context) {
 
         gl.enable(gl.DEPTH_TEST);
 
-        //gl.enable(gl.CULL_FACE);
-        //gl.cullFace(gl.BACK);
-        //gl.frontFace(gl.CW);
+        // gl.enable(gl.CULL_FACE);
+        // gl.cullFace(gl.BACK);
+        gl.frontFace(gl.CW);
     };
 
     this.setContext(context);
 
-    this.draw = function(stage, camera) {
-        if (stage instanceof Object3D === false || camera instanceof Camera3D === false) {
+    this.draw = function(stage, camera, target) {
+        if (!(stage instanceof Object3D)) {
+            throw new TypeError();
+        }
+        if (!(camera instanceof Camera3D)) {
+            throw new TypeError();
+        }
+        if (target && !(target instanceof Texture)) {
             throw new TypeError();
         }
         if (stage.parent) {
@@ -38,6 +44,7 @@ function Renderer(context) {
         if (!stage.contains(camera)) {
             throw new Error();
         }
+
         if (stage3D !== stage) {
             if (stage3D) {
                 stage3D.removeEventListener(Event3D.ADDED, onAdd);
@@ -66,11 +73,12 @@ function Renderer(context) {
 
         var shader = null,
             geometry = null,
-            material = null,
-
-            attributes = [];
+            material = null;
 
         for (var object, i = 0; object = renderList[i]; i++) {
+
+            // stop rendering when the first unrenderable object reached
+
             if (!object.geometry || !object.material) {
                 break;
             }
@@ -84,20 +92,16 @@ function Renderer(context) {
                 var program = getProgram(shader);
 
                 gl.useProgram(program);
-
-                attributes.length = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
-
-                for (var attribute, j = 0, len = attributes.length; j < len; j++) {
-                    attribute = attributes[j] = gl.getActiveAttrib(program, j);
-                }
             }
 
             if (geometry !== object.geometry) {
                 geometry = object.geometry;
 
-                //glVertexArrayObject.bindVertexArrayOES(getVertexArray(object));
+                glVertexArrayObject.bindVertexArrayOES(getVertexArray(object));
 
                 if (true) {
+                    var attributes = program.attributes;
+
                     for (var attribute, j = 0; attribute = attributes[j]; j++) {
                         var name = attribute.name,
                             size = getSize(attribute),
@@ -114,25 +118,33 @@ function Renderer(context) {
 
             shader.uniform(program.uniforms, object, camera, lights);
 
+            // program.pass(object, camera, lights);
+
             gl.drawElements(gl.TRIANGLES, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
 
         gl.useProgram(null);
 
+        glVertexArrayObject.bindVertexArrayOES(null);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-        
-        glVertexArrayObject.bindVertexArrayOES(null);
     };
 
     function sort(a, b) {
         var order;
+
+        // move meshes with no geometry and/or no material to the end of the list
+
         if (!(a.geometry && a.material)) {
             return 1;
         }
         if (!(b.geometry && b.material)) {
-            return -1;
+            return 0;
         }
+
+        // group meshes by shader, geometry and material
+
         if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
             return order;
         }
@@ -142,6 +154,7 @@ function Renderer(context) {
         if ((order = a.material.id - b.material.id) !== 0) {
             return order;
         }
+        
         return 0;
     }
 
@@ -169,17 +182,20 @@ function Renderer(context) {
 
     function addObject(object) {
         var list;
+
         if (object instanceof Mesh) {
             list = renderList;
             updateList = true;
         } else if (object instanceof Light3D) {
             list = lights;
         }
+
         if (list) {
             list.push(object);
         }
+
         for (var child, i = 0; child = object.getChildAt(i); i++) {
-            addObject(child, true);
+            addObject(child);
         }
     }
 
@@ -189,16 +205,19 @@ function Renderer(context) {
 
     function removeObject(object) {
         var list;
+
         if (object instanceof Mesh) {
             list = renderList;
         } else if (object instanceof Light3D) {
             list = lights;
         }
+        
         if (list) {
             list.splice(list.indexOf(object), 1);
         }
+
         for (var child, i = 0; child = object.getChildAt(i); i++) {
-            removeObject(child, true);
+            removeObject(child);
         }
     }
 
@@ -224,6 +243,14 @@ function Renderer(context) {
                 throw new Error(gl.getError());
             }
 
+            var attributes = new Array(gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES));
+
+            for (var attribute, i = 0, len = attributes.length; i < len; i++) {
+                attributes[i] = gl.getActiveAttrib(program, i);
+            }
+
+            program.attributes = attributes;
+
             var uniforms = {};
 
             for (var uniform, i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
@@ -233,6 +260,8 @@ function Renderer(context) {
             }
 
             program.uniforms = uniforms;
+
+            // program.pass = shader.uniform(gl, program);
         }
         
         return program;
@@ -447,7 +476,7 @@ function Renderer(context) {
         return cache.object;
     }
 
-    function setTextureCube(index, texture) {
+    function getTextureCube(texture) {
 
     }
 

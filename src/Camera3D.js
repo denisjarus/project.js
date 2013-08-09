@@ -9,7 +9,8 @@ function Camera3D() {
         _far: { value: 2000, writable: true },
         _near: { value: 0.1, writable: true },
 
-        _projection: { value: null, writable: true }
+        _projection: { value: new Matrix3D() },
+        _updateProjection: { value: true, writable: true }
     });
 }
 
@@ -20,7 +21,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
         },
         set: function(value) {
             this._aspectRatio = value;
-            this._projection = null;
+            this._updateProjection = true;
         }
     },
     fieldOfView: {
@@ -29,7 +30,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
         },
         set: function(value) {
             this._fieldOfView = value;
-            this._projection = null;
+            this._updateProjection = true;
         }
     },
     far: {
@@ -38,7 +39,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
         },
         set: function(value) {
             this._far = value;
-            this._projection = null;
+            this._updateProjection = true;
         }
     },
     near: {
@@ -47,13 +48,15 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
         },
         set: function(value) {
             this._near = value;
-            this._projection = null;
+            this._updateProjection = true;
         }
     },
     projection: {
         get: function() {
-            if (this._projection === null) {
-                this._projection = Matrix3D.perspective(
+            if (this._updateProjection) {
+                this._updateProjection = false;
+
+                this._projection.perspective(
                     this._fieldOfView,
                     this._aspectRatio,
                     this._near,

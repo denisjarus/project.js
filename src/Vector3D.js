@@ -1,7 +1,7 @@
 function Vector3D(elements) {
     if (!elements || elements.length !== 3) {
         elements = new Float32Array(3);
-    } else if (elements instanceof Float32Array === false) {
+    } else if (!(elements instanceof Float32Array)) {
         elements = new Float32Array(elements);
     }
     
@@ -11,6 +11,19 @@ function Vector3D(elements) {
 }
 
 Object.defineProperties(Vector3D.prototype, {
+    set: {
+        value: function(array, offset) {
+            var vec = this.elements;
+
+            offset = offset || 0;
+
+            vec[0] = array[offset];
+            vec[1] = array[offset + 1];
+            vec[2] = array[offset + 2];
+
+            return this;
+        }
+    },
     clone: {
         value: function() {
             return new Vector3D(this.elements);
@@ -18,7 +31,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     copyFrom: {
         value: function(vector) {
-            if (vector instanceof Vector3D === false) {
+            if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
@@ -29,7 +42,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     add: {
         value: function(vector) {
-            if (vector instanceof Vector3D === false) {
+            if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
@@ -45,7 +58,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     subtract: {
         value: function(vector) {
-            if (vector instanceof Vector3D === false) {
+            if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
@@ -61,7 +74,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     cross: {
         value: function(vector) {
-            if (vector instanceof Vector3D === false) {
+            if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
@@ -80,7 +93,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     distance: {
         value: function(vector) {
-            if (vector instanceof Vector3D === false) {
+            if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
@@ -95,7 +108,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     dot: {
         value: function(vector) {
-            if (vector instanceof Vector3D === false) {
+            if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
@@ -167,7 +180,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     transform: {
         value: function(matrix) {
-            if (matrix instanceof Matrix3D === false) {
+            if (!(matrix instanceof Matrix3D)) {
                 throw new TypeError();
             }
             
