@@ -71,45 +71,45 @@ Object.defineProperties(Matrix3D.prototype, {
                 m20 = mat[2], m21 = mat[6], m22 = mat[10], m23 = mat[14],
                 m30 = mat[3], m31 = mat[7], m32 = mat[11], m33 = mat[15],
 
-                d00 = m00 * m11 - m01 * m10,
-                d01 = m00 * m12 - m02 * m10,
-                d02 = m00 * m13 - m03 * m10,
-                d03 = m01 * m12 - m02 * m11,
-                d04 = m01 * m13 - m03 * m11,
-                d05 = m02 * m13 - m03 * m12,
+                c00 = m00 * m11 - m01 * m10,
+                c01 = m00 * m12 - m02 * m10,
+                c02 = m00 * m13 - m03 * m10,
+                c03 = m01 * m12 - m02 * m11,
+                c04 = m01 * m13 - m03 * m11,
+                c05 = m02 * m13 - m03 * m12,
 
-                d06 = m20 * m31 - m21 * m30,
-                d07 = m20 * m32 - m22 * m30,
-                d08 = m20 * m33 - m23 * m30,
-                d09 = m21 * m32 - m22 * m31,
-                d10 = m21 * m33 - m23 * m31,
-                d11 = m22 * m33 - m23 * m32,
+                c06 = m20 * m31 - m21 * m30,
+                c07 = m20 * m32 - m22 * m30,
+                c08 = m20 * m33 - m23 * m30,
+                c09 = m21 * m32 - m22 * m31,
+                c10 = m21 * m33 - m23 * m31,
+                c11 = m22 * m33 - m23 * m32,
                 
-                det = d00 * d11 - d01 * d10 + d02 * d09 + d03 * d08 - d04 * d07 + d05 * d06;
+                det = c00 * c11 - c01 * c10 + c02 * c09 + c03 * c08 - c04 * c07 + c05 * c06;
 
             if (det === 0) { console.warn('matrix is singular'); return null; }
             
             det = 1 / det;
 
-            mat[0] = (m11 * d11 - m12 * d10 + m13 * d09) * det;
-            mat[1] = (m10 * d11 - m12 * d08 + m13 * d07) * (-det);
-            mat[2] = (m10 * d10 - m11 * d08 + m13 * d06) * det;
-            mat[3] = (m10 * d09 - m11 * d07 + m12 * d06) * (-det);
+            mat[0] = (m11 * c11 - m12 * c10 + m13 * c09) * det;
+            mat[1] = (m10 * c11 - m12 * c08 + m13 * c07) * (-det);
+            mat[2] = (m10 * c10 - m11 * c08 + m13 * c06) * det;
+            mat[3] = (m10 * c09 - m11 * c07 + m12 * c06) * (-det);
 
-            mat[4] = (m01 * d11 - m02 * d10 + m03 * d09) * (-det);
-            mat[5] = (m00 * d11 - m02 * d08 + m03 * d07) * det;
-            mat[6] = (m00 * d10 - m01 * d08 + m03 * d06) * (-det);
-            mat[7] = (m00 * d09 - m01 * d07 + m02 * d06) * det;
+            mat[4] = (m01 * c11 - m02 * c10 + m03 * c09) * (-det);
+            mat[5] = (m00 * c11 - m02 * c08 + m03 * c07) * det;
+            mat[6] = (m00 * c10 - m01 * c08 + m03 * c06) * (-det);
+            mat[7] = (m00 * c09 - m01 * c07 + m02 * c06) * det;
 
-            mat[ 8] = (m31 * d05 - m32 * d04 + m33 * d03) * det;
-            mat[ 9] = (m30 * d05 - m32 * d02 + m33 * d01) * (-det);
-            mat[10] = (m30 * d04 - m31 * d02 + m33 * d00) * det;
-            mat[11] = (m30 * d03 - m31 * d01 + m32 * d00) * (-det);
+            mat[ 8] = (m31 * c05 - m32 * c04 + m33 * c03) * det;
+            mat[ 9] = (m30 * c05 - m32 * c02 + m33 * c01) * (-det);
+            mat[10] = (m30 * c04 - m31 * c02 + m33 * c00) * det;
+            mat[11] = (m30 * c03 - m31 * c01 + m32 * c00) * (-det);
 
-            mat[12] = (m21 * d05 - m22 * d04 + m23 * d03) * (-det);
-            mat[13] = (m20 * d05 - m22 * d02 + m23 * d01) * det;
-            mat[14] = (m20 * d04 - m21 * d02 + m23 * d00) * (-det);
-            mat[15] = (m20 * d03 - m21 * d01 + m22 * d00) * det;
+            mat[12] = (m21 * c05 - m22 * c04 + m23 * c03) * (-det);
+            mat[13] = (m20 * c05 - m22 * c02 + m23 * c01) * det;
+            mat[14] = (m20 * c04 - m21 * c02 + m23 * c00) * (-det);
+            mat[15] = (m20 * c03 - m21 * c01 + m22 * c00) * det;
 
             return this;
         }
@@ -251,41 +251,31 @@ Object.defineProperties(Matrix3D.prototype, {
                 m10 = mat[1], m11 = mat[5], m12 = mat[ 9],
                 m20 = mat[2], m21 = mat[6], m22 = mat[10],
 
-                // adjuncts (cofactors)
+                c00 = m11 * m22 - m12 * m21,
+                c01 = m10 * m22 - m12 * m20,
+                c02 = m10 * m21 - m11 * m20,
 
-                a00 = m11 * m22 - m12 * m21,
-                a01 = m12 * m20 - m10 * m22,
-                a02 = m10 * m21 - m11 * m20,
-
-                a10 = m02 * m21 - m01 * m22,
-                a11 = m00 * m22 - m02 * m20,
-                a12 = m01 * m20 - m00 * m21,
-
-                a20 = m01 * m12 - m02 * m11,
-                a21 = m02 * m10 - m00 * m12,
-                a22 = m00 * m11 - m01 * m10,
-
-                det = m00 * a00 + m01 * a01 + m02 * a02;
+                det = m00 * c00 - m01 * c01 + m02 * c02;
 
             if (det === 0) { console.warn('matrix is singular'); return null; }
 
             det = 1 / det;
 
-            // set transposed 3x3
+            // use an untransposed matrix of cofactors
 
-            mat[0] = a00 * det;
-            mat[1] = a10 * det;
-            mat[2] = a20 * det;
+            mat[0] = c00 * det;
+            mat[1] = (m01 * m22 - m02 * m21) * (-det);
+            mat[2] = (m01 * m12 - m02 * m11) * det;
             mat[3] = 0;
 
-            mat[4] = a01 * det;
-            mat[5] = a11 * det;
-            mat[6] = a21 * det;
+            mat[4] = c01 * (-det);
+            mat[5] = (m00 * m22 - m02 * m20) * det;
+            mat[6] = (m00 * m12 - m02 * m10) * (-det);
             mat[7] = 0;
 
-            mat[ 8] = a02 * det;
-            mat[ 9] = a12 * det;
-            mat[10] = a22 * det;
+            mat[ 8] = c02 * det;
+            mat[ 9] = (m00 * m21 - m01 * m20) * (-det);
+            mat[10] = (m00 * m11 - m01 * m10) * det;
             mat[11] = 0;
 
             mat[12] = 0;

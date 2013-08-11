@@ -13,6 +13,7 @@ function Renderer(context) {
         if (!(context instanceof WebGLRenderingContext)) {
             throw new TypeError();
         }
+
         gl = context;
 
         glVertexArrayObject = gl.getExtension('OES_vertex_array_object');
@@ -273,7 +274,7 @@ function Renderer(context) {
         gl.shaderSource(shader, code);
         gl.compileShader(shader);
 
-        if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) === false) {
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
             throw new Error(gl.getShaderInfoLog(shader));
         }
 
@@ -337,8 +338,8 @@ function Renderer(context) {
 
             case gl.SAMPLER_2D:
                 setter = function(texture) {
-                    gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
                     gl.activeTexture(gl.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
                     gl.uniform1i(location, 0);
                 };
                 break;

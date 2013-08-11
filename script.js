@@ -30,14 +30,18 @@ onload = function() {
 
     light = stage.addChild(new Light3D());
 
+    // physicsal camera
+
     camera = stage.addChild(new Camera3D());
+    
+    camera.physics = new Physics(camera);
 
     // ground
 
     var ground = stage.addChild(new Mesh());
     ground.y = - 200;
 
-    ground.geometry = new SurfaceGeometry();
+    ground.geometry = new SurfaceGeometry(10, 10);
 
     ground.geometry.parametrize(
         Geometry.VERTEX_POSITIONS,
@@ -60,7 +64,7 @@ onload = function() {
     ground.material.diffuseMap = new Texture();
 
     var img = new Image();
-    img.src = 'test.bmp';
+    img.src = 'diffuseMap.bmp';
     img.onload = function() {
         ground.material.diffuseMap.setData(img);
     };
@@ -105,8 +109,8 @@ onload = function() {
 
     // add colored point lights
     var red = stage.addChild(new Light3D([1, 0, 0]));
-    red.x = 500;
-    red.z = 500;
+    red.x = -500;
+    red.z = -500;
     red.y = -150;
 
     var green = stage.addChild(new Light3D([0, 1, 0]));
@@ -115,7 +119,7 @@ onload = function() {
     green.y = -150;
 
     var blue = stage.addChild(new Light3D([0, 0, 1]));
-    blue.x = -500;
+    blue.x = 500;
     blue.z = 500;
     blue.y = -150;
 
