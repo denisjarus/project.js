@@ -155,6 +155,19 @@ onload = function() {
         function() { physics = !physics; }
     );
 
+    keyboard.bind('1'.charCodeAt(0),
+        function() { surface.material.diffuseMap.minFilter = Texture.NEAREST; }
+    );
+    keyboard.bind('2'.charCodeAt(0),
+        function() { surface.material.diffuseMap.minFilter = Texture.BILINEAR; }
+    );
+    keyboard.bind('3'.charCodeAt(0),
+        function() { surface.material.diffuseMap.minFilter = Texture.BILINEAR_MIPMAP; }
+    );
+    keyboard.bind('4'.charCodeAt(0),
+        function() { surface.material.diffuseMap.minFilter = Texture.TRILINEAR; }
+    );
+
     onresize();
     requestAnimationFrame(enterFrame);
 }

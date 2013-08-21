@@ -37,7 +37,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
 
                 'void main(void) {',
                 '   vec4 view_position = modelView * vec4(position, 1.0);',
-                '   vec4 view_normal = normalize(normalMatrix * vec4(normal, 1.0));',
+                '   vec4 view_normal = normalize(normalMatrix * vec4(normal, 0.0));',
 
                 '   uv = texcoord;',
 
