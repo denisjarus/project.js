@@ -1,17 +1,17 @@
 function Matrix3D(elements) {
-    if (!elements || elements.length !== 16) {
-        elements = new Float32Array(IDENTITY);
-    } else if (!(elements instanceof Float32Array)) {
-        elements = new Float32Array(elements);
-    }
-    
     Object.defineProperties(this, {
-        elements: { value: elements },
-        position: { value: new Vector3D(elements.subarray(12, 15)) }
+        elements: { value: new Float32Array(16) }
     });
+
+    this.elements.set(elements || IDENTITY);
 }
 
 Object.defineProperties(Matrix3D.prototype, {
+    position: {
+        get: function() {
+            return this.elements.subarray(12, 15);
+        }
+    },
     set: {
         value: function(array, offset) {
             var mat = this.elements;

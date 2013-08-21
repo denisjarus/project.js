@@ -155,18 +155,26 @@ onload = function() {
         function() { physics = !physics; }
     );
 
-    keyboard.bind('1'.charCodeAt(0),
-        function() { surface.material.diffuseMap.minFilter = Texture.NEAREST; }
-    );
-    keyboard.bind('2'.charCodeAt(0),
-        function() { surface.material.diffuseMap.minFilter = Texture.BILINEAR; }
-    );
-    keyboard.bind('3'.charCodeAt(0),
-        function() { surface.material.diffuseMap.minFilter = Texture.BILINEAR_MIPMAP; }
-    );
-    keyboard.bind('4'.charCodeAt(0),
-        function() { surface.material.diffuseMap.minFilter = Texture.TRILINEAR; }
-    );
+    // keyboard.bind('1'.charCodeAt(0),
+    //     function() { surface.material.diffuseMap.minFilter = context.NEAREST; }
+    // );
+    // keyboard.bind('2'.charCodeAt(0),
+    //     function() { surface.material.diffuseMap.minFilter = context.LINEAR; }
+    // );
+    // keyboard.bind('3'.charCodeAt(0),
+    //     function() { surface.material.diffuseMap.minFilter = context.NEAREST_MIPMAP_NEAREST; }
+    // );
+    // keyboard.bind('4'.charCodeAt(0),
+    //     function() { surface.material.diffuseMap.minFilter = context.NEAREST_MIPMAP_LINEAR; } // trilinear
+    // );
+    // keyboard.bind('5'.charCodeAt(0),
+    //     function() { surface.material.diffuseMap.minFilter = context.LINEAR_MIPMAP_NEAREST; } 
+    //     //BILINEAR_MIPMAP
+    // );
+    // keyboard.bind('6'.charCodeAt(0),
+    //     function() { surface.material.diffuseMap.minFilter = context.LINEAR_MIPMAP_LINEAR; } // true trilinear
+    //     //TRILINEAR_MIPMAP
+    // );
 
     onresize();
     requestAnimationFrame(enterFrame);
@@ -204,7 +212,7 @@ function enterFrame(frame) {
         mat = new Matrix3D();
 
     mat.copyFrom(camera.localToGlobal);
-    mat.position.elements.set([0, 0, 0]);
+    mat.position.set([0, 0, 0]);
 
     vec.elements.set([0, 0, -1]);
     vec.transform(mat);
@@ -256,7 +264,7 @@ function enterFrame(frame) {
     light.y = camera.y;
     light.z = camera.z;
 
-    renderer.draw(stage, camera);
+    renderer.render(stage, camera);
 
     requestAnimationFrame(enterFrame);
 }

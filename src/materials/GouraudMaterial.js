@@ -100,7 +100,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                     }
 
                     for (var light, i = 0; light = lights[i]; i++) {
-                        pointLightPositions.set(light.localToGlobal.position.elements, i * 3);
+                        pointLightPositions.set(light.localToGlobal.position, i * 3);
                         pointLightColors.set(light.color, i * 3);
                     }
 

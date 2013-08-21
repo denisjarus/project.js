@@ -1,12 +1,20 @@
 function Renderer(context) {
-    if (!(context instanceof WebGLRenderingContext)) {
-        throw new TypeError();
-    }
+    Object.defineProperties(this, {
+        textureMagFilter: { value: Renderer.TEXTURE_FILTER_BILINEAR, writable: true },
+        textureMinFilter: { value: Renderer.TEXTURE_FILTER_BILINEAR, writable: true },
+
+        anisotropy: { value: 16, writable: true }
+    });
 
     // WebGL context
 
     var gl = context,
-        glVertexArrayObject = gl.getExtension('OES_vertex_array_object');
+        glVertexArrayObject = gl.getExtension('OES_vertex_array_object'),
+        glTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic'),
+
+        magFilter = null,
+        minFilter = null,
+        anisotropy = 0;
 
     // current stage
 
@@ -21,11 +29,18 @@ function Renderer(context) {
 
     var matrix = new Matrix3D();
 
-    // configure context
-
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-    this.draw = function(object, camera, target) {
+    // settings
+
+    var settings = {
+        textureMagFilter: Renderer.TEXTURE_FILTER_BILINEAR,
+        textureMinFilter: Renderer.TEXTURE_FILTER_BILINEAR,
+
+        anisotropy: 0
+    }
+
+    this.render = function(object, camera, target) {
         if (!(object instanceof Object3D)) {
             throw new TypeError();
         }
@@ -364,8 +379,9 @@ function Renderer(context) {
             case gl.SAMPLER_2D:
                 setter = function(texture) {
                     gl.activeTexture(gl.TEXTURE0);
-                    gl.bindTexture(gl.TEXTURE_2D, getTexture2D(texture));
                     gl.uniform1i(location, 0);
+
+                    setTexture(gl.TEXTURE_2D, texture);
                 };
                 break;
         }
@@ -496,7 +512,7 @@ function Renderer(context) {
 
     var textures = {};
 
-    function getTexture2D(texture) {
+    function setTexture(target, texture) {
         var cache = textures[texture.id];
         if (cache === undefined) {
             cache = textures[texture.id] = new Cache(gl.createTexture());
@@ -504,33 +520,34 @@ function Renderer(context) {
             texture.addEventListener(DataEvent.TEXTURE_CHANGE, onTextureChange);
         }
 
+        gl.bindTexture(target, cache.object);
+
         if (cache.update) {
-
-            gl.bindTexture(gl.TEXTURE_2D, cache.object);
-
             if (cache.resize) {
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
+                gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             } else {
-                gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
+                gl.texSubImage2D(target, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             }
 
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, texture.magFilter);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, texture.minFilter);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, texture.wrapU);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, texture.wrapV);
-
-            gl.generateMipmap(gl.TEXTURE_2D);
-
-            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
+            gl.texParameteri(target, gl.TEXTURE_WRAP_T, texture.wrapV);
+            gl.generateMipmap(target);
 
             cache.update = cache.resize = false;
         }
 
-        return cache.object;
-    }
+        // update texture parameters from renderer settings
 
-    function getTextureCube(texture) {
+        if (this.textureFiltering) {
+            gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.textureFiltering);
+        }
+        if (this.textureFiltering) {
+            gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.textureFiltering);
+        }
 
+        if (glTextureFilterAnisotropic && true) {
+            gl.texParameteri(target, glTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, 16);
+        }
     }
 
     function onTextureChange(event) {
@@ -560,3 +577,8 @@ function Renderer(context) {
         });
     }
 }
+
+Object.defineProperties(Renderer, {
+    TEXTURE_FILTER_BILINEAR: { value: 0x2601 },
+    TEXTURE_FILTER_TRILINEAR: { value: 0x2703 }
+});

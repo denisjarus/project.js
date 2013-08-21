@@ -8,10 +8,7 @@ function Texture() {
         _data: { value: null, writable: true },
 
         _wrapU: { value: Texture.REPEAT, writable: true },
-        _wrapV: { value: Texture.REPEAT, writable: true },
-
-        _magFilter: { value: Texture.NEAREST, writable: true },
-        _minFilter: { value: Texture.TRILINEAR, writable: true }
+        _wrapV: { value: Texture.REPEAT, writable: true }
     });
 }
 
@@ -49,26 +46,6 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
 
             this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, false));
         }
-    },
-    magFilter: {
-        get: function() {
-            return this._magFilter;
-        },
-        set: function(value) {
-            this._magFilter = value;
-
-            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, false));
-        }
-    },
-    minFilter: {
-        get: function() {
-            return this._minFilter;
-        },
-        set: function(value) {
-            this._minFilter = value;
-
-            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, false));
-        }
     }
 });
 
@@ -77,10 +54,5 @@ Object.defineProperties(Texture, {
 
     REPEAT: { value: 0x2901 },
     CLAMP: { value: 0x812F },
-    MIRROR: { value: 0x8370 },
-
-    NEAREST: { value: 0x2600 },
-    BILINEAR: { value: 0x2601 },
-    BILINEAR_MIPMAP: { value: 0x2702 },
-    TRILINEAR: { value: 0x2703 }
+    MIRROR: { value: 0x8370 }
 });
