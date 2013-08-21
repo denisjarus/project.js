@@ -1,20 +1,18 @@
 function Renderer(context) {
     Object.defineProperties(this, {
-        textureMagFilter: { value: Renderer.TEXTURE_FILTER_BILINEAR, writable: true },
-        textureMinFilter: { value: Renderer.TEXTURE_FILTER_BILINEAR, writable: true },
+        magFilter: { value: Renderer.TEXTURE_FILTER_NEAREST, writable: true },
+        minFilter: { value: Renderer.TEXTURE_FILTER_NEAREST, writable: true },
 
-        anisotropy: { value: 16, writable: true }
+        anisotropy: { value: 1, writable: true }
     });
+
+    var renderer = this;
 
     // WebGL context
 
     var gl = context,
         glVertexArrayObject = gl.getExtension('OES_vertex_array_object'),
-        glTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic'),
-
-        magFilter = null,
-        minFilter = null,
-        anisotropy = 0;
+        glTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
 
     // current stage
 
@@ -29,16 +27,9 @@ function Renderer(context) {
 
     var matrix = new Matrix3D();
 
+    // config
+
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-
-    // settings
-
-    var settings = {
-        textureMagFilter: Renderer.TEXTURE_FILTER_BILINEAR,
-        textureMinFilter: Renderer.TEXTURE_FILTER_BILINEAR,
-
-        anisotropy: 0
-    }
 
     this.render = function(object, camera, target) {
         if (!(object instanceof Object3D)) {
@@ -514,13 +505,16 @@ function Renderer(context) {
 
     function setTexture(target, texture) {
         var cache = textures[texture.id];
+
         if (cache === undefined) {
-            cache = textures[texture.id] = new Cache(gl.createTexture());
+            cache = textures[texture.id] = new TextureCache(gl.createTexture());
 
             texture.addEventListener(DataEvent.TEXTURE_CHANGE, onTextureChange);
         }
 
         gl.bindTexture(target, cache.object);
+
+        // update data
 
         if (cache.update) {
             if (cache.resize) {
@@ -529,24 +523,32 @@ function Renderer(context) {
                 gl.texSubImage2D(target, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
             }
 
-            gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
-            gl.texParameteri(target, gl.TEXTURE_WRAP_T, texture.wrapV);
             gl.generateMipmap(target);
 
             cache.update = cache.resize = false;
         }
 
-        // update texture parameters from renderer settings
+        // update parameters
 
-        if (this.textureFiltering) {
-            gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.textureFiltering);
+        if (cache.wrapU !== texture.wrapU) {
+            gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
+            cache.wrapU = texture.wrapU;
         }
-        if (this.textureFiltering) {
-            gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.textureFiltering);
+        if (cache.wrapV !== texture.wrapV) {
+            gl.texParameteri(target, gl.TEXTURE_WRAP_T, texture.wrapV);
+            cache.wrapV = texture.wrapV;
         }
-
-        if (glTextureFilterAnisotropic && true) {
-            gl.texParameteri(target, glTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, 16);
+        if (cache.magFilter !== renderer.magFilter) {
+            gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, renderer.magFilter);
+            cache.magFilter = renderer.magFilter;
+        }
+        if (cache.minFilter !== renderer.minFilter) {
+            gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, renderer.minFilter);
+            cache.minFilter = renderer.minFilter;
+        }
+        if (cache.anisotropy !== renderer.anisotropy && glTextureFilterAnisotropic) {
+            gl.texParameteri(target, glTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, renderer.anisotropy);
+            cache.anisotropy = renderer.anisotropy;
         }
     }
 
@@ -576,9 +578,27 @@ function Renderer(context) {
             resize: { value: true, writable: true }
         });
     }
+
+    function TextureCache(object) {
+        Object.defineProperties(this, {
+            object: { value: object },
+
+            update: { value: true, writable: true },
+            resize: { value: true, writable: true },
+
+            wrapV: { value: null, writable: true },
+            wrapV: { value: null, writable: true },
+
+            magFilter: { value: null, writable: true },
+            minFilter: { value: null, writable: true },
+
+            anisotropy: { value: 1, writable: true }
+        });
+    }
 }
 
 Object.defineProperties(Renderer, {
+    TEXTURE_FILTER_NEAREST: { value: 0x2600 },
     TEXTURE_FILTER_BILINEAR: { value: 0x2601 },
     TEXTURE_FILTER_TRILINEAR: { value: 0x2703 }
 });
