@@ -1,6 +1,6 @@
 function EventDispatcher() {
     Object.defineProperties(this, {
-        _listeners: { value: {} },
+        _listeners: { value: {} }
     });
 }
 

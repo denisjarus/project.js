@@ -104,40 +104,42 @@ Object.defineProperties(Geometry, {
     },
     getNormals: {
         value: (function() {
-            var a = new Vector3D(),
-                b = new Vector3D(),
-                c = new Vector3D(),
+            var normal = new Vector3D(),
 
-                normal = new Vector3D();
+                a = new Vector3D(),
+                b = new Vector3D(),
+                c = new Vector3D();
 
             return function(geometry, weighted) {
                 var positions = geometry._data[Geometry.VERTEX_POSITIONS],
                     stride = geometry._strides[Geometry.VERTEX_POSITIONS] || 3,
                     offset = geometry._offsets[Geometry.VERTEX_POSITIONS],
-                    length = positions.length / stride,
 
                     indices = geometry._indices,
 
                     faceNormals = geometry._data[Geometry.FACE_NORMALS],
-                    vertexNormals = geometry._data[Geometry.VERTEX_NORMALS];
+                    faceNormalsLength = indices.length,
+
+                    vertexNormals = geometry._data[Geometry.VERTEX_NORMALS],
+                    vertexNormalsLength = positions.length / stride * 3;
 
                 if (!positions || !indices) {
                     return;
                 }
-                if (!faceNormals || faceNormals.length !== indices.length) {
-                    faceNormals = new Float32Array(indices.length);
+                if (!faceNormals || faceNormals.length !== faceNormalsLength) {
+                    faceNormals = new Float32Array(faceNormalsLength);
                 }
-                if (!vertexNormals || vertexNormals.length !== length * 3) {
-                    vertexNormals = new Float32Array(length * 3);
+                if (!vertexNormals || vertexNormals.length !== vertexNormalsLength) {
+                    vertexNormals = new Float32Array(vertexNormalsLength);
                 } else {
-                    for (var i = 0, len = vertexNormals.length; i < len; i++) {
+                    for (var i = 0; i < vertexNormalsLength; i++) {
                         vertexNormals[i] = 0;
                     }
                 }
 
-                for (var i = 0, len = indices.length; i < len; i += 3) {
+                for (var i = 0; i < faceNormalsLength; i += 3) {
 
-                    // get positions of vertices forming a face
+                    // get vertex positions
 
                     a.set(positions, offset + indices[i] * stride);
                     b.set(positions, offset + indices[i + 1] * stride).subtract(a);
@@ -145,9 +147,11 @@ Object.defineProperties(Geometry, {
 
                     // calculate face normal
 
-                    normal.copyFrom(weighted ? b.cross(c).negate() : b.cross(c).negate().normalize());
+                    normal.copyFrom(c.cross(b));
 
-                    // get normals of vertices forming a face, append face normal and store the results
+                    if (!weighted) { normal.normalize(); }
+
+                    // append face normal to each vertex normal in a face
 
                     var index = indices[i] * 3;
                     a.set(vertexNormals, index).add(normal);
@@ -161,12 +165,14 @@ Object.defineProperties(Geometry, {
                     c.set(vertexNormals, index).add(normal);
                     vertexNormals.set(c.elements, index);
 
-                    faceNormals.set(weighted ? normal.normalize().elements : normal.elements, i);
+                    if (weighted) { normal.normalize(); }
+
+                    faceNormals.set(normal.elements, i);
                 }
 
                 // normalize vertex normals
 
-                for (var i = 0, len = vertexNormals.length; i < len; i += 3) {
+                for (var i = 0; i < vertexNormalsLength; i += 3) {
                     normal.set(vertexNormals, i).normalize();
                     vertexNormals.set(normal.elements, i);
                 }

@@ -132,12 +132,26 @@ var mat = new Matrix3D(),
 // Matrix3D.invert()
 
 mat.copyFrom(a).invert();
-
 test('Matrix3D.invert()', mat, new Matrix3D([
     1, 0, 0, 0,
     0, 0.5, 0, 0,
     0, 0, 2/6, 0,
     -11, -11, -11, 1
+]));
+
+// Matrix3D.transpose();
+
+mat.set([
+    0, 4, 8, 12,
+    1, 5, 9, 13,
+    2, 6, 10, 14,
+    3, 7, 11, 15
+]).transpose();
+test('Matrix3D.transpose()', mat, new Matrix3D([
+    0, 1, 2, 3,
+    4, 5, 6, 7,
+    8, 9, 10, 11,
+    12, 13, 14, 15
 ]));
 
 // Matrix3D.normalMatrix();
@@ -148,7 +162,6 @@ mat.set([
     3, 1, 1, 0,
     0, 0, 0, 1
 ]).normalMatrix();
-
 test('Matrix3D.normalMatrix()', mat, new Matrix3D([
     -2/4, 2/4, 1, 0,
     3/4, -1/4, -8/4, 0,
