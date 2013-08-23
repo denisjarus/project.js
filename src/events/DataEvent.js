@@ -13,5 +13,5 @@ DataEvent.prototype = Object.create(Event3D.prototype);
 Object.defineProperties(DataEvent, {
     VERTICES_CHANGE: { value: 'geometryVerticesChange' },
     INDICES_CHANGE: { value: 'geometryIndicesChange' },
-    TEXTURE_CHANGE: { value: 'textureChange' }
+    TEXTURE_UPDATE: { value: 'textureUpdate' },
 });

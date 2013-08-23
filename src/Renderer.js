@@ -10,9 +10,10 @@ function Renderer(context) {
 
     // context settings
 
-    var magFilter = Renderer.TEXTURE_FILTER_BILINEAR,
-        minFilter = Renderer.TEXTURE_FILTER_BILINEAR,
-        anisotropy = 1;
+    var magFilter = Renderer.TEXTURE_FILTER_NEAREST,
+        minFilter = Renderer.TEXTURE_FILTER_NEAREST,
+        mipFilter = Renderer.TEXTURE_FILTER_NEAREST,
+        maxAnisotropy = 1;
 
     // current stage
 
@@ -57,13 +58,13 @@ function Renderer(context) {
                 }
             }
         },
-        anisotropy: {
+        maxAnisotropy: {
             get: function() {
-                return anisotropy;
+                return maxAnisotropy;
             },
             set: function(value) {
-                if (anisotropy !== value) {
-                    anisotropy = value;
+                if (maxAnisotropy !== value) {
+                    maxAnisotropy = value;
                     updateSettings = true;
                 }
             }
@@ -558,13 +559,22 @@ function Renderer(context) {
 
     var textures = {};
 
+    function TextureData(object) {
+        Object.defineProperties(this, {
+            object: { value: object },
+            update: { value: true, writable: true },
+            resize: { value: true, writable: true },
+            config: { value: true, writable: true }
+        });
+    }
+
     function setTexture(target, texture) {
         var cache = textures[texture.id];
 
         if (cache === undefined) {
-            cache = textures[texture.id] = new TextureCache(gl.createTexture());
+            cache = textures[texture.id] = new TextureData(gl.createTexture());
 
-            texture.addEventListener(DataEvent.TEXTURE_CHANGE, onTextureChange);
+            texture.addEventListener(DataEvent.TEXTURE_UPDATE, onTextureUpdate);
         }
 
         gl.bindTexture(target, cache.object);
@@ -573,9 +583,9 @@ function Renderer(context) {
 
         if (cache.update) {
             if (cache.resize) {
-                gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
+                gl.texImage2D(target, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, texture.getData());
             } else {
-                gl.texSubImage2D(target, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, texture.getData());
+                gl.texSubImage2D(target, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, texture.getData());
             }
             if (true) {
                 gl.generateMipmap(target);
@@ -593,17 +603,21 @@ function Renderer(context) {
             gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minFilter);
 
             if (glAnisotropicFilter) {
-                gl.texParameteri(target, glAnisotropicFilter.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+                gl.texParameteri(target, glAnisotropicFilter.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
             }
 
             cache.config = false;
         }
     }
 
-    function onTextureChange(event) {
+    function onTextureUpdate(event) {
         var cache = textures[event.target.id];
-        cache.update = true;
-        cache.resize |= event.resize;
+        if (event.type === 'something') {
+            cache.update = true;
+            cache.resize |= event.resize;
+        } else {
+            cache.config = true;
+        }
     }
 
     // uniforms
@@ -626,19 +640,9 @@ function Renderer(context) {
             resize: { value: true, writable: true }
         });
     }
-
-    function TextureCache(object) {
-        Object.defineProperties(this, {
-            object: { value: object },
-            update: { value: true, writable: true },
-            resize: { value: true, writable: true },
-            config: { value: true, writable: true }
-        });
-    }
 }
 
 Object.defineProperties(Renderer, {
     TEXTURE_FILTER_NEAREST: { value: 0x2600 },
-    TEXTURE_FILTER_BILINEAR: { value: 0x2601 },
-    TEXTURE_FILTER_TRILINEAR: { value: 0x2703 }
+    TEXTURE_FILTER_LINEAR: { value: 0x2601 }
 });

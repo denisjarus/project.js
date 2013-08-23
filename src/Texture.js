@@ -24,7 +24,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
             
             this._data = data;
 
-            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, resize));
+            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_UPDATE, null, resize));
         }
     },
     wrapU: {
@@ -34,7 +34,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         set: function(value) {
             this._wrapU = value;
 
-            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, false));
+            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_UPDATE, null, false));
         }
     },
     wrapV: {
@@ -44,7 +44,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         set: function(value) {
             this._wrapV = value;
 
-            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_CHANGE, null, false));
+            this.dispatchEvent(new DataEvent(DataEvent.TEXTURE_UPDATE, null, false));
         }
     }
 });
@@ -54,5 +54,9 @@ Object.defineProperties(Texture, {
 
     REPEAT: { value: 0x2901 },
     CLAMP: { value: 0x812F },
-    MIRROR: { value: 0x8370 }
+    MIRROR: { value: 0x8370 },
+
+    RGB: { value: 0x1907 },
+    RGBA: { value: 0x1908 },
+
 });
