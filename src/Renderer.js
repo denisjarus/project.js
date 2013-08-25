@@ -10,10 +10,9 @@ function Renderer(context) {
 
     // context settings
 
-    var magFilter = Renderer.TEXTURE_FILTER_NEAREST,
-        minFilter = Renderer.TEXTURE_FILTER_NEAREST,
-        mipFilter = Renderer.TEXTURE_FILTER_NEAREST,
-        maxAnisotropy = 1;
+    var magFilter = Renderer.TEXTURE_FILTER_BILINEAR,
+        minFilter = Renderer.TEXTURE_FILTER_TRILINEAR,
+        maxAnisotropy = glAnisotropicFilter ? 16 : 1;
 
     // current stage
 
@@ -102,24 +101,20 @@ function Renderer(context) {
             addObject(stage);
         }
 
-        // sort the render list
-
         if (sortRenderList) {
-            renderList.sort(compare);
-
             sortRenderList = false;
-        }
 
-        // clear the render target
+            renderList.sort(compare);
+        }
 
         if (true) {
             gl.clearColor(0, 0, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         }
 
-        // configure the context
-
         if (updateSettings) {
+            updateSettings = false;
+
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             gl.enable(gl.DEPTH_TEST);
             // gl.enable(gl.CULL_FACE);
@@ -129,15 +124,13 @@ function Renderer(context) {
             for (var id in textures) {
                 textures[id].config = true;
             }
-
-            updateSettings = false;
         }
+
+        // render objects
 
         var shader = null,
             geometry = null,
             material = null;
-
-        // render objects
 
         for (var object, i = 0; object = renderList[i]; i++) {
 
@@ -153,7 +146,7 @@ function Renderer(context) {
 
                 var program = getProgram(shader);
 
-                gl.useProgram(program);
+                gl.useProgram(program.object);
 
                 enableAttributes(program.attributes.length);
 
@@ -167,15 +160,15 @@ function Renderer(context) {
             if (geometry !== object.geometry) {
                 geometry = object.geometry;
 
-                // glVertexArrayObject.bindVertexArrayOES(getVertexArray(object));
+                // setVertexArray(object);
 
                 if (true) {
                     var attributes = program.attributes;
 
                     for (var attribute, j = 0; attribute = attributes[j]; j++) {
                         var name = attribute.name,
-                            size = getSize(attribute),
-                            type = getType(attribute);
+                            size = attribute.size,
+                            type = attribute.type;
 
                         gl.bindBuffer(gl.ARRAY_BUFFER, getVertexBuffer(geometry, name));
                         gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name) * 4, geometry.getOffset(name) * 4);
@@ -212,7 +205,7 @@ function Renderer(context) {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-    };
+    }
 
     // render list object comparsion method
 
@@ -241,22 +234,6 @@ function Renderer(context) {
         }
         
         return 0;
-    }
-
-    function getSize(attribute) {
-        switch (attribute.type) {
-            case gl.FLOAT_VEC2: return 2;
-            case gl.FLOAT_VEC3: return 3;
-            case gl.FLOAT_VEC4: return 4;
-        }
-    }
-
-    function getType(attribute) {
-        switch (attribute.type) {
-            case gl.FLOAT_VEC2: return gl.FLOAT;
-            case gl.FLOAT_VEC3: return gl.FLOAT;
-            case gl.FLOAT_VEC4: return gl.FLOAT;
-        }
     }
 
     // stage event handlers
@@ -315,9 +292,16 @@ function Renderer(context) {
     var programs = {};
 
     function getProgram(shader) {
-        var program = programs[shader.id];
-        if (program === undefined) {
-            program = programs[shader.id] = gl.createProgram();
+        var cache = programs[shader.id];
+
+        if (!cache) {
+            cache = programs[shader.id] = {
+                object: gl.createProgram(),
+                uniforms: {},
+                attributes: []
+            };
+
+            var program = cache.object
 
             gl.attachShader(program, createShader(gl.VERTEX_SHADER, shader.vertex));
             gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, shader.fragment));
@@ -328,26 +312,24 @@ function Renderer(context) {
                 throw new Error(gl.getError());
             }
 
-            var attributes = new Array(gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES));
+            for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES); i < len; i++) {
+                var info = gl.getActiveAttrib(program, i);
 
-            for (var attribute, i = 0, len = attributes.length; i < len; i++) {
-                attributes[i] = gl.getActiveAttrib(program, i);
+                cache.attributes[i] = {
+                    name: info.name,
+                    size: getAttributeSize(info),
+                    type: getAttributeType(info)
+                };
             }
 
-            program.attributes = attributes;
+            for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
+                var info = gl.getActiveUniform(program, i);
 
-            var uniforms = {};
-
-            for (var uniform, i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
-                uniform = gl.getActiveUniform(program, i);
-
-                Object.defineProperty(uniforms, uniform.name, createUniform(program, uniform));
+                cache.uniforms[info.name] = getUniformSetter(program, info);
             }
-
-            program.uniforms = uniforms;
         }
         
-        return program;
+        return cache;
     }
 
     function createShader(type, code) {
@@ -363,78 +345,67 @@ function Renderer(context) {
         return shader;
     }
 
-    var programAttributes = {};
-
-    function getProgramAttributes(shader) {
-        return programAttributes[shader.id];
+    function getAttributeSize(attribute) {
+        switch (attribute.type) {
+            case gl.FLOAT_VEC2: return 2;
+            case gl.FLOAT_VEC3: return 3;
+            case gl.FLOAT_VEC4: return 4;
+        }
     }
 
-    function createUniform(program, uniform) {
-        var location = gl.getUniformLocation(program, uniform.name),
-            setter = null;
+    function getAttributeType(attribute) {
+        switch (attribute.type) {
+            case gl.FLOAT_VEC2: return gl.FLOAT;
+            case gl.FLOAT_VEC3: return gl.FLOAT;
+            case gl.FLOAT_VEC4: return gl.FLOAT;
+        }
+    }
+
+    function getUniformSetter(program, uniform) {
+        var location = gl.getUniformLocation(program, uniform.name);
 
         switch (uniform.type) {
 
             // vector types
 
-            case gl.FLOAT:
-                setter = function(value) {
-                    gl.uniform1f(location, value);
-                };
-                break;
+            case gl.FLOAT: return function(value) {
+                gl.uniform1f(location, value);
+            };
 
-            case gl.FLOAT_VEC2:
-                setter = function(value) {
-                    gl.uniform2fv(location, value);
-                };
-                break;
+            case gl.FLOAT_VEC2: return function(value) {
+                gl.uniform2fv(location, value);
+            };
 
-            case gl.FLOAT_VEC3:
-                setter = function(value) {
-                    gl.uniform3fv(location, value);
-                };
-                break;
+            case gl.FLOAT_VEC3: return function(value) {
+                gl.uniform3fv(location, value);
+            };
 
-            case gl.FLOAT_VEC4:
-                setter = function(value) {
-                    gl.uniform4fv(location, value);
-                };
-                break;
+            case gl.FLOAT_VEC4: return function(value) {
+                gl.uniform4fv(location, value);
+            };
 
             // matrix types
 
-            case gl.FLOAT_MAT2:
-                setter = function(matrix) {
-                    gl.uniformMatrix2fv(location, false, matrix);
-                };
-                break;
+            case gl.FLOAT_MAT2: return function(matrix) {
+                gl.uniformMatrix2fv(location, false, matrix);
+            };
 
-            case gl.FLOAT_MAT3:
-                setter = function(matrix) {
-                    gl.uniformMatrix3fv(location, false, matrix);
-                };
-                break;
+            case gl.FLOAT_MAT3: return function(matrix) {
+                gl.uniformMatrix3fv(location, false, matrix);
+            };
 
-            case gl.FLOAT_MAT4:
-                setter = function(matrix) {
-                    gl.uniformMatrix4fv(location, false, matrix);
-                };
-                break;
+            case gl.FLOAT_MAT4: return function(matrix) {
+                gl.uniformMatrix4fv(location, false, matrix);
+            };
 
             // sampler types
 
-            case gl.SAMPLER_2D:
-                setter = function(texture) {
-                    gl.activeTexture(gl.TEXTURE0);
-                    gl.uniform1i(location, 0);
+            case gl.SAMPLER_2D: return function(texture) {
+                gl.activeTexture(gl.TEXTURE0);
+                gl.uniform1i(location, 0);
 
-                    setTexture(gl.TEXTURE_2D, texture);
-                };
-                break;
-        }
-
-        return {
-            set: setter
+                setTexture(gl.TEXTURE_2D, texture);
+            };
         }
     }
 
@@ -451,6 +422,8 @@ function Renderer(context) {
             for (var i = count; i < enabledAttributes; i++) {
                 gl.disableVertexAttribArray(i);
             }
+        } else {
+            return;
         }
 
         enabledAttributes = count;
@@ -460,20 +433,21 @@ function Renderer(context) {
 
     var vertexArrays = {};
 
-    function getVertexArray(object) {
+    function setVertexArray(object) {
         var cache = vertexArrays[object.id];
-        if (cache === undefined) {
-            cache = vertexArrays[object.id] = new Cache(glVertexArrayObject.createVertexArrayOES());
+
+        if (!cache) {
+            cache = vertexArrays[object.id] = {
+                object: glVertexArrayObject.createVertexArrayOES(),
+                update: false
+            };
         }
+
+        glVertexArrayObject.bindVertexArrayOES(cache.object);
 
         if (cache.update) {
-
-            glVertexArrayObject.bindVertexArrayOES(cache.object);
-
             cache.update = false;
         }
-
-        return cache.object;
     }
 
     // vertex buffers
@@ -482,15 +456,21 @@ function Renderer(context) {
 
     function getVertexBuffer(geometry, attribute) {
         var buffers = vertexBuffers[geometry.id];
-        if (buffers === undefined) {
-            buffers = vertexBuffers[geometry.id] = {};
 
-            geometry.addEventListener(DataEvent.VERTICES_CHANGE, onVerticesChange);
+        if (!buffers) {
+            buffers = vertexBuffers[geometry.id] = {};
         }
 
         var cache = buffers[attribute];
-        if (cache === undefined) {
-            cache = buffers[attribute] = new Cache(gl.createBuffer());
+
+        if (!cache) {
+            cache = buffers[attribute] = {
+                object: gl.createBuffer(),
+                update: true,
+                resize: true
+            };
+
+            geometry.addEventListener(GeometryEvent.UPDATE, onVerticesUpdate);
         }
 
         if (cache.update) {
@@ -511,11 +491,12 @@ function Renderer(context) {
         return cache.object;
     }
 
-    function onVerticesChange(event) {
+    function onVerticesUpdate(event) {
         var cache = vertexBuffers[event.target.id][event.attribute];
+
         if (cache) {
             cache.update = true;
-            cache.resize = event.resize;
+            cache.resize |= event.resize;
         }
     }
 
@@ -525,10 +506,15 @@ function Renderer(context) {
 
     function getIndexBuffer(geometry) {
         var cache = indexBuffers[geometry.id];
-        if (cache === undefined) {
-            cache = indexBuffers[geometry.id] = new Cache(gl.createBuffer());
 
-            geometry.addEventListener(DataEvent.INDICES_CHANGE, onIndicesChange);
+        if (!cache) {
+            cache = indexBuffers[geometry.id] = {
+                object: gl.createBuffer(),
+                update: true,
+                resize: true
+            };
+
+            geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
         }
 
         if (cache.update) {
@@ -549,7 +535,7 @@ function Renderer(context) {
         return cache.object;
     }
 
-    function onIndicesChange(event) {
+    function onIndicesUpdate(event) {
         var cache = indexBuffers[event.target.id];
         cache.update = true;
         cache.resize |= event.resize;
@@ -559,27 +545,22 @@ function Renderer(context) {
 
     var textures = {};
 
-    function TextureData(object) {
-        Object.defineProperties(this, {
-            object: { value: object },
-            update: { value: true, writable: true },
-            resize: { value: true, writable: true },
-            config: { value: true, writable: true }
-        });
-    }
-
     function setTexture(target, texture) {
         var cache = textures[texture.id];
 
-        if (cache === undefined) {
-            cache = textures[texture.id] = new TextureData(gl.createTexture());
+        if (!cache) {
+            cache = textures[texture.id] = {
+                object: gl.createTexture(),
+                update: true,
+                resize: true,
+                config: true
+            };
 
-            texture.addEventListener(DataEvent.TEXTURE_UPDATE, onTextureUpdate);
+            texture.addEventListener(TextureEvent.UPDATE, onTextureUpdate);
+            texture.addEventListener(TextureEvent.WRAP_CHANGE, onTextureUpdate);
         }
 
         gl.bindTexture(target, cache.object);
-
-        // update data
 
         if (cache.update) {
             if (cache.resize) {
@@ -594,9 +575,9 @@ function Renderer(context) {
             cache.update = cache.resize = false;
         }
 
-        // update parameters
-
         if (cache.config) {
+            cache.config = false;
+
             gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
             gl.texParameteri(target, gl.TEXTURE_WRAP_T, texture.wrapV);
             gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magFilter);
@@ -605,14 +586,13 @@ function Renderer(context) {
             if (glAnisotropicFilter) {
                 gl.texParameteri(target, glAnisotropicFilter.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
             }
-
-            cache.config = false;
         }
     }
 
     function onTextureUpdate(event) {
         var cache = textures[event.target.id];
-        if (event.type === 'something') {
+
+        if (event.type === TextureEvent.UPDATE) {
             cache.update = true;
             cache.resize |= event.resize;
         } else {
@@ -626,23 +606,15 @@ function Renderer(context) {
 
     function getUniformBuffer(material) {
         var buffer = uniformBuffers[material.id];
-        if (buffer === undefined) {
+
+        if (!buffer) {
             buffer = uniformBuffers[material.id] = {};
         }
-    }
-
-    // cache constructor
-
-    function Cache(object) {
-        Object.defineProperties(this, {
-            object: { value: object },
-            update: { value: true, writable: true },
-            resize: { value: true, writable: true }
-        });
     }
 }
 
 Object.defineProperties(Renderer, {
     TEXTURE_FILTER_NEAREST: { value: 0x2600 },
-    TEXTURE_FILTER_LINEAR: { value: 0x2601 }
+    TEXTURE_FILTER_BILINEAR: { value: 0x2601 },
+    TEXTURE_FILTER_TRILINEAR: { value: 0x2703 }
 });

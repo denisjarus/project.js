@@ -78,19 +78,17 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                 return function(uniforms, object, camera, lights) {
                     // modelView matrix
                     matrix.copyFrom(object.localToGlobal).append(camera.globalToLocal);
-                    uniforms.MODEL_VIEW = matrix.elements;
+                    uniforms.MODEL_VIEW(matrix.elements);
 
-                    uniforms.view = camera.globalToLocal.elements;
-                    uniforms.projection = camera.projection.elements;
+                    uniforms.view(camera.globalToLocal.elements);
+                    uniforms.projection(camera.projection.elements);
 
                     // normal matrix
                     // matrix.invert().transpose();
                     matrix.normalMatrix();
-                    uniforms.normalMatrix = matrix.elements;
+                    uniforms.normalMatrix(matrix.elements);
 
-                    uniforms.diffuseMap = object.material.diffuseMap;
-
-                    uniforms.specular = object.material.specular;
+                    uniforms.diffuseMap(object.material.diffuseMap);
 
                     if (!pointLightPositions || pointLightPositions.length < lights.length * 3) {
                         pointLightPositions = new Float32Array(lights.length * 3);
@@ -104,8 +102,8 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                         pointLightColors.set(light.color, i * 3);
                     }
 
-                    uniforms['pointLightPositions[0]'] = pointLightPositions;
-                    uniforms['pointLightColors[0]'] = pointLightColors;
+                    uniforms['pointLightPositions[0]'](pointLightPositions);
+                    uniforms['pointLightColors[0]'](pointLightColors);
                 }
             })(),
             {
