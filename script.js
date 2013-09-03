@@ -1,4 +1,5 @@
 var canvas,
+    target,
     context,
 
     keyboard,
@@ -20,6 +21,8 @@ var canvas,
 
 onload = function() {
     canvas = document.getElementById('canvas');
+    target = document.getElementById('target');
+
     if (!(context = canvas.getContext('experimental-webgl'))) {
         console.warn('webgl is not available');
     }
@@ -60,7 +63,6 @@ onload = function() {
     Geometry.getNormals(ground.geometry);
 
     ground.material = new GouraudMaterial();
-    // ground.material = new Material();
     ground.material.diffuseMap = new Texture();
 
     var img = new Image();
@@ -267,6 +269,18 @@ function enterFrame(frame) {
     renderer.render(stage, camera);
 
     requestAnimationFrame(enterFrame);
+
+    // test camera
+
+    vec.elements.set([0, -50, 0]);
+    camera.project(vec);
+    if (vec.z < 1) {
+        target.style.display = 'block';
+        target.style.left = (vec.x + 1) * canvas.width / 2 + 'px';
+        target.style.top = (-vec.y + 1) * canvas.height / 2 + 'px';
+    } else {
+        target.style.display = 'none';
+    }
 }
 
 function mouseMove(event) {
@@ -274,4 +288,7 @@ function mouseMove(event) {
     camera.rotationX -= 0.2 * event.webkitMovementY * Math.PI / 180;
 
     camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
+
+    var vec = camera.unproject(new Vector3D([0.5, 0.5, 0]));
+    console.log(vec.x, vec.y, vec.z);
 }

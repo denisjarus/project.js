@@ -63,7 +63,33 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
                     this._far
                 );
             }
+
             return this._projection;
+        }
+    },
+    project: {
+        value: function(vector) {
+            if (!(vector instanceof Vector3D)) {
+                throw new TypeError();
+            }
+
+            vector.transform(this.globalToLocal).transform(this.projection);
+
+            return vector;
+        }
+    },
+    unproject: {
+        value: function(vector) {
+            if (!(vector instanceof Vector3D)) {
+                throw new TypeError();
+            }
+
+            var matrix = new Matrix3D();
+            matrix.copyFrom(this.projection).invert();
+
+            vector.transform(matrix).transform(this.globalToLocal);
+
+            return vector;
         }
     }
 });
