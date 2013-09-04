@@ -53,13 +53,5 @@ SurfaceGeometry.prototype = Object.create(Geometry.prototype, {
 
             this.setData(attribute, vertices);
         }
-    },
-    indices: {
-        get: function() {
-            return this._indices;
-        },
-        set: function() {
-            console.warn('parametric geometry indices are immutable');
-        }
     }
 });

@@ -9,9 +9,7 @@ function Geometry() {
         _strides: { value: {} },
         _offsets: { value: {} },
 
-        _indices: { value: null, writable: true },
-
-        _update: { value: false, writable: true }
+        _indices: { value: null, writable: true }
     });
 }
 
@@ -43,10 +41,6 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             this._strides[attribute] = stride || 0;
             this._offsets[attribute] = offset || 0;
 
-            if (attribute === Geometry.VERTEX_POSITION) {
-                this._update = true;
-            }
-
             this.dispatchEvent(new GeometryEvent(GeometryEvent.UPDATE, attribute, resize));
         }
     },
@@ -69,7 +63,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
 
             this._update = true;
             
-            this.dispatchEvent(new DataEvent(DataEvent.INDICES_CHANGE, null, resize));
+            this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, resize));
         }
     }
 });
@@ -181,5 +175,20 @@ Object.defineProperties(Geometry, {
                 geometry.setData(Geometry.FACE_NORMALS, faceNormals);
             };
         })()
+    },
+    box: {
+        value: function(sizeX, sizeY, sizeZ) {
+            var geometry = new Geometry();
+
+                positions = new Float32Array(48),
+                texcoords = new Float32Array(32),
+                indices = new Uint16Array(36);
+
+            geometry.setData(Geometry.VERTEX_POSITIONS, positions);
+            geometry.setData(Geometry.VERTEX_TEXCOORDS, texcoords);
+            geometry.indices = indices;
+
+            return geometry;
+        }
     }
 });

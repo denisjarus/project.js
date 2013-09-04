@@ -157,6 +157,10 @@ onload = function() {
         function() { physics = !physics; }
     );
 
+    keyboard.bind(KeyboardControls.BACKSPACE,
+        function() { camera.lookAt(new Vector3D([0, 0, 0])); }
+    );
+
     // keyboard.bind('1'.charCodeAt(0),
     //     function() { surface.material.diffuseMap.minFilter = context.NEAREST; }
     // );

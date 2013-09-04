@@ -51,6 +51,7 @@ Object.defineProperties(KeyboardControls.prototype, {
 });
 
 Object.defineProperties(KeyboardControls, {
+    BACKSPACE: { value: 8 },
     ENTER: { value: 13 },
     CONTROL: { value: 17 },
     SPACE: { value: 32 }

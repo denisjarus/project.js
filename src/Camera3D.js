@@ -79,17 +79,26 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
         }
     },
     unproject: {
-        value: function(vector) {
+        value: function(vector, width, height) {
             if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
 
             var matrix = new Matrix3D();
-            matrix.copyFrom(this.projection).invert();
+            matrix.copyFrom(this.globalToLocal).append(this.globalToLocal).invert();
 
-            vector.transform(matrix).transform(this.globalToLocal);
+            vector.transform(matrix);
 
             return vector;
         }
+    },
+    lookAt: {
+        value: (function() {
+            var delta = new Vector3D();
+
+            return function(target) {
+                delta.set([this._x, this._y, this._z]).subtract(target);
+            };
+        })()
     }
 });

@@ -134,11 +134,7 @@ function Renderer(context) {
 
         for (var object, i = 0; object = renderList[i]; i++) {
 
-            // stop rendering when the first unrenderable object reached
-
-            if (!object.geometry || !object.material) {
-                break;
-            }
+            // set program
 
             if (shader !== object.material.shader) {
                 shader = object.material.shader;
@@ -156,6 +152,8 @@ function Renderer(context) {
                 // set lights
                 // TODO
             }
+
+            // set buffers
 
             if (geometry !== object.geometry) {
                 geometry = object.geometry;
@@ -177,6 +175,8 @@ function Renderer(context) {
                     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(geometry));
                 }
             }
+
+            // set material
 
             if (material !== object.material) {
                 material = object.material;
@@ -211,17 +211,6 @@ function Renderer(context) {
 
     function compare(a, b) {
         var order;
-
-        // move meshes with no geometry and/or no material to the end of the list
-
-        if (!(a.geometry && a.material)) {
-            return 1;
-        }
-        if (!(b.geometry && b.material)) {
-            return 0;
-        }
-
-        // group meshes by shader, geometry and material
 
         if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
             return order;
