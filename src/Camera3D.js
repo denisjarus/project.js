@@ -68,7 +68,7 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
         }
     },
     project: {
-        value: function(vector) {
+        value: function(vector, width, height) {
             if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
@@ -84,21 +84,9 @@ Camera3D.prototype = Object.create(Object3D.prototype, {
                 throw new TypeError();
             }
 
-            var matrix = new Matrix3D();
-            matrix.copyFrom(this.globalToLocal).append(this.globalToLocal).invert();
-
-            vector.transform(matrix);
+            vector.transform(this.projection.clone().invert().append(this.localToGlobal));
 
             return vector;
         }
-    },
-    lookAt: {
-        value: (function() {
-            var delta = new Vector3D();
-
-            return function(target) {
-                delta.set([this._x, this._y, this._z]).subtract(target);
-            };
-        })()
     }
 });

@@ -29,7 +29,7 @@ onload = function() {
         
     renderer = new Renderer(context);
     
-    stage = new Object3D();
+    stage = new Stage3D();
 
     light = stage.addChild(new Light3D());
 
@@ -184,6 +184,8 @@ onload = function() {
 
     onresize();
     requestAnimationFrame(enterFrame);
+
+    console.log(stage._objects);
 }
 
 onresize = function() {
@@ -214,39 +216,33 @@ function enterFrame(frame) {
 
     // controls
 
-    var vec = new Vector3D(),
-        mat = new Matrix3D();
+    var vec = new Vector3D();
 
-    mat.copyFrom(camera.localToGlobal);
-    mat.position.set([0, 0, 0]);
-
-    vec.elements.set([0, 0, -1]);
-    vec.transform(mat);
+    vec.set(camera.localToGlobal.elements, 8);
 
     if (physics) {
         if (forwards) {
-            camera.x += vec.x;
-            camera.z += vec.z;
-        }
-        if (backwards) {
             camera.x -= vec.x;
             camera.z -= vec.z;
         }
-    } else {
-        if (forwards) {
+        if (backwards) {
             camera.x += vec.x;
-            camera.y += vec.y;
             camera.z += vec.z;
         }
-        if (backwards) {
+    } else {
+        if (forwards) {
             camera.x -= vec.x;
             camera.y -= vec.y;
             camera.z -= vec.z;
         }
+        if (backwards) {
+            camera.x += vec.x;
+            camera.y += vec.y;
+            camera.z += vec.z;
+        }
     }
 
-    vec.elements.set([1, 0, 0]);
-    vec.transform(mat);
+    vec.set(camera.localToGlobal.elements, 0);
 
     if (left) {
         camera.x -= vec.x;
@@ -293,6 +289,9 @@ function mouseMove(event) {
 
     camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
 
-    var vec = camera.unproject(new Vector3D([0.5, 0.5, 0]));
-    console.log(vec.x, vec.y, vec.z);
+    var near = camera.unproject(new Vector3D([0, 0, 0])),
+        far = camera.unproject(new Vector3D([0, 0, 1])),
+        dir = far.subtract(near);
+
+    console.log(dir.x, dir.y, dir.z);
 }
