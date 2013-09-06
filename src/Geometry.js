@@ -60,8 +60,6 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             var resize = !this._indices || this._indices.length !== data.length;
 
             this._indices = data;
-
-            this._update = true;
             
             this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, resize));
         }

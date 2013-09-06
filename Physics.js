@@ -1,73 +1,86 @@
-function Physics(object) {
-    if (!(object instanceof Object3D)) {
-        throw new TypeError();
-    }
+function Physics() {
+
+    'use strict';
+
+    // worker
+
+    var worker = new Worker('PhysicsWorker.js');
+
+    // current stage
+
+    var stage = null,
+        objects = [];
+
+    // settings
+
+    var gravity = new Vector3D([0, -9.8, 0]);
+
+    // public api
 
     Object.defineProperties(this, {
-        object: { value: object },
-
-        mass: { value: 1, writable: true },
-
-        _force: { value: new Vector3D() },
-
-        _position: { value: new Vector3D([object.x, object.y, object.z]) },
-        _velocity: { value: new Vector3D() },
-
-        _enabled: { value: true, writable: true }
-    });
-}
-
-Object.defineProperties(Physics.prototype, {
-    enabled: {
-        get: function() {
-            return this._enabled;
+        simulate: {
+            value: simulate
         },
-        set: function(value) {
-            if (value === false) {
-                this._position.x = this.object.x;
-                this._position.y = this.object.y;
-                this._position.z = this.object.z;
-
-                this._velocity.x = 0;
-                this._velocity.y = 0;
-                this._velocity.z = 0;
-            }
-
-            this._enabled = value;
+        gravity: {
+            value: gravity
         }
-    },
-    move: {
-        value: function(dt) {
-            var m = this.mass,
-                p = this._position,
-                v = this._velocity,
-                f = this._force,
+    });
 
-                vec = new Vector3D();
+    // internal functions
 
-            // v += (f / m) * dt
-
-            v.add(vec.copyFrom(f).scale(1 / m * dt));
-
-            // p += v * dt
-
-            p.add(vec.copyFrom(v).scale(dt));
-
-            this._force.x = 0;
-            this._force.y = 0;
-            this._force.z = 0;
-
-            this.object.x = p.x;
-            this.object.y = p.y;
-            this.object.z = p.z;
+    function simulate(object, dt) {
+        if (!(object instanceof Object3D)) {
+            throw new TypeError();
         }
-    },
-    addForce: {
-        value: function(force) {
-            if (!(force instanceof Vector3D)) {
-                throw new TypeError();
+
+        if (stage !== object) {
+            if (stage) {
+                stage.removeEventListener(Event3D.ADDED, onAdd);
+                stage.removeEventListener(Event3D.REMOVED, onRemove);
+
+                removeObject(stage);
             }
-            this._force.add(force);
+            stage = object;
+            stage.addEventListener(Event3D.ADDED, onAdd);
+            stage.addEventListener(Event3D.REMOVED, onRemove);
+
+            addObject(stage);
+        }
+
+        // worker.postMessage(':3');
+
+        for (var object, i = 0; object = objects[i]; i++) {
+
         }
     }
-});
+
+    // stage management
+
+    function onAdd(event) {
+        addObject(event.target);
+    }
+
+    function addObject(object) {
+        objects.push(object);
+        for (var child, i = 0; child = object.getChildAt(i); i++) {
+            addObject(child);
+        }
+    }
+
+    function onRemove(event) {
+        removeObject(event.target);
+    }
+
+    function removeObject(object) {
+        objects.splice(objects.indexOf(object), 1);
+        for (var child, i = 0; child = object.getChildAt(i); i++) {
+            removeObject(child);
+        }
+    }
+
+    // worker communication
+
+    worker.onmessage = function(event) {
+        // console.log(event);
+    }
+}

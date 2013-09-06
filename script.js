@@ -28,8 +28,9 @@ onload = function() {
     }
         
     renderer = new Renderer(context);
+    physics = new Physics();
     
-    stage = new Stage3D();
+    stage = new Object3D();
 
     light = stage.addChild(new Light3D());
 
@@ -37,7 +38,7 @@ onload = function() {
 
     camera = stage.addChild(new Camera3D());
     
-    camera.physics = new Physics(camera);
+    camera.physics = new RigidBody(camera);
 
     // ground
 
@@ -105,8 +106,9 @@ onload = function() {
 
     Geometry.getNormals(surface.geometry);
 
-    // surface.material = new TextureMaterial();
-    surface.material = new GouraudMaterial();
+    surface.material = new TextureMaterial();
+    // surface.material = new GouraudMaterial();
+    // surface.material = new Material();
     surface.material.diffuseMap = ground.material.diffuseMap;
 
     // add colored point lights
@@ -184,8 +186,6 @@ onload = function() {
 
     onresize();
     requestAnimationFrame(enterFrame);
-
-    console.log(stage._objects);
 }
 
 onresize = function() {
@@ -266,6 +266,10 @@ function enterFrame(frame) {
     light.y = camera.y;
     light.z = camera.z;
 
+    //
+
+    physics.simulate(stage, delta);
+
     renderer.render(stage, camera);
 
     requestAnimationFrame(enterFrame);
@@ -289,9 +293,9 @@ function mouseMove(event) {
 
     camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
 
-    var near = camera.unproject(new Vector3D([0, 0, 0])),
-        far = camera.unproject(new Vector3D([0, 0, 1])),
-        dir = far.subtract(near);
+    // var near = camera.unproject(new Vector3D([0, 0, 0])),
+    //     far = camera.unproject(new Vector3D([0, 0, 1])),
+    //     dir = far.subtract(near);
 
-    console.log(dir.x, dir.y, dir.z);
+    // console.log(dir.x, dir.y, dir.z);
 }

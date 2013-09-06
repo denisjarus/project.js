@@ -14,11 +14,22 @@ function Renderer(context) {
         minFilter = Renderer.TEXTURE_FILTER_TRILINEAR,
         maxAnisotropy = glAnisotropicFilter ? 16 : 1;
 
-    // current stage
+    // stage
 
     var stage = null,
         renderList = [],
         lights = [];
+
+    // current state
+
+    var currentShader = null,
+        currentShaderAttributes = null,
+        currentShaderUniforms = null,
+
+        currentGeometry = null,
+
+        currentMaterial = null,
+        currentMaterialUniforms = null;
 
     // state flags
 
@@ -128,23 +139,12 @@ function Renderer(context) {
 
         // render objects
 
-        var shader = null,
-            geometry = null,
-            material = null;
-
         for (var object, i = 0; object = renderList[i]; i++) {
 
             // set program
 
-            if (shader !== object.material.shader) {
-                shader = object.material.shader;
-                geometry = null;
-
-                var program = getProgram(shader);
-
-                gl.useProgram(program.object);
-
-                enableAttributes(program.attributes.length);
+            if (currentShader !== object.material.shader) {
+                setShader(object.material.shader);
 
                 // set projection matrix
                 // TODO
@@ -155,35 +155,20 @@ function Renderer(context) {
 
             // set buffers
 
-            if (geometry !== object.geometry) {
-                geometry = object.geometry;
+            if (currentGeometry !== object.geometry) {
+                currentGeometry = object.geometry;
 
-                // setVertexArray(object);
-
-                if (true) {
-                    var attributes = program.attributes;
-
-                    for (var attribute, j = 0; attribute = attributes[j]; j++) {
-                        var name = attribute.name,
-                            size = attribute.size,
-                            type = attribute.type;
-
-                        gl.bindBuffer(gl.ARRAY_BUFFER, getVertexBuffer(geometry, name));
-                        gl.vertexAttribPointer(j, size, type, false, geometry.getStride(name) * 4, geometry.getOffset(name) * 4);
-                    }
-
-                    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(geometry));
-                }
+                setGeometry(object);
             }
 
             // set material
 
-            if (material !== object.material) {
-                material = object.material;
+            if (currentMaterial !== object.material) {
+                currentMaterial = object.material;
                 // TODO
             }
 
-            shader.uniform(program.uniforms, object, camera, lights);
+            currentShader.uniform(currentShaderUniforms, object, camera, lights);
 
             // set object matrices
 
@@ -196,7 +181,7 @@ function Renderer(context) {
             matrix.normalMatrix();
             // TODO
 
-            gl.drawElements(gl.TRIANGLES, geometry.indices.length, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(gl.TRIANGLES, currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
 
         gl.useProgram(null);
@@ -205,6 +190,10 @@ function Renderer(context) {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+        currentShader = null;
+        currentGeometry = null;
+        currentMaterial = null;
     }
 
     // render list object comparsion method
@@ -225,7 +214,7 @@ function Renderer(context) {
         return 0;
     }
 
-    // stage event handlers
+    // stage management
 
     function onAdd(event) {
         addObject(event.target);
@@ -280,7 +269,7 @@ function Renderer(context) {
 
     var programs = {};
 
-    function getProgram(shader) {
+    function setShader(shader) {
         var cache = programs[shader.id];
 
         if (!cache) {
@@ -317,8 +306,18 @@ function Renderer(context) {
                 cache.uniforms[info.name] = getUniformSetter(program, info);
             }
         }
+
+        if (!glVertexArrayObject) {
+            enableAttributes(currentShaderAttributes.length);
+        }
         
-        return cache;
+        gl.useProgram(cache.object);
+
+        currentShader = shader;
+        currentShaderAttributes = cache.attributes;
+        currentShaderUniforms = cache.uniforms;
+        currentGeometry = null;
+        currentMaterial = null;
     }
 
     function createShader(type, code) {
@@ -398,37 +397,29 @@ function Renderer(context) {
         }
     }
 
-    // attributes
-
-    var enabledAttributes = 0;
-
     function enableAttributes(count) {
-        if (count > enabledAttributes) {
-            for (var i = enabledAttributes; i < count; i++) {
+        if (count > currentShaderAttributes.length) {
+            for (var i = currentShaderAttributes.length; i < count; i++) {
                 gl.enableVertexAttribArray(i);
             }
-        } else if (count < enabledAttributes) {
-            for (var i = count; i < enabledAttributes; i++) {
+        } else if (count < currentShaderAttributes.length) {
+            for (var i = count; i < currentShaderAttributes.length; i++) {
                 gl.disableVertexAttribArray(i);
             }
-        } else {
-            return;
         }
-
-        enabledAttributes = count;
     }
 
-    // vertex arrays
+    // geometry
 
     var vertexArrays = {};
 
-    function setVertexArray(object) {
+    function setGeometry(object) {
         var cache = vertexArrays[object.id];
 
         if (!cache) {
             cache = vertexArrays[object.id] = {
                 object: glVertexArrayObject.createVertexArrayOES(),
-                update: false
+                update: true
             };
         }
 
@@ -436,6 +427,17 @@ function Renderer(context) {
 
         if (cache.update) {
             cache.update = false;
+
+            for (var attribute, i = 0; attribute = currentShaderAttributes[i]; i++) {
+                var stride = currentGeometry.getStride(attribute.name) * 4,
+                    offset = currentGeometry.getOffset(attribute.name) * 4;
+
+                gl.enableVertexAttribArray(i);
+                gl.bindBuffer(gl.ARRAY_BUFFER, getVertexBuffer(currentGeometry, attribute.name));
+                gl.vertexAttribPointer(i, attribute.size, attribute.type, false, stride, offset);
+            }
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(currentGeometry));
         }
     }
 
@@ -530,7 +532,11 @@ function Renderer(context) {
         cache.resize |= event.resize;
     }
 
-    // textures
+    // materials
+
+    function setMaterial(material) {
+
+    }
 
     var textures = {};
 
