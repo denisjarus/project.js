@@ -63,7 +63,8 @@ onload = function() {
 
     Geometry.getNormals(ground.geometry);
 
-    ground.material = new GouraudMaterial();
+    // ground.material = new GouraudMaterial();
+    ground.material = new Material();
     ground.material.diffuseMap = new Texture();
 
     var img = new Image();
@@ -106,9 +107,9 @@ onload = function() {
 
     Geometry.getNormals(surface.geometry);
 
-    surface.material = new TextureMaterial();
+    // surface.material = new TextureMaterial();
     // surface.material = new GouraudMaterial();
-    // surface.material = new Material();
+    surface.material = new Material();
     surface.material.diffuseMap = ground.material.diffuseMap;
 
     // add colored point lights
@@ -159,31 +160,6 @@ onload = function() {
         function() { physics = !physics; }
     );
 
-    keyboard.bind(KeyboardControls.BACKSPACE,
-        function() { camera.lookAt(new Vector3D([0, 0, 0])); }
-    );
-
-    // keyboard.bind('1'.charCodeAt(0),
-    //     function() { surface.material.diffuseMap.minFilter = context.NEAREST; }
-    // );
-    // keyboard.bind('2'.charCodeAt(0),
-    //     function() { surface.material.diffuseMap.minFilter = context.LINEAR; }
-    // );
-    // keyboard.bind('3'.charCodeAt(0),
-    //     function() { surface.material.diffuseMap.minFilter = context.NEAREST_MIPMAP_NEAREST; }
-    // );
-    // keyboard.bind('4'.charCodeAt(0),
-    //     function() { surface.material.diffuseMap.minFilter = context.NEAREST_MIPMAP_LINEAR; } // trilinear
-    // );
-    // keyboard.bind('5'.charCodeAt(0),
-    //     function() { surface.material.diffuseMap.minFilter = context.LINEAR_MIPMAP_NEAREST; } 
-    //     //BILINEAR_MIPMAP
-    // );
-    // keyboard.bind('6'.charCodeAt(0),
-    //     function() { surface.material.diffuseMap.minFilter = context.LINEAR_MIPMAP_LINEAR; } // true trilinear
-    //     //TRILINEAR_MIPMAP
-    // );
-
     onresize();
     requestAnimationFrame(enterFrame);
 }
@@ -220,26 +196,15 @@ function enterFrame(frame) {
 
     vec.set(camera.localToGlobal.elements, 8);
 
-    if (physics) {
-        if (forwards) {
-            camera.x -= vec.x;
-            camera.z -= vec.z;
-        }
-        if (backwards) {
-            camera.x += vec.x;
-            camera.z += vec.z;
-        }
-    } else {
-        if (forwards) {
-            camera.x -= vec.x;
-            camera.y -= vec.y;
-            camera.z -= vec.z;
-        }
-        if (backwards) {
-            camera.x += vec.x;
-            camera.y += vec.y;
-            camera.z += vec.z;
-        }
+    if (forwards) {
+        camera.x -= vec.x;
+        camera.y -= vec.y;
+        camera.z -= vec.z;
+    }
+    if (backwards) {
+        camera.x += vec.x;
+        camera.y += vec.y;
+        camera.z += vec.z;
     }
 
     vec.set(camera.localToGlobal.elements, 0);

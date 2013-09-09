@@ -107,8 +107,8 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                 }
             })(),
             {
-                modelView: Shader.MODEL_VIEW,
-                view: Shader.VIEW,
+                'modelView': Shader.MODEL_VIEW,
+                'view': Shader.VIEW,
             }
         )
     }
