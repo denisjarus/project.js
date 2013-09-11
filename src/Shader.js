@@ -1,10 +1,10 @@
-function Shader(vertex, fragment, uniform) {
+function Shader(vertex, fragment, uniforms, uniform) {
     Object.defineProperties(this, {
         id: { value: Shader._counter++ },
 
         vertex: { value: vertex },
-
         fragment: { value: fragment },
+        uniforms: { value: uniforms }
 
         uniform: { value: uniform }
     });

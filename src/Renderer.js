@@ -276,8 +276,8 @@ function Renderer(context) {
         if (!cache) {
             cache = cachedPrograms[shader.id] = {
                 object: gl.createProgram(),
-                uniforms: {},
-                attributes: []
+                attributes: [],
+                uniforms: []
             };
 
             var program = cache.object
@@ -292,19 +292,23 @@ function Renderer(context) {
             }
 
             for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES); i < len; i++) {
-                var info = gl.getActiveAttrib(program, i);
+                var attribute = gl.getActiveAttrib(program, i);
 
                 cache.attributes[i] = {
-                    name: info.name,
-                    size: getAttributeSize(info),
-                    type: getAttributeType(info)
+                    name: attribute.name,
+                    size: getAttributeSize(attribute),
+                    type: getAttributeType(attribute)
                 };
             }
 
             for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
-                var info = gl.getActiveUniform(program, i);
+                var uniform = gl.getActiveUniform(program, i);
 
-                cache.uniforms[info.name] = getUniform(program, info);
+                cache.uniforms[i] = {
+                    name: uniform.name,
+                    location: gl.getUniformLocation(program, uniform.name),
+                    setValue: getUniformFunction(uniform)
+                }
             }
         }
 
@@ -350,52 +354,60 @@ function Renderer(context) {
         }
     }
 
-    function getUniform(program, uniform) {
-        var location = gl.getUniformLocation(program, uniform.name);
-
+    function getUniformFunction(uniform) {
         switch (uniform.type) {
+            case gl.FLOAT: return uniformFloat;
 
-            // vector types
+            case gl.FLOAT_VEC2: return uniformVector2;
+            case gl.FLOAT_VEC3: return uniformVector3;
+            case gl.FLOAT_VEC4: return uniformVector4;
 
-            case gl.FLOAT: return function(value) {
-                gl.uniform1f(location, value);
-            };
+            case gl.FLOAT_MAT2: return uniformMatrix2;
+            case gl.FLOAT_MAT3: return uniformMatrix3;
+            case gl.FLOAT_MAT4: return uniformMatrix4;
 
-            case gl.FLOAT_VEC2: return function(value) {
-                gl.uniform2fv(location, value);
-            };
-
-            case gl.FLOAT_VEC3: return function(value) {
-                gl.uniform3fv(location, value);
-            };
-
-            case gl.FLOAT_VEC4: return function(value) {
-                gl.uniform4fv(location, value);
-            };
-
-            // matrix types
-
-            case gl.FLOAT_MAT2: return function(matrix) {
-                gl.uniformMatrix2fv(location, false, matrix);
-            };
-
-            case gl.FLOAT_MAT3: return function(matrix) {
-                gl.uniformMatrix3fv(location, false, matrix);
-            };
-
-            case gl.FLOAT_MAT4: return function(matrix) {
-                gl.uniformMatrix4fv(location, false, matrix);
-            };
-
-            // sampler types
-
-            case gl.SAMPLER_2D: return function(texture) {
-                gl.activeTexture(gl.TEXTURE0);
-                gl.uniform1i(location, 0);
-
-                bindTexture(gl.TEXTURE_2D, texture);
-            };
+            case gl.SAMPLER_2D: return uniformTexture2D;
+            case gl.SAMPLER_CUBE: return uniformTextureCube;
         }
+    }
+
+    function uniformFloat(value) {
+        gl.uniform1f(this.location, value);
+    }
+
+    function uniformVector2(value) {
+        gl.uniform2fv(this.location, value);
+    }
+    
+    function uniformVector3(value) {
+        gl.uniform3fv(this.location, value);
+    }
+    
+    function uniformVector4(value) {
+        gl.uniform4fv(this.location, value);
+    }
+
+    function uniformMatrix2(value) {
+        gl.uniformMatrix2fv(this.location, false, value);
+    }
+
+    function uniformMatrix3(value) {
+        gl.uniformMatrix3fv(this.location, false, value);
+    }
+
+    function uniformMatrix4(value) {
+        gl.uniformMatrix4fv(this.location, false, value);
+    }
+
+    function uniformTexture2D(texture) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(location, 0);
+
+        bindTexture(gl.TEXTURE_2D, texture);
+    }
+
+    function uniformTextureCube(texture) {
+
     }
 
     function enableAttributes(count) {
@@ -530,9 +542,9 @@ function Renderer(context) {
     // materials
 
     function setMaterial(material) {
-        // for (var uniform, i = 0; uniform = currentMaterialUniforms[i]; i++) {
-        //     uniform(material);
-        // }
+        for (var uniform, i = 0; uniform = currentUniforms[i]; i++) {
+            uniform.setValue(material[uniform.name]);
+        }
 
         currentMaterial = material;
     }
