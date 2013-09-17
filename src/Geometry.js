@@ -145,17 +145,13 @@ Object.defineProperties(Geometry, {
 
                     // append face normal to each vertex normal in a face
 
-                    var index = indices[i] * 3;
-                    a.set(vertexNormals, index).add(normal);
-                    vertexNormals.set(a.elements, index);
+                    a.set(vertexNormals, indices[i] * 3).add(normal);
+                    b.set(vertexNormals, indices[i + 1] * 3).add(normal);
+                    c.set(vertexNormals, indices[i + 2] * 3).add(normal);
 
-                    index = indices[i + 1] * 3;
-                    b.set(vertexNormals, index).add(normal);
-                    vertexNormals.set(b.elements, index);
-
-                    index = indices[i + 2] * 3;
-                    c.set(vertexNormals, index).add(normal);
-                    vertexNormals.set(c.elements, index);
+                    vertexNormals.set(a.elements, indices[i] * 3);
+                    vertexNormals.set(b.elements, indices[i + 1] * 3);
+                    vertexNormals.set(c.elements, indices[i + 2] * 3);
 
                     if (weighted) { normal.normalize(); }
 
