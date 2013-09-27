@@ -65,7 +65,8 @@ onload = function() {
 
     // ground.material = new GouraudMaterial();
     ground.material = new Material();
-    ground.material.diffuseMap = new Texture();
+    ground.material.setProperty('diffuseMap', new Texture());
+    ground.material.diffuseMap = ground.material.getProperty('diffuseMap');
 
     var img = new Image();
     img.src = 'diffuseMap.bmp';

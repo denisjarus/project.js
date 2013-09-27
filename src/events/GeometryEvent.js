@@ -4,7 +4,7 @@ function GeometryEvent(type, attrib, resize) {
 
     Object.defineProperties(this, {
         attrib: { value: attrib },
-        resize: { value: resize || false }
+        resize: { value: resize }
     });
 }
 

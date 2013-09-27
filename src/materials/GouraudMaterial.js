@@ -70,6 +70,11 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                 '   gl_FragColor = texture2D(diffuseMap, uv) * vec4(light, 1.0);',
                 '}'
             ].join('\n'),
+            {
+                'modelView': Shader.MODEL_VIEW_MATRIX,
+                'view': Shader.VIEW_MATRIX,
+                'diffuseMap': Shader.MATERIAL
+            },
             (function() {
                 var matrix = new Matrix3D(),
                     pointLightPositions,
@@ -105,11 +110,7 @@ GouraudMaterial.prototype = Object.create(TextureMaterial.prototype, {
                     uniforms['pointLightPositions[0]'](pointLightPositions);
                     uniforms['pointLightColors[0]'](pointLightColors);
                 }
-            })(),
-            {
-                'modelView': Shader.MODEL_VIEW,
-                'view': Shader.VIEW,
-            }
+            })()
         )
     }
 });

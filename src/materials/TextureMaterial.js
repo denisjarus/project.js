@@ -54,12 +54,8 @@ TextureMaterial.prototype = Object.create(Material.prototype, {
                 '}'
 
             ].join('\n'),
-            function(uniforms, object, camera) {
-                uniforms.model(object.localToGlobal.elements);
-                uniforms.view(camera.globalToLocal.elements);
-                uniforms.projection(camera.projection.elements);
-                
-                uniforms.diffuseMap(object.material.diffuseMap);
+            {
+                diffuseMap: 'diffuseMap'
             }
         )
     }

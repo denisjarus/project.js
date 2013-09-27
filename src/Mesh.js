@@ -24,7 +24,9 @@ Mesh.prototype = Object.create(Object3D.prototype, {
             if (!(geometry instanceof Geometry)) {
                 throw new TypeError();
             }
+
             this._geometry = geometry;
+
             this.dispatchEvent(new Event3D(Event3D.GEOMETRY_CHANGE));
         }
     },
@@ -36,7 +38,9 @@ Mesh.prototype = Object.create(Object3D.prototype, {
             if (!(material instanceof Material)) {
                 throw new TypeError();
             }
+
             this._material = material;
+            
             this.dispatchEvent(new Event3D(Event3D.MATERIAL_CHANGE));
         }
     }
