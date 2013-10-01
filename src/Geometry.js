@@ -169,20 +169,5 @@ Object.defineProperties(Geometry, {
                 geometry.setData(Geometry.FACE_NORMALS, faceNormals);
             };
         })()
-    },
-    box: {
-        value: function(sizeX, sizeY, sizeZ) {
-            var geometry = new Geometry();
-
-                positions = new Float32Array(48),
-                texcoords = new Float32Array(32),
-                indices = new Uint16Array(36);
-
-            geometry.setData(Geometry.VERTEX_POSITIONS, positions);
-            geometry.setData(Geometry.VERTEX_TEXCOORDS, texcoords);
-            geometry.indices = indices;
-
-            return geometry;
-        }
     }
 });

@@ -150,8 +150,19 @@ function Renderer(context) {
             if (currentShader !== object.material.shader) {
                 setShader(object.material.shader);
 
-                // set projection matrix
-                // TODO
+                // set view and projection matrices
+
+                if (currentUniforms.viewMatrix) {
+                    currentUniforms.viewMatrix.setValue(camera.globalToLocal.elements);
+                }
+
+                if (currentUniforms.projectionMatrix) {
+                    currentUniforms.projectionMatrix.setValue(camera.projection.elements);
+                }
+
+                if (currentUniforms.far) {
+                    currentUniforms.far.setValue(camera.far);
+                }
 
                 // set lights
                 // TODO
@@ -171,18 +182,25 @@ function Renderer(context) {
                 setMaterial(object.material);
             }
 
-            currentShader.uniform(currentUniforms, object, camera, lights);
-
             // set object matrices
 
             matrix.copyFrom(object.localToGlobal);
-            // TODO
+
+            if (currentUniforms.modelMatrix) {
+                currentUniforms.modelMatrix.setValue(matrix.elements);
+            }
 
             matrix.append(camera.globalToLocal);
-            // TODO
+            
+            if (currentUniforms.modelViewMatrix) {
+                currentUniforms.modelViewMatrix.setValue(matrix.elements);
+            }
 
             matrix.normalMatrix();
-            // TODO
+            
+            if (currentUniforms.normalMatrix) {
+                currentUniforms.normalMatrix.setValue(matrix.elements);
+            }
 
             gl.drawElements(gl.TRIANGLES, currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
@@ -277,7 +295,7 @@ function Renderer(context) {
             cache = cachedPrograms[shader.id] = {
                 object: gl.createProgram(),
                 attributes: [],
-                uniforms: []
+                uniforms: {}
             };
 
             var program = cache.object
@@ -304,8 +322,7 @@ function Renderer(context) {
             for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
                 var uniform = gl.getActiveUniform(program, i);
 
-                cache.uniforms[i] = {
-                    name: uniform.name,
+                cache.uniforms[uniform.name] = {
                     location: gl.getUniformLocation(program, uniform.name),
                     setValue: getUniformFunction(uniform)
                 }
@@ -375,28 +392,28 @@ function Renderer(context) {
         gl.uniform1f(this.location, value);
     }
 
-    function uniformVector2(value) {
-        gl.uniform2fv(this.location, value);
+    function uniformVector2(elements) {
+        gl.uniform2fv(this.location, elements);
     }
     
-    function uniformVector3(value) {
-        gl.uniform3fv(this.location, value);
+    function uniformVector3(elements) {
+        gl.uniform3fv(this.location, elements);
     }
     
-    function uniformVector4(value) {
-        gl.uniform4fv(this.location, value);
+    function uniformVector4(elements) {
+        gl.uniform4fv(this.location, elements);
     }
 
-    function uniformMatrix2(value) {
-        gl.uniformMatrix2fv(this.location, false, value);
+    function uniformMatrix2(elements) {
+        gl.uniformMatrix2fv(this.location, false, elements);
     }
 
-    function uniformMatrix3(value) {
-        gl.uniformMatrix3fv(this.location, false, value);
+    function uniformMatrix3(elements) {
+        gl.uniformMatrix3fv(this.location, false, elements);
     }
 
-    function uniformMatrix4(value) {
-        gl.uniformMatrix4fv(this.location, false, value);
+    function uniformMatrix4(elements) {
+        gl.uniformMatrix4fv(this.location, false, elements);
     }
 
     function uniformTexture2D(texture) {
@@ -542,9 +559,9 @@ function Renderer(context) {
     // materials
 
     function setMaterial(material) {
-        for (var uniform, i = 0; uniform = currentUniforms[i]; i++) {
-            uniform.setValue(material[uniform.name]);
-        }
+        // for (var uniform, i = 0; uniform = currentUniforms[i]; i++) {
+        //     uniform.setValue(material[uniform.name]);
+        // }
 
         currentMaterial = material;
     }
