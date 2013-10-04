@@ -44,6 +44,11 @@ function Renderer(context) {
 
     var matrix = new Matrix3D();
 
+    // lights
+
+    var pointLightPositions = new Float32Array(0),
+        pointLightColors = new Float32Array(0);
+
     // public api
 
     Object.defineProperties(this, {
@@ -141,6 +146,18 @@ function Renderer(context) {
             }
         }
 
+        // lights
+
+        if (pointLightPositions.length !== lights.length * 3) {
+            pointLightPositions = new Float32Array(lights.length * 3);
+            pointLightColors = new Float32Array(lights.length * 3);
+        }
+
+        for (var light, i = 0; light = lights[i]; i++) {
+            pointLightPositions.set(light.localToGlobal.position, i * 3);
+            pointLightColors.set(light.color, i * 3);
+        }
+
         // render objects
 
         for (var object, i = 0; object = renderList[i]; i++) {
@@ -165,7 +182,14 @@ function Renderer(context) {
                 }
 
                 // set lights
-                // TODO
+
+                if (currentUniforms['pointLightPositions[0]']) {
+                    currentUniforms['pointLightPositions[0]'].setValue(pointLightPositions);
+                }
+
+                if (currentUniforms['pointLightColors[0]']) {
+                    currentUniforms['pointLightColors[0]'].setValue(pointLightColors);
+                }
             }
 
             // set buffers
@@ -418,7 +442,7 @@ function Renderer(context) {
 
     function uniformTexture2D(texture) {
         gl.activeTexture(gl.TEXTURE0);
-        gl.uniform1i(location, 0);
+        gl.uniform1i(this.location, 0);
 
         bindTexture(gl.TEXTURE_2D, texture);
     }
@@ -559,9 +583,9 @@ function Renderer(context) {
     // materials
 
     function setMaterial(material) {
-        // for (var uniform, i = 0; uniform = currentUniforms[i]; i++) {
-        //     uniform.setValue(material[uniform.name]);
-        // }
+        for (var property, i = 0; property = currentShader.properties[i]; i++) {
+            currentUniforms[property].setValue(material.getProperty(property));
+        }
 
         currentMaterial = material;
     }
@@ -611,7 +635,7 @@ function Renderer(context) {
     }
 
     function onTextureUpdate(event) {
-        var cache = textures[event.target.id];
+        var cache = cachedTextures[event.target.id];
 
         if (event.type === TextureEvent.UPDATE) {
             cache.update = true;

@@ -40,6 +40,23 @@ onload = function() {
     
     camera.physics = new RigidBody(camera);
 
+    // load stage
+
+    var request = new XMLHttpRequest();
+
+    request.responseType = 'json';
+
+    request.onload = function() {
+        if (this.responseType === 'json') {
+            parse(this.response);
+        } else {
+            parse(JSON.parse(this.response));
+        }
+    };
+
+    request.open('GET', 'stage.json');
+    request.send();
+
     // ground
 
     var ground = stage.addChild(new Mesh());
@@ -65,13 +82,13 @@ onload = function() {
 
     // ground.material = new GouraudMaterial();
     ground.material = new Material();
+    ground.material.shader = Shader.gouraudShader;
     ground.material.setProperty('diffuseMap', new Texture());
-    ground.material.diffuseMap = ground.material.getProperty('diffuseMap');
 
     var img = new Image();
     img.src = 'diffuseMap.bmp';
     img.onload = function() {
-        ground.material.diffuseMap.setData(img);
+        ground.material.getProperty('diffuseMap').setData(img);
     };
 
     // second instance of ground
@@ -110,8 +127,7 @@ onload = function() {
 
     // surface.material = new TextureMaterial();
     // surface.material = new GouraudMaterial();
-    surface.material = new Material();
-    surface.material.diffuseMap = ground.material.diffuseMap;
+    surface.material = ground.material.clone();
 
     // add colored point lights
     var red = stage.addChild(new Light3D([1, 0, 0]));
@@ -264,4 +280,8 @@ function mouseMove(event) {
     //     dir = far.subtract(near);
 
     // console.log(dir.x, dir.y, dir.z);
+}
+
+function parse(json) {
+    console.log(json);
 }
