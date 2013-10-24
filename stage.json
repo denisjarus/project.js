@@ -1,15 +1,8 @@
-{
-	"textures": {
-		"tex0": {
-			"texture2D": "diffuseMap.bmp"
-		}
-	},
-	"materials": {
-		"mat0": {
-			"diffuseMap": "tex0"
-		}
-	},
-	"stage": {
-		
-	}
-}
+[
+    {
+        "class": "Material"
+    },
+    {
+        "class": "Mesh"
+    }
+]

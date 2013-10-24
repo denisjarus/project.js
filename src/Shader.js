@@ -1,44 +1,23 @@
-function Shader(properties, vertex, fragment) {
+function Shader(vertexShader, fragmentShader, properties) {
     Object.defineProperties(this, {
         id: { value: Shader._counter++ },
-        
-        properties: { value: properties || [] },
 
-        vertex: { value: vertex },
-        fragment: { value: fragment },
+        vertexShader: { value: vertexShader },
+        fragmentShader: { value: fragmentShader },
+
+        properties: { value: properties || [] },
     });
 
-    if (!vertex || !fragment) {
+    if (!vertexShader || !fragmentShader) {
         throw new Error();
     }
 }
 
 Object.defineProperties(Shader, {
-    _counter: { value: 0, writable: true },
-
-    GOURAUD_SHADING: {
-        value: [
-            '#ifndef PHONG_SHADING',
-            '   #define GOURAUD_SHADING',
-            '#endif'
-
-        ].join('\n')
-    },
-    PHONG_SHADING: {
-        value: [
-            '#ifndef GOURAUD_SHADING',
-            '   #define PHONG_SHADING',
-            '#endif'
-
-        ].join('\n')
-    },
-    DIFFUSE_MAP: {
-        value: '#define DIFFUSE_MAP'
-    }
+    _counter: { value: 0, writable: true }
 });
 
 Shader.depthShader = new Shader(
-    null,
     [
         'attribute vec3 position;',
 
@@ -68,50 +47,9 @@ Shader.depthShader = new Shader(
     ].join('\n')
 );
 
-Shader.textureShader = new Shader(
-    [
-        'diffuseMap'
-    ],
-    [
-        'attribute vec3 position;',
-        'attribute vec2 texcoord;',
-
-        'uniform mat4 modelViewMatrix;',
-        'uniform mat4 projectionMatrix;',
-
-        'varying vec2 uv;',
-
-        'void main(void) {',
-
-        '   uv = texcoord;',
-
-        '   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
-
-        '}'
-
-    ].join('\n'),
-    [
-        'precision mediump float;',
-
-        'uniform sampler2D diffuseMap;',
-
-        'varying vec2 uv;',
-
-        'void main(void) {',
-
-        '   gl_FragColor = texture2D(diffuseMap, uv);',
-
-        '}'
-
-    ].join('\n')
-);
-
 Shader.gouraudShader = new Shader(
     [
-        'diffuseMap'
-    ],
-    [
-        Shader.GOURAUD_SHADING,
+        '#define TWO_SIDED',
         '#define NUM_POINT_LIGHTS 5',
 
         'attribute vec3 position;',
@@ -129,7 +67,12 @@ Shader.gouraudShader = new Shader(
         'varying vec2 uv;',
 
         'varying vec3 lightFront;',
-        'varying vec3 lightBack;',
+        
+        '#ifdef TWO_SIDED',
+
+            'varying vec3 lightBack;',
+
+        '#endif',
 
         'void main(void) {',
         '   vec4 view_position = modelViewMatrix * vec4(position, 1.0);',
@@ -137,9 +80,13 @@ Shader.gouraudShader = new Shader(
 
         '   uv = texcoord;',
 
-        '   lightFront = lightBack = vec3(0.0);',
+        '   lightFront = vec3(0.0);',
 
-        '   #ifdef GOURAUD_SHADING',
+        '   #ifdef TWO_SIDED',
+
+        '       lightBack = vec3(0.0);',
+
+        '   #endif',
 
         '   for (int i = 0; i < NUM_POINT_LIGHTS; i++) {',
         '       vec4 view_light = viewMatrix * vec4(pointLightPositions[i], 1.0);',
@@ -147,42 +94,52 @@ Shader.gouraudShader = new Shader(
         '       float dot = dot(view_normal, normalize(view_light - view_position));',
 
         '       lightFront += max(dot, 0.0) * pointLightColors[i];',
-        '       lightBack += max(-dot, 0.0) * pointLightColors[i];',
-        '   }',
 
-        '   #endif',
+        '       #ifdef TWO_SIDED',
+
+        '           lightBack += max(-dot, 0.0) * pointLightColors[i];',
+
+        '       #endif',
+        '   }',
 
         '   gl_Position = projectionMatrix * view_position;',
         '}'
 
     ].join('\n'),
     [
-        'precision mediump float;',
+        '#define TWO_SIDED',
 
-        Shader.DIFFUSE_MAP,
+        'precision mediump float;',
 
         'uniform sampler2D diffuseMap;',
 
         'varying vec2 uv;',
 
         'varying vec3 lightFront;',
-        'varying vec3 lightBack;',
+
+        '#ifdef TWO_SIDED',
+
+        '   varying vec3 lightBack;',
+
+        '#endif',
 
         'void main(void) {',
-        '   vec3 light = gl_FrontFacing ? lightFront : lightBack;',
+
+        '   #ifdef TWO_SIDED',
+
+        '       vec3 light = gl_FrontFacing ? lightFront : lightBack;',
+
+        '   #else',
+
+        '       vec3 light = gl_FrontFacing ? lightFront : vec3(0.0);',
+
+        '   #endif',
+
         '   gl_FragColor = texture2D(diffuseMap, uv) * vec4(light, 1.0);',
         '}'
         
-    ].join('\n')
+    ].join('\n'),
+    [
+        'diffuseMap'
+    ]
 );
-
-// var testShader = new Shader(
-//     [
-//         'position',
-//         'texcoord'
-//     ],
-//     [
-//         'diffuseMap'
-//     ]
-
-// );

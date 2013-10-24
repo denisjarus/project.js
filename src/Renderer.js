@@ -23,17 +23,19 @@ function Renderer(context) {
     // current state
 
     var currentShader = null,
-        currentAttributes = null,
-        currentUniforms = null,
         currentGeometry = null,
         currentMaterial = null;
 
+    var activeAttributes = [],
+        activeUniforms = null,
+        activeTextures = [];
+
     // cached webgl objects
 
-    var cachedPrograms = {},
-        cachedArrays = {},
-        cachedBuffers = {},
-        cachedTextures = {};
+    var glPrograms = {},
+        glVertexArrays = {},
+        glVertexBuffers = {},
+        glTextures = {};
 
     // state flags
 
@@ -133,17 +135,11 @@ function Renderer(context) {
         }
 
         if (updateSettings) {
-            updateSettings = false;
-
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             gl.enable(gl.DEPTH_TEST);
             // gl.enable(gl.CULL_FACE);
             // gl.cullFace(gl.BACK);
             gl.frontFace(gl.CW);
-
-            for (var id in cachedTextures) {
-                cachedTextures[id].config = true;
-            }
         }
 
         // lights
@@ -169,26 +165,26 @@ function Renderer(context) {
 
                 // set view and projection matrices
 
-                if (currentUniforms.viewMatrix) {
-                    currentUniforms.viewMatrix.setValue(camera.globalToLocal.elements);
+                if (activeUniforms.viewMatrix) {
+                    activeUniforms.viewMatrix.set(camera.globalToLocal.elements);
                 }
 
-                if (currentUniforms.projectionMatrix) {
-                    currentUniforms.projectionMatrix.setValue(camera.projection.elements);
+                if (activeUniforms.projectionMatrix) {
+                    activeUniforms.projectionMatrix.set(camera.projection.elements);
                 }
 
-                if (currentUniforms.far) {
-                    currentUniforms.far.setValue(camera.far);
+                if (activeUniforms.far) {
+                    activeUniforms.far.set(camera.far);
                 }
 
                 // set lights
 
-                if (currentUniforms['pointLightPositions[0]']) {
-                    currentUniforms['pointLightPositions[0]'].setValue(pointLightPositions);
+                if (activeUniforms['pointLightPositions[0]']) {
+                    activeUniforms['pointLightPositions[0]'].set(pointLightPositions);
                 }
 
-                if (currentUniforms['pointLightColors[0]']) {
-                    currentUniforms['pointLightColors[0]'].setValue(pointLightColors);
+                if (activeUniforms['pointLightColors[0]']) {
+                    activeUniforms['pointLightColors[0]'].set(pointLightColors);
                 }
             }
 
@@ -210,20 +206,20 @@ function Renderer(context) {
 
             matrix.copyFrom(object.localToGlobal);
 
-            if (currentUniforms.modelMatrix) {
-                currentUniforms.modelMatrix.setValue(matrix.elements);
+            if (activeUniforms.modelMatrix) {
+                activeUniforms.modelMatrix.set(matrix.elements);
             }
 
             matrix.append(camera.globalToLocal);
             
-            if (currentUniforms.modelViewMatrix) {
-                currentUniforms.modelViewMatrix.setValue(matrix.elements);
+            if (activeUniforms.modelViewMatrix) {
+                activeUniforms.modelViewMatrix.set(matrix.elements);
             }
 
             matrix.normalMatrix();
             
-            if (currentUniforms.normalMatrix) {
-                currentUniforms.normalMatrix.setValue(matrix.elements);
+            if (activeUniforms.normalMatrix) {
+                activeUniforms.normalMatrix.set(matrix.elements);
             }
 
             gl.drawElements(gl.TRIANGLES, currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
@@ -239,6 +235,8 @@ function Renderer(context) {
         currentShader = null;
         currentGeometry = null;
         currentMaterial = null;
+
+        updateSettings = false;
     }
 
     // render list object comparsion method
@@ -313,10 +311,10 @@ function Renderer(context) {
     // programs
 
     function setShader(shader) {
-        var cache = cachedPrograms[shader.id];
+        var cache = glPrograms[shader.id];
 
         if (!cache) {
-            cache = cachedPrograms[shader.id] = {
+            cache = glPrograms[shader.id] = {
                 object: gl.createProgram(),
                 attributes: [],
                 uniforms: {}
@@ -324,8 +322,8 @@ function Renderer(context) {
 
             var program = cache.object
 
-            gl.attachShader(program, createShader(gl.VERTEX_SHADER, shader.vertex));
-            gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, shader.fragment));
+            gl.attachShader(program, createShader(gl.VERTEX_SHADER, shader.vertexShader));
+            gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, shader.fragmentShader));
 
             gl.linkProgram(program);
 
@@ -348,8 +346,8 @@ function Renderer(context) {
 
                 cache.uniforms[uniform.name] = {
                     location: gl.getUniformLocation(program, uniform.name),
-                    setValue: getUniformFunction(uniform)
-                }
+                    set: getUniformFunction(uniform)
+                };
             }
         }
 
@@ -360,8 +358,8 @@ function Renderer(context) {
         gl.useProgram(cache.object);
 
         currentShader = shader;
-        currentAttributes = cache.attributes;
-        currentUniforms = cache.uniforms;
+        activeAttributes = cache.attributes;
+        activeUniforms = cache.uniforms;
         currentGeometry = null;
         currentMaterial = null;
     }
@@ -381,6 +379,7 @@ function Renderer(context) {
 
     function getAttributeSize(attribute) {
         switch (attribute.type) {
+            case gl,FLOAT: return 1;
             case gl.FLOAT_VEC2: return 2;
             case gl.FLOAT_VEC3: return 3;
             case gl.FLOAT_VEC4: return 4;
@@ -389,6 +388,7 @@ function Renderer(context) {
 
     function getAttributeType(attribute) {
         switch (attribute.type) {
+            case gl.FLOAT: return gl.FLOAT;
             case gl.FLOAT_VEC2: return gl.FLOAT;
             case gl.FLOAT_VEC3: return gl.FLOAT;
             case gl.FLOAT_VEC4: return gl.FLOAT;
@@ -452,12 +452,12 @@ function Renderer(context) {
     }
 
     function enableAttributes(count) {
-        if (count > currentAttributes.length) {
-            for (var i = currentAttributes.length; i < count; i++) {
+        if (count > activeAttributes.length) {
+            for (var i = activeAttributes.length; i < count; i++) {
                 gl.enableVertexAttribArray(i);
             }
-        } else if (count < currentAttributes.length) {
-            for (var i = count; i < currentAttributes.length; i++) {
+        } else if (count < activeAttributes.length) {
+            for (var i = count; i < activeAttributes.length; i++) {
                 gl.disableVertexAttribArray(i);
             }
         }
@@ -466,10 +466,10 @@ function Renderer(context) {
     // geometry
 
     function setGeometry(object) {
-        var cache = cachedArrays[object.id];
+        var cache = glVertexArrays[object.id];
 
         if (!cache) {
-            cache = cachedArrays[object.id] = {
+            cache = glVertexArrays[object.id] = {
                 object: glVertexArrayObject.createVertexArrayOES(),
                 update: true
             };
@@ -480,7 +480,7 @@ function Renderer(context) {
         if (cache.update) {
             cache.update = false;
 
-            for (var attribute, i = 0; attribute = currentAttributes[i]; i++) {
+            for (var attribute, i = 0; attribute = activeAttributes[i]; i++) {
                 var stride = currentGeometry.getStride(attribute.name) * 4,
                     offset = currentGeometry.getOffset(attribute.name) * 4;
 
@@ -499,10 +499,10 @@ function Renderer(context) {
     // buffers
 
     function bindBuffer(geometry, attribute) {
-        var buffers = cachedBuffers[geometry.id];
+        var buffers = glVertexBuffers[geometry.id];
 
         if (!buffers) {
-            buffers = cachedBuffers[geometry.id] = {};
+            buffers = glVertexBuffers[geometry.id] = {};
         }
 
         var cache = buffers[attribute];
@@ -531,7 +531,7 @@ function Renderer(context) {
     }
 
     function onVerticesUpdate(event) {
-        var cache = vertexBuffers[event.target.id][event.attribute];
+        var cache = glVertexBuffers[event.target.id][event.attribute];
 
         if (cache) {
             cache.update = true;
@@ -584,17 +584,17 @@ function Renderer(context) {
 
     function setMaterial(material) {
         for (var property, i = 0; property = currentShader.properties[i]; i++) {
-            currentUniforms[property].setValue(material.getProperty(property));
+            activeUniforms[property].set(material.getProperty(property));
         }
 
         currentMaterial = material;
     }
 
     function bindTexture(target, texture) {
-        var cache = cachedTextures[texture.id];
+        var cache = glTextures[texture.id];
 
         if (!cache) {
-            cache = cachedTextures[texture.id] = {
+            cache = glTextures[texture.id] = {
                 object: gl.createTexture(),
                 update: true,
                 resize: true,
@@ -620,7 +620,7 @@ function Renderer(context) {
             cache.update = cache.resize = false;
         }
 
-        if (cache.config) {
+        if (cache.config || updateSettings) {
             cache.config = false;
 
             gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
@@ -635,7 +635,7 @@ function Renderer(context) {
     }
 
     function onTextureUpdate(event) {
-        var cache = cachedTextures[event.target.id];
+        var cache = glTextures[event.target.id];
 
         if (event.type === TextureEvent.UPDATE) {
             cache.update = true;

@@ -44,14 +44,9 @@ onload = function() {
 
     var request = new XMLHttpRequest();
 
-    request.responseType = 'json';
-
     request.onload = function() {
-        if (this.responseType === 'json') {
-            parse(this.response);
-        } else {
-            parse(JSON.parse(this.response));
-        }
+        var stage = JSON.parse(this.responseText, parse);
+        console.log(stage);
     };
 
     request.open('GET', 'stage.json');
@@ -282,6 +277,7 @@ function mouseMove(event) {
     // console.log(dir.x, dir.y, dir.z);
 }
 
-function parse(json) {
-    console.log(json);
+function parse(key, value) {
+    console.log(key, value);
+    return new Material();
 }
