@@ -11,5 +11,7 @@ TextureEvent.prototype = Object.create(Event3D.prototype);
 
 Object.defineProperties(TextureEvent, {
 	UPDATE: { value: 'textureUpdate' },
-	WRAP_CHANGE: { value: 'textureWrapChange' }
+	FILTER_CHANGE: { value: 'textureFilterChange' },
+	MAX_ANISITROPY_CHANGE: { value: 'textureMaxAnisotropyChange' },
+	WRAP_CHANGE: { value: 'textureWrapChange' },
 });

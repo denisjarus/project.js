@@ -7,6 +7,11 @@ function Texture() {
 
         _data: { value: null, writable: true },
 
+        _magFilter: { value: Texture.BILINEAR, writable: true },
+        _minFilter: { value: Texture.TRILINEAR, writable: true },
+
+        _maxAnisotropy: { value: 16, writable: true }
+
         _wrapU: { value: Texture.REPEAT, writable: true },
         _wrapV: { value: Texture.REPEAT, writable: true }
     });
@@ -27,6 +32,36 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
             this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, resize));
         }
     },
+    magFilter: {
+        get: function() {
+            return this._magFilter;
+        },
+        set: function(value) {
+            this._magFilter = value;
+
+            this.dispatchEvent(new TextureEvent(TextureEvent.FILTER_CHANGE));
+        }
+    },
+    minFilter: {
+        get: function() {
+            return this._minFilter;
+        },
+        set: function(value) {
+            this._minFilter = value;
+
+            this.dispatchEvent(new TextureEvent(TextureEvent.FILTER_CHANGE));
+        }
+    },
+    maxAnisotropy: {
+        get: function() {
+            return this._maxAnisotropy;
+        },
+        set: function(value) {
+            this._maxAnisotropy = Math.max(0, Math.min(value, 16));
+
+            this.dispatchEvent(new TextureEvent(TextureEvent.MAX_ANISITROPY_CHANGE));
+        }
+    }
     wrapU: {
         get: function() {
             return this._wrapU;
@@ -34,7 +69,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         set: function(value) {
             this._wrapU = value;
 
-            this.dispatchEvent(new TextureEvent(TextureEvent.WRAP_CHANGE, false));
+            this.dispatchEvent(new TextureEvent(TextureEvent.WRAP_CHANGE));
         }
     },
     wrapV: {
@@ -54,5 +89,9 @@ Object.defineProperties(Texture, {
 
     REPEAT: { value: 0x2901 },
     CLAMP: { value: 0x812F },
-    MIRROR: { value: 0x8370 }
+    MIRROR: { value: 0x8370 },
+
+    NEAREST: { value: 0x2600 },
+    BILINEAR: { value: 0x2601 },
+    TRILINEAR: { value: 0x2703 }
 });
