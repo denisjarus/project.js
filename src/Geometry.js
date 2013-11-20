@@ -6,8 +6,6 @@ function Geometry() {
         id: { value: Geometry._counter++ },
 
         _data: { value: {} },
-        _strides: { value: {} },
-        _offsets: { value: {} },
 
         _indices: { value: null, writable: true }
     });
@@ -19,18 +17,8 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             return this._data[attribute];
         }
     },
-    getStride: {
-        value: function(attribute) {
-            return this._strides[attribute];
-        }
-    },
-    getOffset: {
-        value: function(attribute) {
-            return this._offsets[attribute];
-        }
-    },
     setData: {
-        value: function(attribute, data, stride, offset) {
+        value: function(attribute, data) {
             if (!(data instanceof Float32Array)) {
                 throw new TypeError();
             }
@@ -38,9 +26,6 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             var resize = !this._data[attribute] || this._data[attribute].length !== data.length;
 
             this._data[attribute] = data;
-            this._strides[attribute] = stride || 0;
-            this._offsets[attribute] = offset || 0;
-
             this.dispatchEvent(new GeometryEvent(GeometryEvent.UPDATE, attribute, resize));
         }
     },
@@ -60,7 +45,6 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             var resize = !this._indices || this._indices.length !== data.length;
 
             this._indices = data;
-            
             this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, resize));
         }
     }
@@ -102,10 +86,10 @@ Object.defineProperties(Geometry, {
                 b = new Vector3D(),
                 c = new Vector3D();
 
-            return function(geometry, weighted) {
+            return function(geometry, weighted, stride, offset) {
                 var positions = geometry._data[Geometry.VERTEX_POSITIONS],
-                    stride = geometry._strides[Geometry.VERTEX_POSITIONS] || 3,
-                    offset = geometry._offsets[Geometry.VERTEX_POSITIONS],
+                    stride = stride || 3,
+                    offset = offset || 0,
 
                     indices = geometry._indices,
 

@@ -74,6 +74,7 @@ onload = function() {
     );
 
     Geometry.getNormals(ground.geometry);
+    // ground.geometry.setData('normal', ground.geometry.getData('position'));
 
     // ground.material = new GouraudMaterial();
     ground.material = new Material();
@@ -174,7 +175,7 @@ onload = function() {
 
     onresize();
     requestAnimationFrame(enterFrame);
-}
+};
 
 onresize = function() {
     context.canvas.width = context.canvas.clientWidth;
@@ -182,11 +183,11 @@ onresize = function() {
     context.viewport(0, 0, context.canvas.width, context.canvas.height);
 
     camera.aspectRatio = context.canvas.width / context.canvas.height;
-}
+};
 
 onmousedown = function() {
     canvas.webkitRequestPointerLock();
-}
+};
 
 document.addEventListener('webkitpointerlockchange', function(event) {
     if (document.webkitPointerLockElement === canvas) {

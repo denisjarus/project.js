@@ -8,12 +8,6 @@ function Renderer(context) {
         glVertexArrayObject = gl.getExtension('OES_vertex_array_object'),
         glAnisotropicFilter = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
 
-    // context settings
-
-    var magFilter = Renderer.TEXTURE_FILTER_BILINEAR,
-        minFilter = Renderer.TEXTURE_FILTER_TRILINEAR,
-        maxAnisotropy = glAnisotropicFilter ? 16 : 1;
-
     // stage
 
     var stage = null,
@@ -32,10 +26,10 @@ function Renderer(context) {
 
     // cached webgl objects
 
-    var glPrograms = {},
-        glVertexArrays = {},
-        glVertexBuffers = {},
-        glTextures = {};
+    var shaderCache = {},
+        geometryCache = {},
+        materialCache = {},  // for v2.0
+        textureCache = {};
 
     // state flags
 
@@ -56,39 +50,6 @@ function Renderer(context) {
     Object.defineProperties(this, {
         render: {
             value: render
-        },
-        magFilter: {
-            get: function() {
-                return magFilter;
-            },
-            set: function(value) {
-                if (magFilter !== value) {
-                    magFilter = value;
-                    updateSettings = true;
-                }
-            }
-        },
-        minFilter: {
-            get: function() {
-                return minFilter;
-            },
-            set: function(value) {
-                if (minFilter !== value) {
-                    minFilter = value;
-                    updateSettings = true
-                }
-            }
-        },
-        maxAnisotropy: {
-            get: function() {
-                return maxAnisotropy;
-            },
-            set: function(value) {
-                if (maxAnisotropy !== value) {
-                    maxAnisotropy = value;
-                    updateSettings = true;
-                }
-            }
         }
     });
 
@@ -126,7 +87,7 @@ function Renderer(context) {
         if (sortRenderList) {
             sortRenderList = false;
 
-            renderList.sort(compare);
+            renderList.sort(sort);
         }
 
         if (true) {
@@ -157,6 +118,9 @@ function Renderer(context) {
         // render objects
 
         for (var object, i = 0; object = renderList[i]; i++) {
+            if (!object.visible) {
+                continue;
+            }
 
             // set program
 
@@ -191,9 +155,7 @@ function Renderer(context) {
             // set buffers
 
             if (currentGeometry !== object.geometry) {
-                currentGeometry = object.geometry;
-
-                setGeometry(object);
+                setGeometry(object.geometry);
             }
 
             // set material
@@ -239,9 +201,9 @@ function Renderer(context) {
         updateSettings = false;
     }
 
-    // render list object comparsion method
+    // render list object comparison method
 
-    function compare(a, b) {
+    function sort(a, b) {
         var order;
 
         if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
@@ -311,57 +273,56 @@ function Renderer(context) {
     // programs
 
     function setShader(shader) {
-        var cache = glPrograms[shader.id];
+        var glProgram = shaderCache[shader.id];
 
-        if (!cache) {
-            cache = glPrograms[shader.id] = {
-                object: gl.createProgram(),
+        if (glProgram === undefined) {
+            glProgram = shaderCache[shader.id] = {
+                program: gl.createProgram(),
                 attributes: [],
                 uniforms: {}
             };
 
-            var program = cache.object
+            gl.attachShader(glProgram.program, createShader(gl.VERTEX_SHADER, shader.vertexShader));
+            gl.attachShader(glProgram.program, createShader(gl.FRAGMENT_SHADER, shader.fragmentShader));
 
-            gl.attachShader(program, createShader(gl.VERTEX_SHADER, shader.vertexShader));
-            gl.attachShader(program, createShader(gl.FRAGMENT_SHADER, shader.fragmentShader));
+            gl.linkProgram(glProgram.program);
 
-            gl.linkProgram(program);
-
-            if (gl.getProgramParameter(program, gl.LINK_STATUS) === false) {
+            if (gl.getProgramParameter(glProgram.program, gl.LINK_STATUS) === false) {
                 throw new Error(gl.getError());
             }
 
-            for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES); i < len; i++) {
-                var attribute = gl.getActiveAttrib(program, i);
+            for (var i = 0, len = gl.getProgramParameter(glProgram.program, gl.ACTIVE_ATTRIBUTES); i < len; i++) {
+                var attribute = gl.getActiveAttrib(glProgram.program, i);
 
-                cache.attributes[i] = {
+                glProgram.attributes[i] = {
                     name: attribute.name,
                     size: getAttributeSize(attribute),
                     type: getAttributeType(attribute)
                 };
             }
 
-            for (var i = 0, len = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS); i < len; i++) {
-                var uniform = gl.getActiveUniform(program, i);
+            for (var i = 0, len = gl.getProgramParameter(glProgram.program, gl.ACTIVE_UNIFORMS); i < len; i++) {
+                var uniform = gl.getActiveUniform(glProgram.program, i);
 
-                cache.uniforms[uniform.name] = {
-                    location: gl.getUniformLocation(program, uniform.name),
+                glProgram.uniforms[uniform.name] = {
+                    location: gl.getUniformLocation(glProgram.program, uniform.name),
                     set: getUniformFunction(uniform)
                 };
             }
         }
 
         if (!glVertexArrayObject) {
-            enableAttributes(cache.attributes.length);
+            enableAttributes(glProgram.attributes.length);
         }
         
-        gl.useProgram(cache.object);
+        gl.useProgram(glProgram.program);
 
         currentShader = shader;
-        activeAttributes = cache.attributes;
-        activeUniforms = cache.uniforms;
         currentGeometry = null;
         currentMaterial = null;
+
+        activeAttributes = glProgram.attributes;
+        activeUniforms = glProgram.uniforms;
     }
 
     function createShader(type, code) {
@@ -379,7 +340,7 @@ function Renderer(context) {
 
     function getAttributeSize(attribute) {
         switch (attribute.type) {
-            case gl,FLOAT: return 1;
+            case gl.FLOAT: return 1;
             case gl.FLOAT_VEC2: return 2;
             case gl.FLOAT_VEC3: return 3;
             case gl.FLOAT_VEC4: return 4;
@@ -444,7 +405,7 @@ function Renderer(context) {
         gl.activeTexture(gl.TEXTURE0);
         gl.uniform1i(this.location, 0);
 
-        bindTexture(gl.TEXTURE_2D, texture);
+        setTexture2D(texture);
     }
 
     function uniformTextureCube(texture) {
@@ -465,119 +426,76 @@ function Renderer(context) {
 
     // geometry
 
-    function setGeometry(object) {
-        var cache = glVertexArrays[object.id];
+    function setGeometry(geometry) {
+        var glGeometry = geometryCache[geometry.id];
 
-        if (!cache) {
-            cache = glVertexArrays[object.id] = {
-                object: glVertexArrayObject.createVertexArrayOES(),
-                update: true
-            };
-        }
-
-        glVertexArrayObject.bindVertexArrayOES(cache.object);
-
-        if (cache.update) {
-            cache.update = false;
-
-            for (var attribute, i = 0; attribute = activeAttributes[i]; i++) {
-                var stride = currentGeometry.getStride(attribute.name) * 4,
-                    offset = currentGeometry.getOffset(attribute.name) * 4;
-
-                bindBuffer(currentGeometry, attribute.name);
-
-                gl.enableVertexAttribArray(i);
-                gl.vertexAttribPointer(i, attribute.size, attribute.type, false, stride, offset);
-            }
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getIndexBuffer(currentGeometry));
-        }
-
-        // currentGeometry = geometry;
-    }
-
-    // buffers
-
-    function bindBuffer(geometry, attribute) {
-        var buffers = glVertexBuffers[geometry.id];
-
-        if (!buffers) {
-            buffers = glVertexBuffers[geometry.id] = {};
-        }
-
-        var cache = buffers[attribute];
-
-        if (!cache) {
-            cache = buffers[attribute] = {
-                object: gl.createBuffer(),
-                update: true,
-                resize: true
+        if (glGeometry === undefined) {
+            glGeometry = geometryCache[geometry.id] = {
+                vertexArrays: {},
+                vertexBuffers: {},
+                indexBuffer: null
             };
 
             geometry.addEventListener(GeometryEvent.UPDATE, onVerticesUpdate);
+            geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
         }
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, cache.object);
+        var vertexArray = glGeometry.vertexArrays[currentShader.id];
 
-        if (cache.update) {
-            if (cache.resize) {
-                gl.bufferData(gl.ARRAY_BUFFER, geometry.getData(attribute), gl.STATIC_DRAW);
-            } else {
-                gl.bufferSubData(gl.ARRAY_BUFFER, 0, geometry.getData(attribute));
+        if (vertexArray) {
+            glVertexArrayObject.bindVertexArrayOES(vertexArray);
+        } else {
+            vertexArray = glGeometry.vertexArrays[currentShader.id] = glVertexArrayObject.createVertexArrayOES();
+
+            glVertexArrayObject.bindVertexArrayOES(vertexArray);
+
+            for (var attribute, i = 0; attribute = activeAttributes[i]; i++) {
+                var vertexBuffer = glGeometry.vertexBuffers[attribute.name];
+
+                if (vertexBuffer) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                } else {
+                    vertexBuffer = glGeometry.vertexBuffers[attribute.name] = gl.createBuffer();
+
+                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                    updateBuffer(gl.ARRAY_BUFFER, geometry.getData(attribute.name), true);
+                }
+
+                gl.enableVertexAttribArray(i);
+                gl.vertexAttribPointer(i, attribute.size, attribute.type, false, 0, 0);
             }
 
-            cache.update = cache.resize = false;
+            var indexBuffer = glGeometry.indexBuffer;
+
+            if (indexBuffer) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            } else {
+                indexBuffer = glGeometry.indexBuffer = gl.createBuffer();
+
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                updateBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, true);
+            }
+        }
+
+        currentGeometry = geometry;
+    }
+
+    function updateBuffer(target, data, resize) {
+        if (resize) {
+            gl.bufferData(target, data, gl.STATIC_DRAW);
+        } else {
+            gl.bufferSubData(target, 0, data);
         }
     }
 
     function onVerticesUpdate(event) {
-        var cache = glVertexBuffers[event.target.id][event.attribute];
-
-        if (cache) {
-            cache.update = true;
-            cache.resize |= event.resize;
-        }
-    }
-
-    // index buffers
-
-    var indexBuffers = {};
-
-    function getIndexBuffer(geometry) {
-        var cache = indexBuffers[geometry.id];
-
-        if (!cache) {
-            cache = indexBuffers[geometry.id] = {
-                object: gl.createBuffer(),
-                update: true,
-                resize: true
-            };
-
-            geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
-        }
-
-        if (cache.update) {
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cache.object);
-
-            if (cache.resize) {
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
-            } else {
-                gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, geometry.indices);
-            }
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-
-            cache.update = cache.resize = false;
-        }
-
-        return cache.object;
+        gl.bindBuffer(gl.ARRAY_BUFFER, geometryCache[event.target.id].vertexBuffers[event.attribute]);
+        updateBuffer(gl.ARRAY_BUFFER, geometry.getData(attribute), event.resize);
     }
 
     function onIndicesUpdate(event) {
-        var cache = indexBuffers[event.target.id];
-        cache.update = true;
-        cache.resize |= event.resize;
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryCache[event.target.id].indexBuffer);
+        updateBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, event.resize);
     }
 
     // materials
@@ -590,64 +508,87 @@ function Renderer(context) {
         currentMaterial = material;
     }
 
-    function bindTexture(target, texture) {
-        var cache = glTextures[texture.id];
+    // textures
 
-        if (!cache) {
-            cache = glTextures[texture.id] = {
-                object: gl.createTexture(),
-                update: true,
-                resize: true,
-                config: true
-            };
+    function setTexture2D(texture) {
+        var glTexture = textureCache[texture.id];
 
-            texture.addEventListener(TextureEvent.UPDATE, onTextureUpdate);
-            texture.addEventListener(TextureEvent.WRAP_CHANGE, onTextureUpdate);
-        }
+        if (glTexture) {
+            gl.bindTexture(gl.TEXTURE_2D, glTexture);
+        } else {
+            glTexture = textureCache[texture.id] = gl.createTexture();
 
-        gl.bindTexture(target, cache.object);
+            gl.bindTexture(gl.TEXTURE_2D, glTexture);
 
-        if (cache.update) {
-            if (cache.resize) {
-                gl.texImage2D(target, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, texture.getData());
-            } else {
-                gl.texSubImage2D(target, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, texture.getData());
-            }
-            if (true) {
-                gl.generateMipmap(target);
-            }
+            updateTexture(gl.TEXTURE_2D, texture.getData(), true);
+            configTexture(gl.TEXTURE_2D, texture);
 
-            cache.update = cache.resize = false;
-        }
-
-        if (cache.config || updateSettings) {
-            cache.config = false;
-
-            gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
-            gl.texParameteri(target, gl.TEXTURE_WRAP_T, texture.wrapV);
-            gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magFilter);
-            gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minFilter);
-
-            if (glAnisotropicFilter) {
-                gl.texParameteri(target, glAnisotropicFilter.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
-            }
+            texture.addEventListener(TextureEvent.UPDATE, onTexture2DUpdate);
+            texture.addEventListener(TextureEvent.CONFIG, onTexture2DConfig);
         }
     }
 
-    function onTextureUpdate(event) {
-        var cache = glTextures[event.target.id];
+    function setTextureCube(texture) {
+        var glTexture = textureCache[texture.id];
 
-        if (event.type === TextureEvent.UPDATE) {
-            cache.update = true;
-            cache.resize |= event.resize;
+        if (glTexture) {
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);
         } else {
-            cache.config = true;
+            glTexture = textureCache[texture.id] = gl.createTexture();
+
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);
+
+            for (var i = 0; i < 6; i++) {
+                updateTexture(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, texture.getData(i), true);
+            }
+
+            configTexture(gl.TEXTURE_CUBE_MAP, texture);
+
+            texture.addEventListener(TextureEvent.UPDATE, onTextureCubeUpdate);
+            texture.addEventListener(TextureEvent.CONFIG, onTextureCubeConfig);
         }
+    }
+
+    function updateTexture(target, data, resize) {
+        if (resize) {
+            gl.texImage2D(target, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, data);
+        } else {
+            gl.texSubImage2D(target, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, data);
+        }
+
+        if (true) {
+            gl.generateMipmap(target);
+        }
+    }
+
+    function configTexture(target, texture) {
+        gl.texParameteri(target, gl.TEXTURE_WRAP_S, texture.wrapU);
+        gl.texParameteri(target, gl.TEXTURE_WRAP_T, texture.wrapV);
+        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, texture.magFilter);
+        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, texture.minFilter);
+
+        if (glAnisotropicFilter) {
+            gl.texParameteri(target, glAnisotropicFilter.TEXTURE_MAX_ANISOTROPY_EXT, texture.maxAnisotropy);
+        }
+    }
+
+    function onTexture2DUpdate(event) {
+        gl.bindTexture(gl.TEXTURE_2D, textureCache[event.target.id]);
+        updateTexture(gl.TEXTURE_2D, event.target.getData(), event.resize);
+    }
+
+    function onTextureCubeUpdate(event) {
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCache[event.target.id]);
+        updateTexture(event.side, event.data, event.resize);
+    }
+
+    function onTexture2DConfig(event) {
+        gl.bindTexture(gl.TEXTURE_2D, textureCache[event.target.id]);
+        configTexture(gl.TEXTURE_2D, event.target);
+    }
+
+    function onTextureCubeConfig(event) {
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCache[event.target.id]);
+        configTexture(gl.TEXTURE_CUBE_MAP, event.target);
     }
 }
-
-Object.defineProperties(Renderer, {
-    TEXTURE_FILTER_NEAREST: { value: 0x2600 },
-    TEXTURE_FILTER_BILINEAR: { value: 0x2601 },
-    TEXTURE_FILTER_TRILINEAR: { value: 0x2703 }
-});

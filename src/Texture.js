@@ -10,7 +10,7 @@ function Texture() {
         _magFilter: { value: Texture.BILINEAR, writable: true },
         _minFilter: { value: Texture.TRILINEAR, writable: true },
 
-        _maxAnisotropy: { value: 16, writable: true }
+        _maxAnisotropy: { value: 16, writable: true },
 
         _wrapU: { value: Texture.REPEAT, writable: true },
         _wrapV: { value: Texture.REPEAT, writable: true }
@@ -61,7 +61,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
 
             this.dispatchEvent(new TextureEvent(TextureEvent.MAX_ANISITROPY_CHANGE));
         }
-    }
+    },
     wrapU: {
         get: function() {
             return this._wrapU;
