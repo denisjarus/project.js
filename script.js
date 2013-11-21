@@ -29,6 +29,9 @@ onload = function() {
         
     renderer = new Renderer(context);
     physics = new Physics();
+
+    var loader = new Loader();
+    loader.load('stage.json');
     
     stage = new Object3D();
 
@@ -39,18 +42,6 @@ onload = function() {
     camera = stage.addChild(new Camera3D());
     
     camera.physics = new RigidBody(camera);
-
-    // load stage
-
-    var request = new XMLHttpRequest();
-
-    request.onload = function() {
-        var stage = JSON.parse(this.responseText, parse);
-        console.log(stage);
-    };
-
-    request.open('GET', 'stage.json');
-    request.send();
 
     // ground
 
@@ -276,9 +267,4 @@ function mouseMove(event) {
     //     dir = far.subtract(near);
 
     // console.log(dir.x, dir.y, dir.z);
-}
-
-function parse(key, value) {
-    console.log(key, value);
-    return new Material();
 }

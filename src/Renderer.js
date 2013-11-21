@@ -404,14 +404,13 @@ function Renderer(context) {
     }
 
     function uniformTexture2D(texture) {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.uniform1i(this.location, 0);
-
+        addActiveTexture(this.location);
         setTexture2D(texture);
     }
 
     function uniformTextureCube(texture) {
-
+        addActiveTexture(this.location);
+        setTextureCube(texture);
     }
 
     function enableAttributes(count) {
@@ -424,6 +423,12 @@ function Renderer(context) {
                 gl.disableVertexAttribArray(i);
             }
         }
+    }
+
+    function addActiveTexture(location) {
+        gl.activeTexture(gl.TEXTURE0 + activeTextures);
+        gl.uniform1i(location, activeTextures);
+        activeTextures++;
     }
 
     // geometry
@@ -510,6 +515,7 @@ function Renderer(context) {
         }
 
         currentMaterial = material;
+        activeTextures = 0;
     }
 
     // textures

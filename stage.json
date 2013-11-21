@@ -1,8 +1,10 @@
-[
-    {
-        "class": "Material"
-    },
-    {
-        "class": "Mesh"
+{
+    "textures": {
+        "diffuseMap": {
+            "data": ["diffuseMap.bmp"]
+        },
+        "normalMap": {
+            "data": ["normalMap.bmp"]
+        }
     }
-]
+}
