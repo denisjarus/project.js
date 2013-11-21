@@ -22,7 +22,7 @@ function Renderer(context) {
 
     var activeAttributes = [],
         activeUniforms = null,
-        activeTextures = [];
+        activeTextures = 0;
 
     // cached webgl objects
 
@@ -184,6 +184,8 @@ function Renderer(context) {
                 activeUniforms.normalMatrix.set(matrix.elements);
             }
 
+            // render object
+
             gl.drawElements(gl.TRIANGLES, currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
         }
 
@@ -273,56 +275,56 @@ function Renderer(context) {
     // programs
 
     function setShader(shader) {
-        var glProgram = shaderCache[shader.id];
+        var glShader = shaderCache[shader.id];
 
-        if (glProgram === undefined) {
-            glProgram = shaderCache[shader.id] = {
+        if (glShader === undefined) {
+            glShader = shaderCache[shader.id] = {
                 program: gl.createProgram(),
                 attributes: [],
                 uniforms: {}
             };
 
-            gl.attachShader(glProgram.program, createShader(gl.VERTEX_SHADER, shader.vertexShader));
-            gl.attachShader(glProgram.program, createShader(gl.FRAGMENT_SHADER, shader.fragmentShader));
+            gl.attachShader(glShader.program, createShader(gl.VERTEX_SHADER, shader.vertexShader));
+            gl.attachShader(glShader.program, createShader(gl.FRAGMENT_SHADER, shader.fragmentShader));
 
-            gl.linkProgram(glProgram.program);
+            gl.linkProgram(glShader.program);
 
-            if (gl.getProgramParameter(glProgram.program, gl.LINK_STATUS) === false) {
+            if (gl.getProgramParameter(glShader.program, gl.LINK_STATUS) === false) {
                 throw new Error(gl.getError());
             }
 
-            for (var i = 0, len = gl.getProgramParameter(glProgram.program, gl.ACTIVE_ATTRIBUTES); i < len; i++) {
-                var attribute = gl.getActiveAttrib(glProgram.program, i);
+            for (var i = 0, len = gl.getProgramParameter(glShader.program, gl.ACTIVE_ATTRIBUTES); i < len; i++) {
+                var attribute = gl.getActiveAttrib(glShader.program, i);
 
-                glProgram.attributes[i] = {
+                glShader.attributes[i] = {
                     name: attribute.name,
                     size: getAttributeSize(attribute),
                     type: getAttributeType(attribute)
                 };
             }
 
-            for (var i = 0, len = gl.getProgramParameter(glProgram.program, gl.ACTIVE_UNIFORMS); i < len; i++) {
-                var uniform = gl.getActiveUniform(glProgram.program, i);
+            for (var i = 0, len = gl.getProgramParameter(glShader.program, gl.ACTIVE_UNIFORMS); i < len; i++) {
+                var uniform = gl.getActiveUniform(glShader.program, i);
 
-                glProgram.uniforms[uniform.name] = {
-                    location: gl.getUniformLocation(glProgram.program, uniform.name),
+                glShader.uniforms[uniform.name] = {
+                    location: gl.getUniformLocation(glShader.program, uniform.name),
                     set: getUniformFunction(uniform)
                 };
             }
         }
 
         if (!glVertexArrayObject) {
-            enableAttributes(glProgram.attributes.length);
+            enableAttributes(glShader.attributes.length);
         }
         
-        gl.useProgram(glProgram.program);
+        gl.useProgram(glShader.program);
 
         currentShader = shader;
         currentGeometry = null;
         currentMaterial = null;
 
-        activeAttributes = glProgram.attributes;
-        activeUniforms = glProgram.uniforms;
+        activeAttributes = glShader.attributes;
+        activeUniforms = glShader.uniforms;
     }
 
     function createShader(type, code) {
@@ -433,26 +435,35 @@ function Renderer(context) {
             glGeometry = geometryCache[geometry.id] = {
                 vertexArrays: {},
                 vertexBuffers: {},
-                indexBuffer: null
+                indexBuffer: gl.createBuffer()
             };
+
+            glVertexArrayObject.bindVertexArrayOES(null);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
+            updateBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, true);
 
             geometry.addEventListener(GeometryEvent.UPDATE, onVerticesUpdate);
             geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
         }
 
+        // bind vertex array
+
         var vertexArray = glGeometry.vertexArrays[currentShader.id];
 
-        if (vertexArray) {
+        if (vertexArray !== undefined) {
             glVertexArrayObject.bindVertexArrayOES(vertexArray);
         } else {
             vertexArray = glGeometry.vertexArrays[currentShader.id] = glVertexArrayObject.createVertexArrayOES();
 
             glVertexArrayObject.bindVertexArrayOES(vertexArray);
 
+            // bind vertex buffers
+
             for (var attribute, i = 0; attribute = activeAttributes[i]; i++) {
                 var vertexBuffer = glGeometry.vertexBuffers[attribute.name];
 
-                if (vertexBuffer) {
+                if (vertexBuffer !== undefined) {
                     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
                 } else {
                     vertexBuffer = glGeometry.vertexBuffers[attribute.name] = gl.createBuffer();
@@ -465,16 +476,9 @@ function Renderer(context) {
                 gl.vertexAttribPointer(i, attribute.size, attribute.type, false, 0, 0);
             }
 
-            var indexBuffer = glGeometry.indexBuffer;
+            // bind index buffer
 
-            if (indexBuffer) {
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-            } else {
-                indexBuffer = glGeometry.indexBuffer = gl.createBuffer();
-
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-                updateBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, true);
-            }
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
         }
 
         currentGeometry = geometry;
@@ -513,7 +517,7 @@ function Renderer(context) {
     function setTexture2D(texture) {
         var glTexture = textureCache[texture.id];
 
-        if (glTexture) {
+        if (glTexture !== undefined) {
             gl.bindTexture(gl.TEXTURE_2D, glTexture);
         } else {
             glTexture = textureCache[texture.id] = gl.createTexture();
@@ -531,7 +535,7 @@ function Renderer(context) {
     function setTextureCube(texture) {
         var glTexture = textureCache[texture.id];
 
-        if (glTexture) {
+        if (glTexture !== undefined) {
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);
         } else {
             glTexture = textureCache[texture.id] = gl.createTexture();
