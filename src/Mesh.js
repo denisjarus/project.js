@@ -26,7 +26,6 @@ Mesh.prototype = Object.create(Object3D.prototype, {
             }
 
             this._geometry = geometry;
-
             this.dispatchEvent(new Event3D(Event3D.GEOMETRY_CHANGE));
         }
     },
@@ -40,7 +39,6 @@ Mesh.prototype = Object.create(Object3D.prototype, {
             }
 
             this._material = material;
-            
             this.dispatchEvent(new Event3D(Event3D.MATERIAL_CHANGE));
         }
     }

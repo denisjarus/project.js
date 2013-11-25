@@ -9,6 +9,7 @@ var canvas,
     light,
     camera,
     surface,
+    display,
 
     forwards,
     backwards,
@@ -51,14 +52,14 @@ onload = function() {
     ground.geometry = new SurfaceGeometry(10, 10);
 
     ground.geometry.parametrize(
-        Geometry.VERTEX_POSITIONS,
+        Geometry.POSITION,
         function(x, y) { return [x, 0, y]; },
         500, -500,
         -500, 500
     );
 
     ground.geometry.parametrize(
-        Geometry.VERTEX_TEXCOORDS,
+        Geometry.TEXCOORD,
         function(u, v) { return [u, v]; },
         0, 10,
         0, 10
@@ -75,7 +76,8 @@ onload = function() {
     var img = new Image();
     img.src = 'diffuseMap.bmp';
     img.onload = function() {
-        ground.material.getProperty('diffuseMap').setData(img);
+        console.log('loaded');
+        ground.material.getProperty('diffuseMap').setData(0, img);
     };
 
     // second instance of ground
@@ -91,7 +93,7 @@ onload = function() {
     surface.geometry = new SurfaceGeometry(60, 5);
 
     surface.geometry.parametrize(
-        Geometry.VERTEX_POSITIONS,
+        Geometry.POSITION,
         function(s, t) {
             return [
                 (150 + t * Math.cos(s / 2)) * Math.cos(s),
@@ -104,7 +106,7 @@ onload = function() {
     );
 
     surface.geometry.parametrize(
-        Geometry.VERTEX_TEXCOORDS,
+        Geometry.TEXCOORD,
         function(u, v) { return [u, v]; },
         0, 10,
         0, 1
@@ -115,6 +117,20 @@ onload = function() {
     // surface.material = new TextureMaterial();
     // surface.material = new GouraudMaterial();
     surface.material = ground.material.clone();
+
+    // display
+
+    display = stage.addChild(new Mesh());
+
+    display.geometry = ground.geometry;
+
+    display.material = new Material();
+    display.material.setProperty('frameBuffer', new Texture());
+
+    display.y = -30;
+    display.z = -50;
+    display.rotationX = Math.PI / 2;
+    display.scaleX = display.scaleY = display.scaleZ = 0.01;
 
     // add colored point lights
     var red = stage.addChild(new Light3D([1, 0, 0]));
@@ -239,21 +255,22 @@ function enterFrame(frame) {
 
     physics.simulate(stage, delta);
 
+    renderer.render(stage, camera, display.material.getProperty('frameBuffer'));
     renderer.render(stage, camera);
 
     requestAnimationFrame(enterFrame);
 
     // test camera
 
-    vec.elements.set([0, -50, 0]);
-    camera.project(vec);
-    if (vec.z < 1) {
-        target.style.display = 'block';
-        target.style.left = (vec.x + 1) * canvas.width / 2 + 'px';
-        target.style.top = (-vec.y + 1) * canvas.height / 2 + 'px';
-    } else {
-        target.style.display = 'none';
-    }
+    // vec.elements.set([0, -50, 0]);
+    // camera.project(vec);
+    // if (vec.z < 1) {
+    //     target.style.display = 'block';
+    //     target.style.left = (vec.x + 1) * canvas.width / 2 + 'px';
+    //     target.style.top = (-vec.y + 1) * canvas.height / 2 + 'px';
+    // } else {
+    //     target.style.display = 'none';
+    // }
 }
 
 function mouseMove(event) {

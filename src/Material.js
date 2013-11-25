@@ -20,7 +20,6 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
     setProperty: {
         value: function(property, value) {
             this._properties[property] = value;
-
             this.dispatchEvent(new MaterialEvent(MaterialEvent.UPDATE, property));
         }
     },
@@ -34,7 +33,6 @@ Material.prototype = Object.create(EventDispatcher.prototype, {
             }
 
             this._shader = shader;
-
             this.dispatchEvent(new MaterialEvent(MaterialEvent.SHADER_CHANGE));
         }
     },

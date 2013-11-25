@@ -7,14 +7,15 @@ function Geometry() {
 
         _data: { value: {} },
 
-        _indices: { value: null, writable: true }
+        _indices: { value: null, writable: true },
+        _normals: { value: null, writable: true }
     });
 }
 
 Geometry.prototype = Object.create(EventDispatcher.prototype, {
     getData: {
         value: function(attribute) {
-            return this._data[attribute];
+            return this._data[attribute] || null;
         }
     },
     setData: {
@@ -47,37 +48,21 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             this._indices = data;
             this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, resize));
         }
+    },
+    normals: {
+        get: function() {
+            return this._normals;
+        }
     }
 });
 
 Object.defineProperties(Geometry, {
     _counter: { value: 0, writable: true },
 
-    VERTEX_POSITIONS: { value: 'position' },
-    VERTEX_TEXCOORDS: { value: 'texcoord' },
-    VERTEX_NORMALS: { value: 'normal' },
+    POSITION: { value: 'position' },
+    TEXCOORD: { value: 'texcoord' },
+    NORMAL: { value: 'normal' },
 
-    FACE_NORMALS: { value: 'faceNormal' },
-
-    interleave: {
-        value: function (a, b, stride, offset) {
-            if (!(a instanceof Float32Array) || !(b instanceof Float32Array)) {
-                throw new TypeError();
-            }
-
-            var array = new Float32Array(a.length + b.length);
- 
-            for (var i = 0, j = 0, k = 0, len = array.length; i < len; i++) {
-                if (i % stride < offset) {
-                    array[i] = a[j++];
-                } else {
-                    array[i] = b[k++];
-                }
-            }
- 
-            return array;
-        }
-    },
     getNormals: {
         value: (function() {
             var normal = new Vector3D(),
@@ -87,16 +72,16 @@ Object.defineProperties(Geometry, {
                 c = new Vector3D();
 
             return function(geometry, weighted, stride, offset) {
-                var positions = geometry._data[Geometry.VERTEX_POSITIONS],
+                var positions = geometry._data[Geometry.POSITION],
                     stride = stride || 3,
                     offset = offset || 0,
 
                     indices = geometry._indices,
 
-                    faceNormals = geometry._data[Geometry.FACE_NORMALS],
+                    faceNormals = geometry._normals,
                     faceNormalsLength = indices.length,
 
-                    vertexNormals = geometry._data[Geometry.VERTEX_NORMALS],
+                    vertexNormals = geometry._data[Geometry.NORMAL],
                     vertexNormalsLength = positions.length / stride * 3;
 
                 if (!positions || !indices) {
@@ -149,8 +134,8 @@ Object.defineProperties(Geometry, {
                     vertexNormals.set(normal.elements, i);
                 }
 
-                geometry.setData(Geometry.VERTEX_NORMALS, vertexNormals);
-                geometry.setData(Geometry.FACE_NORMALS, faceNormals);
+                geometry._normals = faceNormals;
+                geometry.setData(Geometry.NORMAL, vertexNormals);
             };
         })()
     }

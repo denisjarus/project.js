@@ -18,7 +18,8 @@ function Renderer(context) {
 
     var currentShader = null,
         currentGeometry = null,
-        currentMaterial = null;
+        currentMaterial = null,
+        currentFrame = null;
 
     var activeAttributes = [],
         activeUniforms = null,
@@ -29,7 +30,8 @@ function Renderer(context) {
     var shaderCache = {},
         geometryCache = {},
         materialCache = {},  // for v2.0
-        textureCache = {};
+        textureCache = {},
+        frameCache = {};
 
     // state flags
 
@@ -115,6 +117,12 @@ function Renderer(context) {
             pointLightColors.set(light.color, i * 3);
         }
 
+        // set frame
+
+        if (target && currentFrame !== target) {
+            setFrame(target);
+        }
+
         // render objects
 
         for (var object, i = 0; object = renderList[i]; i++) {
@@ -187,6 +195,10 @@ function Renderer(context) {
             // render object
 
             gl.drawElements(gl.TRIANGLES, currentGeometry.indices.length, gl.UNSIGNED_SHORT, 0);
+        }
+
+        if (target) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
 
         gl.useProgram(null);
@@ -272,7 +284,7 @@ function Renderer(context) {
         sortRenderList = true;
     }
 
-    // programs
+    // shaders
 
     function setShader(shader) {
         var glShader = shaderCache[shader.id];
@@ -431,7 +443,7 @@ function Renderer(context) {
         activeTextures++;
     }
 
-    // geometry
+    // geometries
 
     function setGeometry(geometry) {
         var glGeometry = geometryCache[geometry.id];
@@ -530,7 +542,7 @@ function Renderer(context) {
 
             gl.bindTexture(gl.TEXTURE_2D, glTexture);
 
-            updateTexture(gl.TEXTURE_2D, texture.getData(), true);
+            updateTexture(gl.TEXTURE_2D, texture.getData(0), true);
             configTexture(gl.TEXTURE_2D, texture);
 
             texture.addEventListener(TextureEvent.UPDATE, onTexture2DUpdate);
@@ -584,12 +596,12 @@ function Renderer(context) {
 
     function onTexture2DUpdate(event) {
         gl.bindTexture(gl.TEXTURE_2D, textureCache[event.target.id]);
-        updateTexture(gl.TEXTURE_2D, event.target.getData(), event.resize);
+        updateTexture(gl.TEXTURE_2D, event.target.getData(0), event.resize);
     }
 
     function onTextureCubeUpdate(event) {
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCache[event.target.id]);
-        updateTexture(event.side, event.data, event.resize);
+        updateTexture(gl.TEXTURE_CUBE_MAP_POSITIVE_X + event.side, event.target.getData(event.side), event.resize);
     }
 
     function onTexture2DConfig(event) {
@@ -600,5 +612,21 @@ function Renderer(context) {
     function onTextureCubeConfig(event) {
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCache[event.target.id]);
         configTexture(gl.TEXTURE_CUBE_MAP, event.target);
+    }
+
+    // frame buffers
+
+    function setFrame(texture) {
+        var glFrameBuffer = frameCache[texture.id];
+
+        if (glFrameBuffer !== undefined) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, glFrameBuffer);
+        } else {
+            glFrameBuffer = frameCache[texture.id] = gl.createFramebuffer();
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, glFrameBuffer);
+        }
+
+        currentFrame = texture;
     }
 }

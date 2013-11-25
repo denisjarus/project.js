@@ -21,6 +21,8 @@ html, body {
 }
 
 #target {
+    display: none;
+    
     position: absolute;
 
     width: 10px;

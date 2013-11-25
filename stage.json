@@ -1,10 +1,10 @@
 {
     "textures": {
         "diffuseMap": {
-            "data": ["diffuseMap.bmp"]
+            "url": "diffuseMap.bmp"
         },
         "normalMap": {
-            "data": ["normalMap.bmp"]
+            "url": "normalMap.bmp"
         }
     }
 }

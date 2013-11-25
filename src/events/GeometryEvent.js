@@ -3,8 +3,8 @@ function GeometryEvent(type, attrib, resize) {
     Event3D.call(this, type);
 
     Object.defineProperties(this, {
-        attrib: { value: attrib },
-        resize: { value: resize }
+        attrib: { value: attrib || null },
+        resize: { value: resize || null }
     });
 }
 

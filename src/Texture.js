@@ -5,7 +5,7 @@ function Texture() {
     Object.defineProperties(this, {
         id: { value: Texture._counter++ },
 
-        _data: { value: null, writable: true },
+        _data: { value: [], writable: true },
 
         _magFilter: { value: Texture.BILINEAR, writable: true },
         _minFilter: { value: Texture.TRILINEAR, writable: true },
@@ -19,17 +19,16 @@ function Texture() {
 
 Texture.prototype = Object.create(EventDispatcher.prototype, {
     getData: {
-        value: function() {
-            return this._data;
+        value: function(side) {
+            return this._data[side] || null;
         }
     },
     setData: {
-        value: function(data) {
-            var resize = !this._data || this._data.width !== data.width || this._data.height !== data.height;
+        value: function(side, data) {
+            var resize = !this._data[side] || this._data[side].width !== data.width || this._data[side].height !== data.height;
             
-            this._data = data;
-
-            this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, resize));
+            this._data[side] = data;
+            this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, side, resize));
         }
     },
     magFilter: {
@@ -38,8 +37,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(value) {
             this._magFilter = value;
-
-            this.dispatchEvent(new TextureEvent(TextureEvent.FILTER_CHANGE));
+            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG));
         }
     },
     minFilter: {
@@ -48,8 +46,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(value) {
             this._minFilter = value;
-
-            this.dispatchEvent(new TextureEvent(TextureEvent.FILTER_CHANGE));
+            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG));
         }
     },
     maxAnisotropy: {
@@ -58,8 +55,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(value) {
             this._maxAnisotropy = Math.max(0, Math.min(value, 16));
-
-            this.dispatchEvent(new TextureEvent(TextureEvent.MAX_ANISITROPY_CHANGE));
+            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG));
         }
     },
     wrapU: {
@@ -68,8 +64,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(value) {
             this._wrapU = value;
-
-            this.dispatchEvent(new TextureEvent(TextureEvent.WRAP_CHANGE));
+            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG));
         }
     },
     wrapV: {
@@ -78,8 +73,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(value) {
             this._wrapV = value;
-
-            this.dispatchEvent(new TextureEvent(TextureEvent.WRAP_CHANGE, false));
+            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG, false));
         }
     }
 });
