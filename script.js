@@ -78,6 +78,7 @@ onload = function() {
     img.onload = function() {
         console.log('loaded');
         ground.material.getProperty('diffuseMap').setData(0, img);
+        // display.material.getProperty('diffuseMap').setData(0, img);
     };
 
     // second instance of ground
@@ -122,15 +123,17 @@ onload = function() {
 
     display = stage.addChild(new Mesh());
 
-    display.geometry = ground.geometry;
+    display.geometry = new SurfaceGeometry(2, 2);
+    display.geometry.parametrize(Geometry.POSITION, function(x, y) { return [x, y, 0]; }, -10, 10, -10, 10);
+    display.geometry.parametrize(Geometry.TEXCOORD, function(u, v) { return [u, v]; }, 0, 1, 0, 1);
+    Geometry.getNormals(display.geometry);
 
     display.material = new Material();
-    display.material.setProperty('frameBuffer', new Texture());
+    display.material.shader = Shader.gouraudShader;
+    display.material.setProperty('diffuseMap', new Texture());
 
     display.y = -30;
     display.z = -50;
-    display.rotationX = Math.PI / 2;
-    display.scaleX = display.scaleY = display.scaleZ = 0.01;
 
     // add colored point lights
     var red = stage.addChild(new Light3D([1, 0, 0]));
@@ -187,9 +190,9 @@ onload = function() {
 onresize = function() {
     context.canvas.width = context.canvas.clientWidth;
     context.canvas.height = context.canvas.clientHeight;
-    context.viewport(0, 0, context.canvas.width, context.canvas.height);
+    // context.viewport(0, 0, context.canvas.width, context.canvas.height);
 
-    camera.aspectRatio = context.canvas.width / context.canvas.height;
+    // camera.aspectRatio = context.canvas.width / context.canvas.height;
 };
 
 onmousedown = function() {
@@ -255,7 +258,12 @@ function enterFrame(frame) {
 
     physics.simulate(stage, delta);
 
-    renderer.render(stage, camera, display.material.getProperty('frameBuffer'));
+    camera.aspectRatio = 1;
+    context.viewport(0, 0, 512, 512);
+    renderer.render(stage, camera, display.material.getProperty('diffuseMap'));
+
+    camera.aspectRatio = context.canvas.width / context.canvas.height;
+    context.viewport(0, 0, context.canvas.width, context.canvas.height);
     renderer.render(stage, camera);
 
     requestAnimationFrame(enterFrame);

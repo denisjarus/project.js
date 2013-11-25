@@ -92,11 +92,6 @@ function Renderer(context) {
             renderList.sort(sort);
         }
 
-        if (true) {
-            gl.clearColor(0, 0, 0, 1);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        }
-
         if (updateSettings) {
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             gl.enable(gl.DEPTH_TEST);
@@ -121,6 +116,11 @@ function Renderer(context) {
 
         if (target && currentFrame !== target) {
             setFrame(target);
+        }
+
+        if (true) {
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         }
 
         // render objects
@@ -198,6 +198,7 @@ function Renderer(context) {
         }
 
         if (target) {
+            gl.generateMipmap(gl.TEXTURE_2D);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
 
@@ -211,6 +212,7 @@ function Renderer(context) {
         currentShader = null;
         currentGeometry = null;
         currentMaterial = null;
+        currentFrame = null;
 
         updateSettings = false;
     }
@@ -616,6 +618,8 @@ function Renderer(context) {
 
     // frame buffers
 
+    var depthBuffer = gl.createRenderbuffer();
+
     function setFrame(texture) {
         var glFrameBuffer = frameCache[texture.id];
 
@@ -625,6 +629,16 @@ function Renderer(context) {
             glFrameBuffer = frameCache[texture.id] = gl.createFramebuffer();
 
             gl.bindFramebuffer(gl.FRAMEBUFFER, glFrameBuffer);
+
+            setTexture2D(texture);
+
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+            gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
+
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textureCache[texture.id], 0);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
         }
 
         currentFrame = texture;
