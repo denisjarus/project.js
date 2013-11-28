@@ -125,7 +125,7 @@ onload = function() {
     display.geometry.parametrize(Geometry.TEXCOORD, function(u, v) { return [u, v]; }, 0, 1, 0, 1);
     Geometry.getNormals(display.geometry);
 
-    var displayTexture = new Texture();
+    var displayTexture = new DataTexture(512, 512);
     displayTexture.wrapU = displayTexture.wrapV = Texture.CLAMP;
 
     display.material = new Material();

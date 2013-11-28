@@ -259,11 +259,24 @@ function Renderer(context) {
         }
     }
 
-    function onChange(event) {
-        cacheGeometry(event.target);
-        cacheMaterial(event.target);
-
+    function onChange() {
         sortRenderList = true;
+    }
+
+    function sort(a, b) {
+        var order;
+
+        if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
+            return order;
+        }
+        if ((order = a.geometry.id - b.geometry.id) !== 0) {
+            return order;
+        }
+        if ((order = a.material.id - b.material.id) !== 0) {
+            return order;
+        }
+        
+        return 0;
     }
 
     function cacheGeometry(geometry) {
@@ -281,22 +294,6 @@ function Renderer(context) {
 
     function cacheMaterial(material) {
 
-    }
-
-    function sort(a, b) {
-        var order;
-
-        if ((order = a.material.shader.id - b.material.shader.id) !== 0) {
-            return order;
-        }
-        if ((order = a.geometry.id - b.geometry.id) !== 0) {
-            return order;
-        }
-        if ((order = a.material.id - b.material.id) !== 0) {
-            return order;
-        }
-        
-        return 0;
     }
 
     // shaders
