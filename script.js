@@ -68,7 +68,6 @@ onload = function() {
     Geometry.getNormals(ground.geometry);
     // ground.geometry.setData('normal', ground.geometry.getData('position'));
 
-    // ground.material = new GouraudMaterial();
     ground.material = new Material();
     ground.material.shader = Shader.gouraudShader;
     ground.material.setProperty('diffuseMap', new Texture());
@@ -78,7 +77,7 @@ onload = function() {
     img.onload = function() {
         console.log('loaded');
         ground.material.getProperty('diffuseMap').setData(0, img);
-        // display.material.getProperty('diffuseMap').setData(0, img);
+        requestAnimationFrame(enterFrame);
     };
 
     // second instance of ground
@@ -115,8 +114,6 @@ onload = function() {
 
     Geometry.getNormals(surface.geometry);
 
-    // surface.material = new TextureMaterial();
-    // surface.material = new GouraudMaterial();
     surface.material = ground.material.clone();
 
     // display
@@ -128,9 +125,12 @@ onload = function() {
     display.geometry.parametrize(Geometry.TEXCOORD, function(u, v) { return [u, v]; }, 0, 1, 0, 1);
     Geometry.getNormals(display.geometry);
 
+    var displayTexture = new Texture();
+    displayTexture.wrapU = displayTexture.wrapV = Texture.CLAMP;
+
     display.material = new Material();
     display.material.shader = Shader.gouraudShader;
-    display.material.setProperty('diffuseMap', new Texture());
+    display.material.setProperty('diffuseMap', displayTexture);
 
     display.y = -30;
     display.z = -50;
@@ -184,7 +184,7 @@ onload = function() {
     );
 
     onresize();
-    requestAnimationFrame(enterFrame);
+    // requestAnimationFrame(enterFrame);
 };
 
 onresize = function() {
@@ -259,10 +259,12 @@ function enterFrame(frame) {
     physics.simulate(stage, delta);
 
     camera.aspectRatio = 1;
+    display.visible = false;
     context.viewport(0, 0, 512, 512);
     renderer.render(stage, camera, display.material.getProperty('diffuseMap'));
 
     camera.aspectRatio = context.canvas.width / context.canvas.height;
+    display.visible = true;
     context.viewport(0, 0, context.canvas.width, context.canvas.height);
     renderer.render(stage, camera);
 

@@ -25,10 +25,8 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
     },
     setData: {
         value: function(side, data) {
-            var resize = !this._data[side] || this._data[side].width !== data.width || this._data[side].height !== data.height;
-            
             this._data[side] = data;
-            this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, side, resize));
+            this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, side));
         }
     },
     magFilter: {
@@ -73,7 +71,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
         },
         set: function(value) {
             this._wrapV = value;
-            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG, false));
+            this.dispatchEvent(new TextureEvent(TextureEvent.CONFIG));
         }
     }
 });

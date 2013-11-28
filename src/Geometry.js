@@ -24,10 +24,8 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
                 throw new TypeError();
             }
 
-            var resize = !this._data[attribute] || this._data[attribute].length !== data.length;
-
             this._data[attribute] = data;
-            this.dispatchEvent(new GeometryEvent(GeometryEvent.UPDATE, attribute, resize));
+            this.dispatchEvent(new GeometryEvent(GeometryEvent.UPDATE, attribute));
         }
     },
     indices: {
@@ -42,8 +40,6 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             if (data.length % 3 !== 0) {
                 throw new Error();
             }
-
-            var resize = !this._indices || this._indices.length !== data.length;
 
             this._indices = data;
             this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, resize));

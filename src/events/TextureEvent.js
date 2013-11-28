@@ -1,10 +1,9 @@
-function TextureEvent(type, side, resize) {
+function TextureEvent(type, side) {
 
     Event3D.call(this, type);
 
     Object.defineProperties(this, {
-        side: { value: side || null },
-        resize: { value: resize || false }
+        side: { value: side || null }
     });
 }
 

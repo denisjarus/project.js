@@ -198,6 +198,7 @@ function Renderer(context) {
         }
 
         if (target) {
+            bindTexture2D(target);
             gl.generateMipmap(gl.TEXTURE_2D);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
@@ -247,6 +248,7 @@ function Renderer(context) {
         if (object instanceof Mesh) {
             list = renderList;
             sortRenderList = true;
+
         } else if (object instanceof Light3D) {
             list = lights;
         }
@@ -269,6 +271,7 @@ function Renderer(context) {
 
         if (object instanceof Mesh) {
             list = renderList;
+
         } else if (object instanceof Light3D) {
             list = lights;
         }
@@ -389,6 +392,95 @@ function Renderer(context) {
         }
     }
 
+    function enableAttributes(count) {
+        if (count > activeAttributes.length) {
+            for (var i = activeAttributes.length; i < count; i++) {
+                gl.enableVertexAttribArray(i);
+            }
+
+        } else if (count < activeAttributes.length) {
+            for (var i = count; i < activeAttributes.length; i++) {
+                gl.disableVertexAttribArray(i);
+            }
+        }
+    }
+
+    // geometries
+
+    function setGeometry(geometry) {
+        var glGeometry = geometryCache[geometry.id];
+
+        if (glGeometry === undefined) {
+            glGeometry = geometryCache[geometry.id] = {
+                vertexArrays: {},
+                vertexBuffers: {},
+                indexBuffer: gl.createBuffer()
+            };
+
+            glVertexArrayObject.bindVertexArrayOES(null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
+
+            geometry.addEventListener(GeometryEvent.UPDATE, onVerticesUpdate);
+            geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
+        }
+
+        var vertexArray = glGeometry.vertexArrays[currentShader.id];
+
+        if (vertexArray === undefined) {
+            vertexArray = glGeometry.vertexArrays[currentShader.id] = glVertexArrayObject.createVertexArrayOES();
+
+            glVertexArrayObject.bindVertexArrayOES(vertexArray);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
+
+            for (var attribute, i = 0; attribute = activeAttributes[i]; i++) {
+                var vertexBuffer = glGeometry.vertexBuffers[attribute.name];
+
+                if (vertexBuffer === undefined) {
+                    vertexBuffer = glGeometry.vertexBuffers[attribute.name] = gl.createBuffer();
+
+                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                    gl.bufferData(gl.ARRAY_BUFFER, geometry.getData(attribute.name), gl.STATIC_DRAW);
+
+                } else {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+                }
+
+                gl.enableVertexAttribArray(i);
+                gl.vertexAttribPointer(i, attribute.size, attribute.type, false, 0, 0);
+            }
+
+        } else {
+            glVertexArrayObject.bindVertexArrayOES(vertexArray);
+        }
+
+        currentGeometry = geometry;
+    }
+
+    function onVerticesUpdate(event) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, geometryCache[event.target.id].vertexBuffers[event.attribute]);
+        gl.bufferData(gl.ARRAY_BUFFER, event.target.getData(event.attribute), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+
+    function onIndicesUpdate(event) {
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryCache[event.target.id].indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, event.target.indices, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    }
+
+    // materials
+
+    function setMaterial(material) {
+        for (var property, i = 0; property = currentShader.properties[i]; i++) {
+            activeUniforms[property].set(material.getProperty(property));
+        }
+
+        currentMaterial = material;
+        activeTextures = 0;
+    }
+
+
     function uniformFloat(value) {
         gl.uniform1f(this.location, value);
     }
@@ -419,24 +511,12 @@ function Renderer(context) {
 
     function uniformTexture2D(texture) {
         addActiveTexture(this.location);
-        setTexture2D(texture);
+        bindTexture2D(texture);
     }
 
     function uniformTextureCube(texture) {
         addActiveTexture(this.location);
-        setTextureCube(texture);
-    }
-
-    function enableAttributes(count) {
-        if (count > activeAttributes.length) {
-            for (var i = activeAttributes.length; i < count; i++) {
-                gl.enableVertexAttribArray(i);
-            }
-        } else if (count < activeAttributes.length) {
-            for (var i = count; i < activeAttributes.length; i++) {
-                gl.disableVertexAttribArray(i);
-            }
-        }
+        bindTextureCube(texture);
     }
 
     function addActiveTexture(location) {
@@ -445,144 +525,54 @@ function Renderer(context) {
         activeTextures++;
     }
 
-    // geometries
-
-    function setGeometry(geometry) {
-        var glGeometry = geometryCache[geometry.id];
-
-        if (glGeometry === undefined) {
-            glGeometry = geometryCache[geometry.id] = {
-                vertexArrays: {},
-                vertexBuffers: {},
-                indexBuffer: gl.createBuffer()
-            };
-
-            glVertexArrayObject.bindVertexArrayOES(null);
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
-            updateBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, true);
-
-            geometry.addEventListener(GeometryEvent.UPDATE, onVerticesUpdate);
-            geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
-        }
-
-        // bind vertex array
-
-        var vertexArray = glGeometry.vertexArrays[currentShader.id];
-
-        if (vertexArray !== undefined) {
-            glVertexArrayObject.bindVertexArrayOES(vertexArray);
-        } else {
-            vertexArray = glGeometry.vertexArrays[currentShader.id] = glVertexArrayObject.createVertexArrayOES();
-
-            glVertexArrayObject.bindVertexArrayOES(vertexArray);
-
-            // bind vertex buffers
-
-            for (var attribute, i = 0; attribute = activeAttributes[i]; i++) {
-                var vertexBuffer = glGeometry.vertexBuffers[attribute.name];
-
-                if (vertexBuffer !== undefined) {
-                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-                } else {
-                    vertexBuffer = glGeometry.vertexBuffers[attribute.name] = gl.createBuffer();
-
-                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-                    updateBuffer(gl.ARRAY_BUFFER, geometry.getData(attribute.name), true);
-                }
-
-                gl.enableVertexAttribArray(i);
-                gl.vertexAttribPointer(i, attribute.size, attribute.type, false, 0, 0);
-            }
-
-            // bind index buffer
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
-        }
-
-        currentGeometry = geometry;
-    }
-
-    function updateBuffer(target, data, resize) {
-        if (resize) {
-            gl.bufferData(target, data, gl.STATIC_DRAW);
-        } else {
-            gl.bufferSubData(target, 0, data);
-        }
-    }
-
-    function onVerticesUpdate(event) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, geometryCache[event.target.id].vertexBuffers[event.attribute]);
-        updateBuffer(gl.ARRAY_BUFFER, geometry.getData(attribute), event.resize);
-    }
-
-    function onIndicesUpdate(event) {
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryCache[event.target.id].indexBuffer);
-        updateBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, event.resize);
-    }
-
-    // materials
-
-    function setMaterial(material) {
-        for (var property, i = 0; property = currentShader.properties[i]; i++) {
-            activeUniforms[property].set(material.getProperty(property));
-        }
-
-        currentMaterial = material;
-        activeTextures = 0;
-    }
-
     // textures
 
-    function setTexture2D(texture) {
+    function bindTexture2D(texture) {
         var glTexture = textureCache[texture.id];
 
-        if (glTexture !== undefined) {
-            gl.bindTexture(gl.TEXTURE_2D, glTexture);
-        } else {
+        if (glTexture === undefined) {
             glTexture = textureCache[texture.id] = gl.createTexture();
 
             gl.bindTexture(gl.TEXTURE_2D, glTexture);
-
-            updateTexture(gl.TEXTURE_2D, texture.getData(0), true);
+            updateTexture(gl.TEXTURE_2D, texture, texture.getData(0));
             configTexture(gl.TEXTURE_2D, texture);
+
+            gl.generateMipmap(gl.TEXTURE_2D);
 
             texture.addEventListener(TextureEvent.UPDATE, onTexture2DUpdate);
             texture.addEventListener(TextureEvent.CONFIG, onTexture2DConfig);
+
+        } else {
+            gl.bindTexture(gl.TEXTURE_2D, glTexture);
         }
     }
 
-    function setTextureCube(texture) {
+    function bindTextureCube(texture) {
         var glTexture = textureCache[texture.id];
 
         if (glTexture !== undefined) {
-            gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);
-        } else {
             glTexture = textureCache[texture.id] = gl.createTexture();
 
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);
 
             for (var i = 0; i < 6; i++) {
-                updateTexture(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, texture.getData(i), true);
+                updateTexture(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, texture, texture.getData(i));
             }
 
             configTexture(gl.TEXTURE_CUBE_MAP, texture);
 
+            gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+
             texture.addEventListener(TextureEvent.UPDATE, onTextureCubeUpdate);
             texture.addEventListener(TextureEvent.CONFIG, onTextureCubeConfig);
+
+        } else {
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);
         }
     }
 
-    function updateTexture(target, data, resize) {
-        if (resize) {
-            gl.texImage2D(target, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, data);
-        } else {
-            gl.texSubImage2D(target, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, data);
-        }
-
-        if (true) {
-            gl.generateMipmap(target);
-        }
+    function updateTexture(target, texture, data) {
+        gl.texImage2D(target, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, data);
     }
 
     function configTexture(target, texture) {
@@ -597,23 +587,31 @@ function Renderer(context) {
     }
 
     function onTexture2DUpdate(event) {
-        gl.bindTexture(gl.TEXTURE_2D, textureCache[event.target.id]);
-        updateTexture(gl.TEXTURE_2D, event.target.getData(0), event.resize);
+        bindTexture2D(event.target);
+        updateTexture(gl.TEXTURE_2D, event.target, event.target.getData(0));
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
     function onTextureCubeUpdate(event) {
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCache[event.target.id]);
-        updateTexture(gl.TEXTURE_CUBE_MAP_POSITIVE_X + event.side, event.target.getData(event.side), event.resize);
+        bindTextureCube(event.target);
+        updateTexture(gl.TEXTURE_CUBE_MAP_POSITIVE_X + event.side, event.target, event.target.getData(event.side));
+
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
     }
 
     function onTexture2DConfig(event) {
-        gl.bindTexture(gl.TEXTURE_2D, textureCache[event.target.id]);
+        bindTexture2D(event.target);
         configTexture(gl.TEXTURE_2D, event.target);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
     function onTextureCubeConfig(event) {
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureCache[event.target.id]);
+        bindTextureCube(event.target);
         configTexture(gl.TEXTURE_CUBE_MAP, event.target);
+
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
     }
 
     // frame buffers
@@ -623,22 +621,26 @@ function Renderer(context) {
     function setFrame(texture) {
         var glFrameBuffer = frameCache[texture.id];
 
-        if (glFrameBuffer !== undefined) {
-            gl.bindFramebuffer(gl.FRAMEBUFFER, glFrameBuffer);
-        } else {
+        if (glFrameBuffer === undefined) {
             glFrameBuffer = frameCache[texture.id] = gl.createFramebuffer();
 
             gl.bindFramebuffer(gl.FRAMEBUFFER, glFrameBuffer);
 
-            setTexture2D(texture);
-
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            bindTexture2D(texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 512, 512, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+            gl.generateMipmap(gl.TEXTURE_2D);
 
             gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer);
             gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 512, 512);
 
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textureCache[texture.id], 0);
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, textureCache[texture.id], 0);
+            // gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer);
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+        } else {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, glFrameBuffer);
         }
 
         currentFrame = texture;
