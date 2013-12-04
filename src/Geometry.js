@@ -13,6 +13,11 @@ function Geometry() {
 }
 
 Geometry.prototype = Object.create(EventDispatcher.prototype, {
+    attributes: {
+        get: function() {
+            return Object.keys(this._data);
+        }
+    },
     getData: {
         value: function(attribute) {
             return this._data[attribute] || null;
@@ -25,7 +30,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             }
 
             this._data[attribute] = data;
-            this.dispatchEvent(new GeometryEvent(GeometryEvent.UPDATE, attribute));
+            this.dispatchEvent(new GeometryEvent(GeometryEvent.UPDATE, attribute, data));
         }
     },
     indices: {
@@ -42,7 +47,7 @@ Geometry.prototype = Object.create(EventDispatcher.prototype, {
             }
 
             this._indices = data;
-            this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, resize));
+            this.dispatchEvent(new GeometryEvent(GeometryEvent.INDICES_UPDATE, null, data));
         }
     },
     normals: {

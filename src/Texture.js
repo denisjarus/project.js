@@ -26,7 +26,7 @@ Texture.prototype = Object.create(EventDispatcher.prototype, {
     setData: {
         value: function(side, data) {
             this._data[side] = data;
-            this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, side));
+            this.dispatchEvent(new TextureEvent(TextureEvent.UPDATE, side, data));
         }
     },
     magFilter: {

@@ -1,9 +1,10 @@
-function TextureEvent(type, side) {
+function TextureEvent(type, side, data) {
 
     Event3D.call(this, type);
 
     Object.defineProperties(this, {
-        side: { value: side || null }
+        side: { value: side || null },
+        data: { value: data || null }
     });
 }
 

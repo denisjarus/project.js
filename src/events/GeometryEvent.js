@@ -1,9 +1,10 @@
-function GeometryEvent(type, attrib) {
+function GeometryEvent(type, attribute, data) {
     
     Event3D.call(this, type);
 
     Object.defineProperties(this, {
-        attrib: { value: attrib || null }
+        attribute: { value: attribute || null },
+        data: { value: data || null }
     });
 }
 

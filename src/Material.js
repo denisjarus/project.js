@@ -12,6 +12,11 @@ function Material() {
 }
 
 Material.prototype = Object.create(EventDispatcher.prototype, {
+    properties: {
+        get: function() {
+            return Object.keys(this._properties);
+        }
+    },
     getProperty: {
         value: function(property) {
             return this._properties[property];
