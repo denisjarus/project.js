@@ -1,23 +1,26 @@
 function RigidBody(object) {
-    if (!(object instanceof Object3D)) {
-        throw new TypeError();
-    }
+
+    EventDispatcher.call(this);
 
     Object.defineProperties(this, {
         object: { value: object },
 
-        mass: { value: 1, writable: true },
+        mass: { value: 1, writable: true, enumerable: true },
 
-        _force: { value: new Vector3D() },
+        _force: { value: new Vector3D(), enumerable: true },
 
         _position: { value: new Vector3D([object.x, object.y, object.z]) },
         _velocity: { value: new Vector3D() },
 
         _enabled: { value: true, writable: true }
     });
+
+    if (!(object instanceof Object3D)) {
+        throw new TypeError();
+    }
 }
 
-Object.defineProperties(RigidBody.prototype, {
+RigidBody.prototype = Object.create(EventDispatcher.prototype, {
     enabled: {
         get: function() {
             return this._enabled;

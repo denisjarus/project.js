@@ -227,6 +227,9 @@ function Renderer(context) {
     function addObject(object) {
         if (object instanceof Mesh) {
             renderList.push(object);
+
+            cacheGeometry(object.geometry);
+
             sortRenderList = true;
 
         } else if (object instanceof Light3D) {
@@ -256,6 +259,8 @@ function Renderer(context) {
     }
 
     function onChange(event) {
+        cacheGeometry(event.target.geometry);
+
         sortRenderList = true;
     }
 
@@ -393,23 +398,35 @@ function Renderer(context) {
 
     // geometries
 
-    function setGeometry(geometry) {
-        var glGeometry = geometryCache[geometry.id];
-
-        if (glGeometry === undefined) {
-            glGeometry = geometryCache[geometry.id] = {
+    function cacheGeometry(geometry) {
+        if (geometryCache[geometry.id] === undefined) {
+            geometryCache[geometry.id] = {
                 vertexArrays: {},
                 vertexBuffers: {},
-                indexBuffer: gl.createBuffer()
+                indexBuffer: createBuffer(gl.ELEMENT_ARRAY_BUFFER, geometry.indices)
             };
-
-            glVertexArrayObject.bindVertexArrayOES(null);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glGeometry.indexBuffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
 
             geometry.addEventListener(GeometryEvent.UPDATE, onVerticesUpdate);
             geometry.addEventListener(GeometryEvent.INDICES_UPDATE, onIndicesUpdate);
         }
+    }
+
+    function createBuffer(type, data) {
+        var glBuffer = gl.createBuffer();
+
+        bufferData(type, glBuffer, data);
+
+        return glBuffer;
+    }
+
+    function bufferData(type, glBuffer, data) {
+        gl.bindBuffer(type, glBuffer);
+        gl.bufferData(type, data, gl.STATIC_DRAW);
+        gl.bindBuffer(type, null);
+    }
+
+    function setGeometry(geometry) {
+        var glGeometry = geometryCache[geometry.id];
 
         var vertexArray = glGeometry.vertexArrays[currentShader.id];
 

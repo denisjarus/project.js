@@ -9,11 +9,10 @@ function Physics() {
     // current stage
 
     var stage = null,
-        objects = [];
+        objects = [],
+        gravity = null;
 
-    // settings
-
-    var gravity = new Vector3D([0, -9.8, 0]);
+    var simulating = false;
 
     // public api
 
@@ -22,9 +21,19 @@ function Physics() {
             value: simulate
         },
         gravity: {
-            value: gravity
+            get: function() {
+                return gravity;
+            },
+            set: function(value) {
+                gravity = value;
+                message('setGravity', value);
+            }
         }
     });
+
+    // settings
+
+    this.gravity = new Vector3D([0, -9.8, 0]);
 
     // internal functions
 
@@ -32,6 +41,12 @@ function Physics() {
         if (!(object instanceof Object3D)) {
             throw new TypeError();
         }
+
+        if (simulating === true) {
+            return false;
+        }
+
+        simulating = true;
 
         if (stage !== object) {
             if (stage) {
@@ -47,11 +62,22 @@ function Physics() {
             addObject(stage);
         }
 
-        // worker.postMessage(':3');
-
         for (var object, i = 0; object = objects[i]; i++) {
-
+            
         }
+
+        message('simulate', {dt: dt});
+    }
+
+    function updateScene(data) {
+        // console.log(data);
+        for (var object, i = 0; object = objects[i]; i++) {
+            object.x = data[i].x;
+            object.y = data[i].y;
+            object.z = data[i].z;
+        }
+
+        simulating = false;
     }
 
     // stage management
@@ -61,7 +87,10 @@ function Physics() {
     }
 
     function addObject(object) {
-        objects.push(object);
+        if (object.physics !== undefined) {
+            objects.push(object);
+            message('addObject', {x: object.x, y: object.y, z: object.z});
+        }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             addObject(child);
         }
@@ -72,7 +101,10 @@ function Physics() {
     }
 
     function removeObject(object) {
-        objects.splice(objects.indexOf(object), 1);
+        if (object.physics !== undefined) {
+            objects.splice(objects.indexOf(object));
+            message('removeObject', object);
+        }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             removeObject(child);
         }
@@ -80,7 +112,11 @@ function Physics() {
 
     // worker communication
 
+    function message(method, data) {
+        worker.postMessage({method: method, data: data});
+    }
+
     worker.onmessage = function(event) {
-        // console.log(event);
+        updateScene(event.data);
     }
 }

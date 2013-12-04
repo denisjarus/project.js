@@ -1,6 +1,6 @@
 function Matrix3D(elements) {
     Object.defineProperties(this, {
-        elements: { value: new Float32Array(16) }
+        elements: { value: new Float32Array(16), enumerable: true }
     });
 
     this.elements.set(elements || IDENTITY);

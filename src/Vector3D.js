@@ -1,6 +1,6 @@
 function Vector3D(elements) {
     Object.defineProperties(this, {
-        elements: { value: new Float32Array(3) }
+        elements: { value: new Float32Array(3), enumerable: true }
     });
 
     this.elements.set(elements || [0, 0, 0]);
