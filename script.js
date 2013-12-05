@@ -15,8 +15,6 @@ var canvas,
     backwards,
     left,
     right,
-    up,
-    down,
 
     physics;
 
@@ -43,6 +41,7 @@ onload = function() {
     camera = stage.addChild(new Camera3D());
     
     camera.physics = new RigidBody(camera);
+    camera.bounds = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
 
     // ground
 
@@ -85,7 +84,8 @@ onload = function() {
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
-    instance.physics = new RigidBody(instance);
+    // instance.physics = new RigidBody(instance);
+    instance.bounds = new BoundBox(new Vector3D([-50, 0, -50]), new Vector3D([50, 0, 50]));
 
     // surface
 
@@ -155,6 +155,7 @@ onload = function() {
     // controls
 
     keyboard = new KeyboardControls(canvas);
+
     keyboard.bind('W'.charCodeAt(0),
         function() { forwards = true; },
         function() { forwards = false; }
@@ -172,8 +173,7 @@ onload = function() {
         function() { right = false; }
     );
     keyboard.bind(KeyboardControls.SPACE,
-        function() { up = true; },
-        function() { up = false; }
+        function() { physics.addForce(camera, new Vector3D([0, 0.01, 0])); }
     );
     keyboard.bind('C'.charCodeAt(0),
         function() { down = true; },
@@ -218,35 +218,22 @@ function enterFrame(frame) {
 
     var vec = new Vector3D();
 
-    vec.set(camera.localToGlobal.elements, 8);
+    vec.set(camera.localToGlobal.elements, 8).negate().scale(0.0001);
 
     if (forwards) {
-        camera.x -= vec.x;
-        camera.y -= vec.y;
-        camera.z -= vec.z;
+        physics.addForce(camera, vec);
     }
     if (backwards) {
-        camera.x += vec.x;
-        camera.y += vec.y;
-        camera.z += vec.z;
+        physics.addForce(camera, vec.negate());
     }
 
-    vec.set(camera.localToGlobal.elements, 0);
+    vec.set(camera.localToGlobal.elements, 0).negate().scale(0.0001);
 
     if (left) {
-        camera.x -= vec.x;
-        camera.z -= vec.z;
+        physics.addForce(camera, vec);
     }
     if (right) {
-        camera.x += vec.x;
-        camera.z += vec.z;
-    }
-
-    if (up) {
-        camera.y++;
-    }
-    if (down) {
-        camera.y--;
+        physics.addForce(camera, vec.negate());
     }
 
     surface.rotationY += 0.1 * Math.PI / 180;

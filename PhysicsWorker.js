@@ -2,7 +2,8 @@
 
 importScripts(
     'src/Matrix3D.js',
-    'src/Vector3D.js'
+    'src/Vector3D.js',
+    'src/BoundBox.js'
 );
 
 var objects = [],
@@ -20,6 +21,9 @@ var methods = {
 
             position: new Vector3D([object.x, object.y, object.z]),
             velocity: new Vector3D(),
+            rotation: new Vector3D(),
+            
+            drag: object.drag,
 
             force: new Vector3D()
         });
@@ -28,10 +32,17 @@ var methods = {
         objects.splice(objects.indexOf(object), 1);
     },
     setGravity: function(value) {
-        console.log(value)
         gravity.set(value.elements);
     },
-    addForce: function(object, index) {
+    addForce: function(data) {
+        var object = objects[data.index];
+
+        object.force.add(vec.set(data.force));
+    },
+    setVelocity: function(data) {
+        var object = objects[data.index];
+
+        object.velocity.set(data.velocity);
 
     },
     simulate: function(dt) {
@@ -42,9 +53,10 @@ var methods = {
                 im = object.imass,
                 p = object.position,
                 v = object.velocity,
-                f = object.force;
+                f = object.force,
+                d = object.drag;
 
-            f.set([0, 0, 0]);
+            f.subtract(vec.copyFrom(v).normalize().scale(v.lengthSquared * d));
 
             // v += (f / m + g) * dt
 
@@ -57,6 +69,8 @@ var methods = {
             message[offset] = object.position.x;
             message[offset + 1] = object.position.y;
             message[offset + 2] = object.position.z;
+
+            f.set([0, 0, 0]);
         }
 
         postMessage(message);
@@ -64,6 +78,5 @@ var methods = {
 };
 
 onmessage = function(event) {
-    console.log(event.data[1])
-    methods[event.data[0]].apply(self, Array.prototype.slice.call(event.data, 1));
+    methods[event.data.method](event.data.data);
 }

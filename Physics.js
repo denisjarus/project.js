@@ -28,6 +28,30 @@ function Physics() {
                 gravity = value;
                 message('setGravity', value);
             }
+        },
+        addForce: {
+            value: function(object, force) {
+                if (!(object instanceof Object3D)) {
+                    throw new TypeError();
+                }
+                if (!(force instanceof Vector3D)) {
+                    throw new TypeError();
+                }
+
+                message('addForce', {index: objects.indexOf(object), force: force.elements});
+            }
+        },
+        setVelocity: {
+            value: function(object, velocity) {
+                if (!(object instanceof Object3D)) {
+                    throw new TypeError();
+                }
+                if (!(velocity instanceof Vector3D)) {
+                    throw new TypeError();
+                }
+
+                message('setVelocity', {index: objects.indexOf(object), velocity: velocity.elements});
+            }
         }
     });
 
@@ -89,7 +113,14 @@ function Physics() {
     function addObject(object) {
         if (object.physics !== undefined) {
             objects.push(object);
-            message('addObject', {x: object.x, y: object.y, z: object.z, mass: object.physics.mass});
+
+            message('addObject', {
+                x: object.x,
+                y: object.y,
+                z: object.z,
+                mass: object.physics.mass,
+                drag: object.physics.drag
+            });
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             addObject(child);
@@ -104,6 +135,7 @@ function Physics() {
         if (object.physics !== undefined) {
             var index = objects.indexOf(object);
             objects.splice(index, 1);
+
             message('removeObject', index);
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
@@ -113,8 +145,8 @@ function Physics() {
 
     // worker communication
 
-    function message() {
-        worker.postMessage(arguments);
+    function message(method, data) {
+        worker.postMessage({method: method, data: data});
     }
 
     worker.onmessage = function(event) {

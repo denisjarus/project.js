@@ -16,6 +16,7 @@ Object.defineProperties(BoundBox.prototype, {
             if (!(boundBox instanceof BoundBox)) {
                 throw new TypeError();
             }
+
             this.min.copyFrom(boundBox.min);
             this.max.copyFrom(boundBox.max);
             
@@ -27,6 +28,7 @@ Object.defineProperties(BoundBox.prototype, {
             if (!(toIntersect instanceof BoundBox)) {
                 throw new TypeError();
             }
+            
             //TO DO
             return false;
         }
@@ -36,6 +38,7 @@ Object.defineProperties(BoundBox.prototype, {
             if (!(toIntersect instanceof BoundBox)) {
                 throw new TypeError();
             }
+
             //TO DO
             return new BoundBox();
         }
