@@ -85,6 +85,7 @@ onload = function() {
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
+    instance.physics = new RigidBody(instance);
 
     // surface
 

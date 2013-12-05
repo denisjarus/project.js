@@ -33,7 +33,7 @@ function Physics() {
 
     // settings
 
-    this.gravity = new Vector3D([0, -9.8, 0]);
+    this.gravity = new Vector3D([0, -0.000098, 0]);
 
     // internal functions
 
@@ -66,15 +66,15 @@ function Physics() {
             
         }
 
-        message('simulate', {dt: dt});
+        message('simulate', dt);
     }
 
     function updateScene(data) {
-        // console.log(data);
         for (var object, i = 0; object = objects[i]; i++) {
-            object.x = data[i].x;
-            object.y = data[i].y;
-            object.z = data[i].z;
+            var offset = i * 3;
+            object.x = data[offset];
+            object.y = data[offset + 1];
+            object.z = data[offset + 2];
         }
 
         simulating = false;
@@ -89,7 +89,7 @@ function Physics() {
     function addObject(object) {
         if (object.physics !== undefined) {
             objects.push(object);
-            message('addObject', {x: object.x, y: object.y, z: object.z});
+            message('addObject', {x: object.x, y: object.y, z: object.z, mass: object.physics.mass});
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             addObject(child);
@@ -102,8 +102,9 @@ function Physics() {
 
     function removeObject(object) {
         if (object.physics !== undefined) {
-            objects.splice(objects.indexOf(object));
-            message('removeObject', object);
+            var index = objects.indexOf(object);
+            objects.splice(index, 1);
+            message('removeObject', index);
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             removeObject(child);
@@ -112,8 +113,8 @@ function Physics() {
 
     // worker communication
 
-    function message(method, data) {
-        worker.postMessage({method: method, data: data});
+    function message() {
+        worker.postMessage(arguments);
     }
 
     worker.onmessage = function(event) {
