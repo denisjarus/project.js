@@ -74,7 +74,6 @@ onload = function() {
     var img = new Image();
     img.src = 'diffuseMap.bmp';
     img.onload = function() {
-        console.log('loaded');
         ground.material.getProperty('diffuseMap').setData(0, img);
         requestAnimationFrame(enterFrame);
     };
@@ -85,7 +84,7 @@ onload = function() {
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
     // instance.physics = new RigidBody(instance);
-    instance.bounds = new BoundBox(new Vector3D([-50, 0, -50]), new Vector3D([50, 0, 50]));
+    instance.bounds = new BoundBox(new Vector3D([-50, -5, -50]), new Vector3D([50, 5, 50]));
 
     // surface
 
@@ -185,8 +184,47 @@ onload = function() {
     );
 
     onresize();
-    // requestAnimationFrame(enterFrame);
+
+    // gjk
+
+    var boxOne = new BoundBox(new Vector3D([-20, -10, -20]), new Vector3D([20, 10, 20])),
+        boxTwo = new BoundBox(new Vector3D([0, 0, 0]), new Vector3D([40, 20, 40]));
+
+    console.log(getSupport(boxOne, boxTwo, new Vector3D([1, 0, 1])));
+    console.log('test:', test(boxOne, boxTwo));
 };
+
+function test(a, b) {
+    var d = new Vector3D([1, 0, 0]),
+        simplex = [getSupport(a, b, d)];
+
+    d.negate();
+
+    for (var i = 0; i < 30; i++) {
+        simplex.push(getSupport(a, b, d));
+
+        if (simplex[simplex.length - 1].dot(d) <= 0) {
+            return false;
+        } else {
+            if (hasOrigin(simplex, d)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function hasOrigin(simplex, s) {
+
+}
+
+function getSupport(a, b, direction) {
+    var point1 = a.getSupport(direction),
+        point2 = b.getSupport(direction.clone().negate());
+
+    return point1.subtract(point2);
+}
 
 onresize = function() {
     context.canvas.width = context.canvas.clientWidth;

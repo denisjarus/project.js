@@ -43,6 +43,17 @@ Object.defineProperties(BoundBox.prototype, {
             return new BoundBox();
         }
     },
+    getSupport: {
+        value: function(direction) {
+            var support = new Vector3D();
+
+            support.x = direction.x >= 0 ? this.max.x : this.min.x;
+            support.y = direction.y >= 0 ? this.max.y : this.min.y;
+            support.z = direction.z >= 0 ? this.max.z : this.min.z;
+
+            return support;
+        }
+    },
     sizeX: {
         get: function() {
             return this.max.x - this.min.x;
