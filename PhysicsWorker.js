@@ -3,6 +3,7 @@
 importScripts(
     'src/Matrix3D.js',
     'src/Vector3D.js',
+    'src/Collider.js',
     'src/BoundBox.js'
 );
 
@@ -25,11 +26,13 @@ var methods = {
             
             drag: object.drag,
 
-            force: new Vector3D()
+            force: new Vector3D(),
+
+            collider: object.bounds
         });
     },
-    removeObject: function(object) {
-        objects.splice(objects.indexOf(object), 1);
+    removeObject: function(index) {
+        objects.splice(index, 1);
     },
     setGravity: function(value) {
         gravity.set(value.elements);
@@ -79,4 +82,10 @@ var methods = {
 
 onmessage = function(event) {
     methods[event.data.method](event.data.data);
+}
+
+// collision detection
+
+function aabb(a, b, result) {
+
 }

@@ -1,11 +1,14 @@
 function BoundBox(min, max) {
+
+    Collider.call(this);
+
     Object.defineProperties(this, {
-        min: { value: min instanceof Vector3D ? min : new Vector3D() },
-        max: { value: max instanceof Vector3D ? max : new Vector3D() }
+        min: { value: min instanceof Vector3D ? min : new Vector3D(), enumerable: true },
+        max: { value: max instanceof Vector3D ? max : new Vector3D(), enumerable: true }
     });
 }
 
-Object.defineProperties(BoundBox.prototype, {
+BoundBox.prototype = Object.create(Collider.prototype, {
     clone: {
         value: function() {
             return new BoundBox(this.min.clone(), this.max.clone());

@@ -25,13 +25,13 @@ function Object3D() {
         _concat: { value: false, writable: true },
         _invert: { value: false, writable: true },
 
-        _bounds: { value: null, writable: true },
-
         visible: { value: true, writable: true },
 
         _parent: { value: null, writable: true },
         
-        _children: { value: [] }
+        _children: { value: [] },
+
+        _collider: { value: null, writable: true }
     });
 }
     
@@ -122,17 +122,6 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             }
         }
     },
-    bounds: {
-        get: function() {
-            return this._bounds;
-        },
-        set: function(bounds) {
-            if (!(bounds instanceof BoundBox)) {
-                return new TypeError();
-            }
-            this._bounds = bounds;
-        }
-    },
     parent: {
         get: function() {
             return this._parent;
@@ -205,6 +194,17 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
                 }
             }
             return false;
+        }
+    },
+    collider: {
+        get: function() {
+            return this._collider;
+        },
+        set: function(collider) {
+            if (!(collider instanceof Collider)) {
+                throw new TypeError();
+            }
+            this._collider = collider;
         }
     },
     x: {

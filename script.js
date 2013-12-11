@@ -187,36 +187,66 @@ onload = function() {
 
     // gjk
 
-    var boxOne = new BoundBox(new Vector3D([-20, -10, -20]), new Vector3D([20, 10, 20])),
-        boxTwo = new BoundBox(new Vector3D([0, 0, 0]), new Vector3D([40, 20, 40]));
+    boxOne = new BoundBox(new Vector3D([-20, -10, -20]), new Vector3D([20, 10, 20])),
+    boxTwo = new BoundBox(new Vector3D([0, -10, 0]), new Vector3D([40, 10, 40]));
 
-    console.log(getSupport(boxOne, boxTwo, new Vector3D([1, 0, 1])));
+    console.log(getSupport(boxOne, boxTwo, new Vector3D([-1, 0, 1])));
     console.log('test:', test(boxOne, boxTwo));
+
+    // var vec1 = new Vector3D([10, 0, 0]),
+    //     vec2 = new Vector3D([5, 5, 0]),
+    //     vec3 = new Vector3D();
+
+    // console.log('vec:', vec3.copyFrom(vec1).scale(vec1.dot(vec2) / vec1.lengthSquared));
 };
 
+var ap = new Vector3D(),
+    bp = new Vector3D(),
+    cp = new Vector3D(),
+
+    ab = new Vector3D(),
+    ac = new Vector3D(),
+    ad = new Vector3D(),
+
+    origin = new Vector3D(),
+    normal = new Vector3D(),
+
+    e = 0.00001;
+
 function test(a, b) {
-    var d = new Vector3D([1, 0, 0]),
-        simplex = [getSupport(a, b, d)];
+    var d = new Vector3D(),
+        simplex = [
+            getSupport(a, b, d.set([1, 0, 0])),
+            getSupport(a, b, d.set([0, 1, 0])),
+            getSupport(a, b, d.set([0, 0, 1])),
+            getSupport(a, b, d.set([0, -1, 0])),
+        ];
 
-    d.negate();
+    console.log('initial', simplex);
 
-    for (var i = 0; i < 30; i++) {
-        simplex.push(getSupport(a, b, d));
+    d.set([5, -7, 0]);
 
-        if (simplex[simplex.length - 1].dot(d) <= 0) {
-            return false;
-        } else {
-            if (hasOrigin(simplex, d)) {
-                return true;
-            }
+    // barycentric(
+    //     new Vector3D([0, 0, 0]),
+    //     new Vector3D([10, 0, 0]),
+    //     new Vector3D([0, 10, 0]),
+    //     new Vector3D([0, 0, 10]),
+    //     d
+    // );
+    // console.log('barycentric', d);
+    // console.log('lambda 4', 1 - d.x - d.y - d.z);
+
+    // try {
+        for (var i = 0; i < 1; i++) {
+            updateSimplex(simplex);
+            // closestToLine(simplex[0], simplex[2], d);
+            // console.log(d);
         }
-    }
+    // } catch (error) {
+    //     console.log(error);
+    // }
 
-    return false;
-}
-
-function hasOrigin(simplex, s) {
-
+    return null;
 }
 
 function getSupport(a, b, direction) {
@@ -224,6 +254,247 @@ function getSupport(a, b, direction) {
         point2 = b.getSupport(direction.clone().negate());
 
     return point1.subtract(point2);
+}
+
+function closestToLine(a, b, point) {
+    var ab = new Vector3D(),
+        ao = new Vector3D();
+
+    ab.copyFrom(b).subtract(a);
+    ao.copyFrom(a).negate();
+    point.copyFrom(ab).scale(ab.dot(ao) / ab.lengthSquared).add(a);
+}
+
+console.log('point outside', pointOutsideOfPlane(
+    new Vector3D([0, 0, 0]),
+    new Vector3D([5, 0, -10]),
+    new Vector3D([0, 5, -10]),
+    new Vector3D([5, 5, -10]),
+    new Vector3D([0, 0, -20])
+));
+
+function pointOutsideOfPlane(p, a, b, c, d) {
+    ap.copyFrom(p).subtract(a);
+    ab.copyFrom(b).subtract(a);
+    ac.copyFrom(c).subtract(a);
+    ad.copyFrom(d).subtract(a);
+    normal.copyFrom(ab).cross(ac);
+    if (normal.dot(ad) < 0) {
+        return ap.dot(normal) > -e;
+    } else {
+        return ap.dot(normal) < -e;
+    }
+}
+
+function closestPointInTetrahedron(p, a, b, c, d, result) {
+
+}
+
+function closestPointInTriangle(p, a, b, c, result) {
+
+    // vertex A
+
+    ap.copyFrom(p).subtract(a);
+    ab.copyFrom(b).subtract(a);
+    ac.copyFrom(c).subtract(a);
+
+    var d1 = ab.dot(ap),
+        d2 = ac.dot(ap);
+
+    if (d1 <= 0 && d2 <= 0) {
+        console.log('point is a:', a);
+        return result.copyFrom(a);
+    }
+
+    // vertex B
+
+    bp.copyFrom(p).subtract(b);
+
+    var d3 = ab.dot(bp),
+        d4 = ac.dot(bp);
+
+    if (d3 >= 0 && d3 >= d4) {
+        console.log('point is b:', b);
+        return result.copyFrom(b);
+    }
+
+    // edge AB
+
+    var vc = d1 * d4 - d3 * d2;
+
+    if (vc <= 0 && d1 >= 0 && d3 <= 0) {
+        console.log('point in on ab:', a, b);
+        return result.copyFrom(ab).scale(d1 / (d1 - d3)).add(a);
+    }
+
+    // vertex C
+
+    cp.copyFrom(p).subtract(c);
+
+    var d5 = ab.dot(cp),
+        d6 = ac.dot(cp);
+
+    if (d6 >= 0 && d5 >= d6) {
+        console.log('point is c:', c);
+        return result.copyFrom(c);
+    }
+
+    // edge AC
+
+    var vb = d5 * d2 - d1 * d6;
+
+    if (vb <= 0 && d2 >= 0 && d6 <= 0) {
+        console.log('point in on ac:', a, c);
+        return result.copyFrom(ac).scale(d2 / (d2 - d6)).add(a);
+    }
+
+    // edge BC
+
+    var va = d3 * d6 - d5 * d4;
+
+    if (va <= 0 && d4 >= d3 && d5 >= d6) {
+        console.log('point in on bc:', b, c);
+        bc.copyFrom(c).subtract(b);
+        return result.copyFrom(bc).scale((d4 - d3) / ((d4 - d3) + (d5 - d6))).add(b);
+    }
+
+    // face ABC
+
+    var denom = 1 / (va + vb + vc);
+
+    console.log('point is in abc:', a, b, c);
+    return result.copyFrom(a).add(ab.scale(vb * denom)).add(ac.scale(vc * denom));
+}
+
+function updateSimplex(simplex) {
+    var a = simplex[0],
+        b = simplex[1],
+        c = simplex[2],
+        d = simplex[3],
+
+        planeABC = pointOutsideOfPlane(origin, a, b, c, d),
+        planeBCD = pointOutsideOfPlane(origin, b, c, d, a),
+        planeCDA = pointOutsideOfPlane(origin, c, d, a, b),
+        planeDAB = pointOutsideOfPlane(origin, d, a, b, c),
+
+        tempDistance = 0,
+        bestDistance = Number.MAX_VALUE,
+        tempResult = new Vector3D(),
+        bestResult = new Vector3D();
+
+    if (!planeABC && !planeBCD && !planeCDA && !planeDAB) {
+        return true;
+    }
+
+    if (planeABC) {
+        closestPointInTriangle(origin, a, b, c, tempResult);
+        tempDistance = tempResult.distanceSquared(origin);
+
+        if (bestDistance > tempDistance) {
+            bestDistance = tempDistance;
+            bestResult = tempResult;
+        }
+    }
+
+    if (planeBCD) {
+        closestPointInTriangle(origin, b, c, d, tempResult);
+        tempDistance = tempResult.distanceSquared(origin);
+        
+        if (bestDistance > tempDistance) {
+            bestDistance = tempDistance;
+            bestResult = tempResult;
+        }
+    }
+
+    if (planeCDA) {
+        closestPointInTriangle(origin, c, d, a, tempResult);
+        tempDistance = tempResult.distanceSquared(origin);
+        
+        if (bestDistance > tempDistance) {
+            bestDistance = tempDistance;
+            bestResult = tempResult;
+        }
+    }
+
+    if (planeDAB) {
+        closestPointInTriangle(origin, d, a, b, tempResult);
+        tempDistance = tempResult.distanceSquared(origin);
+        
+        if (bestDistance > tempDistance) {
+            bestDistance = tempDistance;
+            bestResult = tempResult;
+        }
+    }
+
+    console.log('::iteration::', bestResult);
+    // console.log('abc', planeABC);
+    // console.log('bcd', planeBCD);
+    // console.log('cda', planeCDA);
+    // console.log('dab', planeDAB);
+}
+
+function updateSimplex2(simplex) {
+    var a = simplex[0],
+        b = simplex[1],
+        c = simplex[2],
+        d = simplex[3],
+
+        point = barycentric(a, b, c, d, new Vector3D()),
+
+        ba = point.x,
+        bb = point.y,
+        bc = point.z,
+        bd = 1 - ba - bb - bc;
+
+    console.log('point', ba, bb, bc, bd);
+
+    if (ba > 0 && bb > 0 && bc > 0 && bd > 0) {
+        console.log('origin is inside');
+    }
+
+    // check vertices
+
+    if (ba <= 0 && bb >= 1 && bc >= 1 && bd >= 1) {
+        console.log('vertex a');
+        return;
+    }
+
+    if (bb <= 0 && ba >= 1 && bc >= 1 && bd >= 1) {
+        console.log('vertex b');
+        return;
+    }
+
+    if (bc <= 0 && ba >= 1 && bb >= 1 && bd >= 1) {
+        console.log('vertex c');
+        return;
+    }
+
+    if (bd <= 0 && ba >= 1 && bb >= 1 && bc >= 1) {
+        console.log('vertex d');
+        return;
+    }
+
+    // check faces
+}
+
+function barycentric(a, b, c, d, point) {
+    var mat = new Matrix3D(),
+        vec = new Vector3D();
+
+    vec.copyFrom(a).subtract(d);
+    mat.elements.set(vec.elements, 0);
+
+    vec.copyFrom(b).subtract(d);
+    mat.elements.set(vec.elements, 4);
+
+    vec.copyFrom(c).subtract(d);
+    mat.elements.set(vec.elements, 8);
+
+    mat.invert();
+
+    point.subtract(d).transform(mat);
+
+    return point;
 }
 
 onresize = function() {

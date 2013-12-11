@@ -119,7 +119,8 @@ function Physics() {
                 y: object.y,
                 z: object.z,
                 mass: object.physics.mass,
-                drag: object.physics.drag
+                drag: object.physics.drag,
+                bounds: object.bounds
             });
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {

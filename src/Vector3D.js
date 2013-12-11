@@ -89,6 +89,11 @@ Object.defineProperties(Vector3D.prototype, {
     },
     distance: {
         value: function(vector) {
+            return Math.sqrt(this.distance(vector));
+        }
+    },
+    distanceSquared: {
+        value: function(vector) {
             if (!(vector instanceof Vector3D)) {
                 throw new TypeError();
             }
@@ -99,7 +104,7 @@ Object.defineProperties(Vector3D.prototype, {
                 y = b[1] - a[1],
                 z = b[2] - a[2];
             
-            return Math.sqrt(x * x + y * y + z * z);
+            return x * x + y * y + z * z;
         }
     },
     dot: {
@@ -120,13 +125,7 @@ Object.defineProperties(Vector3D.prototype, {
     },
     length: {
         get: function() {
-            var vec = this.elements;
-
-            return Math.sqrt(
-                vec[0] * vec[0] +
-                vec[1] * vec[1] +
-                vec[2] * vec[2]
-            );
+            return Math.sqrt(this.lengthSquared);
         }
     },
     lengthSquared: {
