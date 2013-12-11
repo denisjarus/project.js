@@ -18,13 +18,13 @@ var vec = new Vector3D();
 var methods = {
     addObject: function(object) {
         objects.push({
-            imass: 1 / object.mass,
+            mass: object.mass,
+            massInv: object.mass !== 0 ? 1 / object.mass : 0,
+            drag: object.drag,
 
             position: new Vector3D([object.x, object.y, object.z]),
             velocity: new Vector3D(),
             rotation: new Vector3D(),
-            
-            drag: object.drag,
 
             force: new Vector3D(),
 
@@ -49,21 +49,23 @@ var methods = {
 
     },
     simulate: function(dt) {
-        var g = gravity;
-
         for (var object, i = 0; object = objects[i]; i++) {
             var offset = i * 3,
-                im = object.imass,
+
+                m = object.mass,
+                im = object.massInv,
+                d = object.drag,
+
                 p = object.position,
                 v = object.velocity,
-                f = object.force,
-                d = object.drag;
+                f = object.force;
 
-            f.subtract(vec.copyFrom(v).normalize().scale(v.lengthSquared * d));
+            f.add(vec.copyFrom(gravity).scale(m));
+            f.sub(vec.copyFrom(v).normalize().scale(0.5 * v.lengthSquared * d));
 
-            // v += (f / m + g) * dt
+            // v += (f / m) * dt
 
-            v.add(vec.copyFrom(f).scale(im).add(g).scale(dt));
+            v.add(vec.copyFrom(f).scale(im).scale(dt));
 
             // p += v * dt
 

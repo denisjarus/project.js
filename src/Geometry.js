@@ -104,8 +104,8 @@ Object.defineProperties(Geometry, {
                     // get vertex positions
 
                     a.set(positions, offset + indices[i] * stride);
-                    b.set(positions, offset + indices[i + 1] * stride).subtract(a);
-                    c.set(positions, offset + indices[i + 2] * stride).subtract(a);
+                    b.set(positions, offset + indices[i + 1] * stride).sub(a);
+                    c.set(positions, offset + indices[i + 2] * stride).sub(a);
 
                     // calculate face normal
 

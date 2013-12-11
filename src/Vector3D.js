@@ -52,7 +52,7 @@ Object.defineProperties(Vector3D.prototype, {
             return this;
         }
     },
-    subtract: {
+    sub: {
         value: function(vector) {
             if (!(vector instanceof Vector3D)) {
                 throw new TypeError();

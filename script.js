@@ -253,14 +253,14 @@ function getSupport(a, b, direction) {
     var point1 = a.getSupport(direction),
         point2 = b.getSupport(direction.clone().negate());
 
-    return point1.subtract(point2);
+    return point1.sub(point2);
 }
 
 function closestToLine(a, b, point) {
     var ab = new Vector3D(),
         ao = new Vector3D();
 
-    ab.copyFrom(b).subtract(a);
+    ab.copyFrom(b).sub(a);
     ao.copyFrom(a).negate();
     point.copyFrom(ab).scale(ab.dot(ao) / ab.lengthSquared).add(a);
 }
@@ -274,10 +274,10 @@ console.log('point outside', pointOutsideOfPlane(
 ));
 
 function pointOutsideOfPlane(p, a, b, c, d) {
-    ap.copyFrom(p).subtract(a);
-    ab.copyFrom(b).subtract(a);
-    ac.copyFrom(c).subtract(a);
-    ad.copyFrom(d).subtract(a);
+    ap.copyFrom(p).sub(a);
+    ab.copyFrom(b).sub(a);
+    ac.copyFrom(c).sub(a);
+    ad.copyFrom(d).sub(a);
     normal.copyFrom(ab).cross(ac);
     if (normal.dot(ad) < 0) {
         return ap.dot(normal) > -e;
@@ -286,17 +286,13 @@ function pointOutsideOfPlane(p, a, b, c, d) {
     }
 }
 
-function closestPointInTetrahedron(p, a, b, c, d, result) {
-
-}
-
 function closestPointInTriangle(p, a, b, c, result) {
 
     // vertex A
 
-    ap.copyFrom(p).subtract(a);
-    ab.copyFrom(b).subtract(a);
-    ac.copyFrom(c).subtract(a);
+    ap.copyFrom(p).sub(a);
+    ab.copyFrom(b).sub(a);
+    ac.copyFrom(c).sub(a);
 
     var d1 = ab.dot(ap),
         d2 = ac.dot(ap);
@@ -308,7 +304,7 @@ function closestPointInTriangle(p, a, b, c, result) {
 
     // vertex B
 
-    bp.copyFrom(p).subtract(b);
+    bp.copyFrom(p).sub(b);
 
     var d3 = ab.dot(bp),
         d4 = ac.dot(bp);
@@ -329,7 +325,7 @@ function closestPointInTriangle(p, a, b, c, result) {
 
     // vertex C
 
-    cp.copyFrom(p).subtract(c);
+    cp.copyFrom(p).sub(c);
 
     var d5 = ab.dot(cp),
         d6 = ac.dot(cp);
@@ -354,7 +350,7 @@ function closestPointInTriangle(p, a, b, c, result) {
 
     if (va <= 0 && d4 >= d3 && d5 >= d6) {
         console.log('point in on bc:', b, c);
-        bc.copyFrom(c).subtract(b);
+        bc.copyFrom(c).sub(b);
         return result.copyFrom(bc).scale((d4 - d3) / ((d4 - d3) + (d5 - d6))).add(b);
     }
 
@@ -481,18 +477,18 @@ function barycentric(a, b, c, d, point) {
     var mat = new Matrix3D(),
         vec = new Vector3D();
 
-    vec.copyFrom(a).subtract(d);
+    vec.copyFrom(a).sub(d);
     mat.elements.set(vec.elements, 0);
 
-    vec.copyFrom(b).subtract(d);
+    vec.copyFrom(b).sub(d);
     mat.elements.set(vec.elements, 4);
 
-    vec.copyFrom(c).subtract(d);
+    vec.copyFrom(c).sub(d);
     mat.elements.set(vec.elements, 8);
 
     mat.invert();
 
-    point.subtract(d).transform(mat);
+    point.sub(d).transform(mat);
 
     return point;
 }
@@ -588,7 +584,7 @@ function mouseMove(event) {
 
     // var near = camera.unproject(new Vector3D([0, 0, 0])),
     //     far = camera.unproject(new Vector3D([0, 0, 1])),
-    //     dir = far.subtract(near);
+    //     dir = far.sub(near);
 
     // console.log(dir.x, dir.y, dir.z);
 }
