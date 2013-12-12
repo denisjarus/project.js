@@ -41,7 +41,9 @@ onload = function() {
     camera = stage.addChild(new Camera3D());
     
     camera.physics = new RigidBody(camera);
-    camera.bounds = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
+    camera.physics.mass = 10;
+
+    camera.collider = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
 
     // ground
 
@@ -172,7 +174,7 @@ onload = function() {
         function() { right = false; }
     );
     keyboard.bind(KeyboardControls.SPACE,
-        function() { physics.addForce(camera, new Vector3D([0, 0.01, 0])); }
+        function() { physics.addForce(camera, new Vector3D([0, 10000, 0])); }
     );
     keyboard.bind('C'.charCodeAt(0),
         function() { down = true; },
@@ -523,7 +525,7 @@ function enterFrame(frame) {
 
     var vec = new Vector3D();
 
-    vec.set(camera.localToGlobal.elements, 8).negate().scale(0.0001);
+    vec.set(camera.localToGlobal.elements, 8).negate().scale(100);
 
     if (forwards) {
         physics.addForce(camera, vec);
@@ -532,7 +534,7 @@ function enterFrame(frame) {
         physics.addForce(camera, vec.negate());
     }
 
-    vec.set(camera.localToGlobal.elements, 0).negate().scale(0.0001);
+    vec.set(camera.localToGlobal.elements, 0).negate().scale(100);
 
     if (left) {
         physics.addForce(camera, vec);
@@ -549,7 +551,7 @@ function enterFrame(frame) {
 
     //
 
-    physics.simulate(stage, delta);
+    physics.simulate(stage, delta * 0.001);
 
     camera.aspectRatio = 1;
     display.visible = false;

@@ -7,9 +7,17 @@ importScripts(
     'src/BoundBox.js'
 );
 
-var objects = [],
-    gravity = new Vector3D(),
-    message = [];
+var message = [];
+
+// stage
+
+var rigidBodies = [],
+    colliders = [],
+    constraints = [],
+
+    gravity = new Vector3D();
+
+// math
 
 var vec = new Vector3D();
 
@@ -17,7 +25,7 @@ var vec = new Vector3D();
 
 var methods = {
     addObject: function(object) {
-        objects.push({
+        rigidBodies.push({
             mass: object.mass,
             massInv: object.mass !== 0 ? 1 / object.mass : 0,
             drag: object.drag,
@@ -26,30 +34,40 @@ var methods = {
             velocity: new Vector3D(),
             rotation: new Vector3D(),
 
-            force: new Vector3D(),
-
-            collider: object.bounds
+            force: new Vector3D()
         });
     },
+    addCollider: function(data) {
+        var collider;
+
+        switch (data.type) {
+            case 'BoundBox': 
+                collider = new BoundBox(data.min, data.max);
+                break;
+        }
+
+        console.log('FUCK');
+        console.log(collider.min.x, collider.min.y, collider.min.z);
+    },
     removeObject: function(index) {
-        objects.splice(index, 1);
+        rigidBodies.splice(index, 1);
     },
     setGravity: function(value) {
         gravity.set(value.elements);
     },
     addForce: function(data) {
-        var object = objects[data.index];
+        var object = rigidBodies[data.index];
 
         object.force.add(vec.set(data.force));
     },
     setVelocity: function(data) {
-        var object = objects[data.index];
+        var object = rigidBodies[data.index];
 
         object.velocity.set(data.velocity);
 
     },
     simulate: function(dt) {
-        for (var object, i = 0; object = objects[i]; i++) {
+        for (var object, i = 0; object = rigidBodies[i]; i++) {
             var offset = i * 3,
 
                 m = object.mass,

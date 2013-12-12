@@ -57,7 +57,7 @@ function Physics() {
 
     // settings
 
-    this.gravity = new Vector3D([0, -0.000098, 0]);
+    this.gravity = new Vector3D([0, -9.8, 0]);
 
     // internal functions
 
@@ -123,6 +123,9 @@ function Physics() {
                 bounds: object.bounds
             });
         }
+
+        addCollider(object);
+
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             addObject(child);
         }
@@ -133,7 +136,7 @@ function Physics() {
     }
 
     function removeObject(object) {
-        if (object.physics !== undefined) {
+        if (object.physics) {
             var index = objects.indexOf(object);
             objects.splice(index, 1);
 
@@ -141,6 +144,18 @@ function Physics() {
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             removeObject(child);
+        }
+    }
+
+    function addCollider(object) {
+        var type;
+
+        if (object.collider) {
+            if (object.collider instanceof BoundBox) {
+                type = 'BoundBox';
+            }
+
+            message('addCollider', {type: type, collider: object.collider});
         }
     }
 
