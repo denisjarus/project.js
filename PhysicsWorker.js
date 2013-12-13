@@ -4,7 +4,9 @@ importScripts(
     'src/Matrix3D.js',
     'src/Vector3D.js',
     'src/Collider.js',
-    'src/BoundBox.js'
+    'src/BoundBox.js',
+
+    'RigidBody.js'
 );
 
 var message = [];
@@ -24,30 +26,14 @@ var vec = new Vector3D();
 // public api
 
 var methods = {
-    addObject: function(object) {
-        rigidBodies.push({
-            mass: object.mass,
-            massInv: object.mass !== 0 ? 1 / object.mass : 0,
-            drag: object.drag,
+    addObject: function(data) {
+        var object = new RigidBody();
 
-            position: new Vector3D([object.x, object.y, object.z]),
-            velocity: new Vector3D(),
-            rotation: new Vector3D(),
+        object.collider = new BoundBox();
 
-            force: new Vector3D()
-        });
-    },
-    addCollider: function(data) {
-        var collider;
+        console.log(JSON.stringify(data));
 
-        switch (data.type) {
-            case 'BoundBox': 
-                collider = new BoundBox(data.min, data.max);
-                break;
-        }
-
-        console.log('FUCK');
-        console.log(collider.min.x, collider.min.y, collider.min.z);
+        rigidBodies.push(object);
     },
     removeObject: function(index) {
         rigidBodies.splice(index, 1);
@@ -70,20 +56,19 @@ var methods = {
         for (var object, i = 0; object = rigidBodies[i]; i++) {
             var offset = i * 3,
 
-                m = object.mass,
-                im = object.massInv,
-                d = object.drag,
-
                 p = object.position,
                 v = object.velocity,
-                f = object.force;
+                f = object.force,
+
+                m = object.collider.mass,
+                d = object.collider.drag;
 
             f.add(vec.copyFrom(gravity).scale(m));
             f.sub(vec.copyFrom(v).normalize().scale(0.5 * v.lengthSquared * d));
 
             // v += (f / m) * dt
 
-            v.add(vec.copyFrom(f).scale(im).scale(dt));
+            v.add(vec.copyFrom(f).scale(1 / m).scale(dt));
 
             // p += v * dt
 

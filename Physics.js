@@ -86,10 +86,6 @@ function Physics() {
             addObject(stage);
         }
 
-        for (var object, i = 0; object = objects[i]; i++) {
-            
-        }
-
         message('simulate', dt);
     }
 
@@ -111,20 +107,11 @@ function Physics() {
     }
 
     function addObject(object) {
-        if (object.physics !== undefined) {
+        if (object.collider) {
             objects.push(object);
 
-            message('addObject', {
-                x: object.x,
-                y: object.y,
-                z: object.z,
-                mass: object.physics.mass,
-                drag: object.physics.drag,
-                bounds: object.bounds
-            });
+            message('addObject', object.collider);
         }
-
-        addCollider(object);
 
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             addObject(child);
@@ -136,26 +123,15 @@ function Physics() {
     }
 
     function removeObject(object) {
-        if (object.physics) {
+        if (object.collider) {
             var index = objects.indexOf(object);
+
             objects.splice(index, 1);
 
             message('removeObject', index);
         }
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             removeObject(child);
-        }
-    }
-
-    function addCollider(object) {
-        var type;
-
-        if (object.collider) {
-            if (object.collider instanceof BoundBox) {
-                type = 'BoundBox';
-            }
-
-            message('addCollider', {type: type, collider: object.collider});
         }
     }
 

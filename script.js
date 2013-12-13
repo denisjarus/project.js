@@ -40,10 +40,8 @@ onload = function() {
 
     camera = stage.addChild(new Camera3D());
     
-    camera.physics = new RigidBody(camera);
-    camera.physics.mass = 10;
-
     camera.collider = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
+    camera.collider.mass = 10;
 
     // ground
 

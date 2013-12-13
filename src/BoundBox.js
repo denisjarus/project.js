@@ -26,26 +26,6 @@ BoundBox.prototype = Object.create(Collider.prototype, {
             return this;
         }
     },
-    intersects: {
-        value: function(toIntersect) {
-            if (!(toIntersect instanceof BoundBox)) {
-                throw new TypeError();
-            }
-            
-            //TO DO
-            return false;
-        }
-    },
-    intersection: {
-        value: function(toIntersect) {
-            if (!(toIntersect instanceof BoundBox)) {
-                throw new TypeError();
-            }
-
-            //TO DO
-            return new BoundBox();
-        }
-    },
     getSupport: {
         value: function(direction) {
             var support = new Vector3D();

@@ -1,28 +1,11 @@
-function RigidBody(object) {
-
-    EventDispatcher.call(this);
-
+function RigidBody() {
     Object.defineProperties(this, {
-        object: { value: object },
+        collider: { value: null, writable: true },
 
-        mass: { value: 1, writable: true, enumerable: true },
-        drag: { value: 0.01, writable: true, enumerable: true },
+        position: { value: new Vector3D() },
+        velocity: { value: new Vector3D() },
+        rotation: { value: new Vector3D() },
 
-        _enabled: { value: true, writable: true }
+        force: { value: new Vector3D() }
     });
-
-    if (!(object instanceof Object3D)) {
-        throw new TypeError();
-    }
 }
-
-RigidBody.prototype = Object.create(EventDispatcher.prototype, {
-    enabled: {
-        get: function() {
-            return this._enabled;
-        },
-        set: function(value) {
-            this._enabled = value;
-        }
-    }
-});
