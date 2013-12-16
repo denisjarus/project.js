@@ -1,9 +1,8 @@
 function Collider() {
     Object.defineProperties(this, {
         inverseMass: { value: 1, writable: true, enumerable: true },
-
-        linDrag: { value: 1, writable: true, enumerable: true },
-        angDrag: { value: 1, writable: true, enumerable: true }
+        linearDrag: { value: 1, writable: true, enumerable: true },
+        angularDrag: { value: 1, writable: true, enumerable: true }
     });
 }
 

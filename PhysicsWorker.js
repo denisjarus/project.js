@@ -29,9 +29,10 @@ var methods = {
     addObject: function(data) {
         var object = new RigidBody();
 
-        object.collider = new BoundBox();
+        object.collider = new BoundBox(new Vector3D(data.min.elements), new Vector3D(data.max.elements));
+        object.collider.inverseMass = data.inverseMass;
 
-        console.log(JSON.stringify(data));
+        console.log(object.collider.inverseMass);
 
         rigidBodies.push(object);
     },
@@ -42,14 +43,16 @@ var methods = {
         gravity.set(vector);
     },
     addForce: function(data) {
-        var object = rigidBodies[data.index];
-
-        object.force.add(vec.set(data.force));
+        rigidBodies[data.index].force.add(vec.set(data.force));
+    },
+    setPosition: function(data) {
+        rigidBodies[data.index].position.set(data.position);
+    },
+    setRotation: function(data) {
+        rigidBodies[data.index].rotation.set(data.rotation);
     },
     setVelocity: function(data) {
-        var object = rigidBodies[data.index];
-
-        object.velocity.set(data.velocity);
+        rigidBodies[data.index].velocity.set(data.velocity);
     },
     simulate: function(dt) {
         for (var object, i = 0; object = rigidBodies[i]; i++) {
@@ -58,25 +61,28 @@ var methods = {
                 p = object.position,
                 r = object.rotation,
 
-                vl = object.linVelocity,
-                va = object.angVelocity,
+                vl = object.linearVelocity,
+                va = object.angularVelocity,
 
                 f = object.force,
                 t = object.torque,
 
                 im = object.collider.inverseMass,
-                dl = object.collider.linDrag,
-                da = object.collider.angDrag;
+                dl = object.collider.linearDrag,
+                da = object.collider.angularDrag;
 
-            f.sub(vec.copyFrom(vl).normalize().scale(0.5 * vl.lengthSquared * dl));
+            f.add(vec.copyFrom(gravity));
+            // f.sub(vec.copyFrom(vl).normalize().scale(0.5 * vl.lengthSquared * dl));
 
             // v += (f / m + g) * dt
 
-            vl.add(vec.copyFrom(f).scale(im).add(gravity).scale(dt));
+            vl.add(vec.copyFrom(f).scale(im).scale(dt));
 
             // p += v * dt
 
             p.add(vec.copyFrom(vl).scale(dt));
+
+            object.matrix.recompose(p.x, p.y, p.z, r.x, r.y, r.z, 1, 1, 1);
 
             message[offset] = object.position.x;
             message[offset + 1] = object.position.y;

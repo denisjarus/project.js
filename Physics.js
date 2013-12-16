@@ -14,6 +14,10 @@ function Physics() {
 
     var simulating = false;
 
+    // temp
+
+    var vec = new Vector3D();
+
     // public api
 
     Object.defineProperties(this, {
@@ -29,16 +33,28 @@ function Physics() {
                 message('setGravity', value.elements);
             }
         },
-        addForce: {
-            value: function(object, force) {
+        setPosition: {
+            value: function(object, position) {
                 if (!(object instanceof Object3D)) {
                     throw new TypeError();
                 }
-                if (!(force instanceof Vector3D)) {
+                if (!(position instanceof Vector3D)) {
                     throw new TypeError();
                 }
 
-                message('addForce', {index: objects.indexOf(object), force: force.elements});
+                message('setPosition', {index: objects.indexOf(object), position: position.elements});
+            }
+        },
+        setRotation: {
+            value: function(object, rotation) {
+                if (!(object instanceof Object3D)) {
+                    throw new TypeError();
+                }
+                if (!(rotation instanceof Vector3D)) {
+                    throw new TypeError();
+                }
+
+                message('setPosition', {index: objects.indexOf(object), rotation: rotation.elements});
             }
         },
         setVelocity: {
@@ -51,6 +67,18 @@ function Physics() {
                 }
 
                 message('setVelocity', {index: objects.indexOf(object), velocity: velocity.elements});
+            }
+        },
+        addForce: {
+            value: function(object, force) {
+                if (!(object instanceof Object3D)) {
+                    throw new TypeError();
+                }
+                if (!(force instanceof Vector3D)) {
+                    throw new TypeError();
+                }
+
+                message('addForce', {index: objects.indexOf(object), force: force.elements});
             }
         }
     });
@@ -108,9 +136,11 @@ function Physics() {
 
     function addObject(object) {
         if (object.collider) {
-            objects.push(object);
+            var index = objects.push(object) - 1;
 
             message('addObject', object.collider);
+            message('setPosition', {index: index, position: [object.x, object.y, object.z]});
+            message('setRotation', {index: index, rotation: [object.rotationX, object.rotationY, object.rotationZ]});
         }
 
         for (var child, i = 0; child = object.getChildAt(i); i++) {
@@ -130,6 +160,7 @@ function Physics() {
 
             message('removeObject', index);
         }
+
         for (var child, i = 0; child = object.getChildAt(i); i++) {
             removeObject(child);
         }
