@@ -3,8 +3,8 @@
 importScripts(
     'src/Matrix3D.js',
     'src/Vector3D.js',
-    'src/Collider.js',
-    'src/BoundBox.js',
+    'src/physics/Collider.js',
+    'src/physics/BoundBox.js',
 
     'RigidBody.js'
 );
@@ -38,8 +38,8 @@ var methods = {
     removeObject: function(index) {
         rigidBodies.splice(index, 1);
     },
-    setGravity: function(value) {
-        gravity.set(value.elements);
+    setGravity: function(vector) {
+        gravity.set(vector);
     },
     addForce: function(data) {
         var object = rigidBodies[data.index];
@@ -50,35 +50,40 @@ var methods = {
         var object = rigidBodies[data.index];
 
         object.velocity.set(data.velocity);
-
     },
     simulate: function(dt) {
         for (var object, i = 0; object = rigidBodies[i]; i++) {
             var offset = i * 3,
 
                 p = object.position,
-                v = object.velocity,
+                r = object.rotation,
+
+                vl = object.linVelocity,
+                va = object.angVelocity,
+
                 f = object.force,
+                t = object.torque,
 
-                m = object.collider.mass,
-                d = object.collider.drag;
+                im = object.collider.inverseMass,
+                dl = object.collider.linDrag,
+                da = object.collider.angDrag;
 
-            f.add(vec.copyFrom(gravity).scale(m));
-            f.sub(vec.copyFrom(v).normalize().scale(0.5 * v.lengthSquared * d));
+            f.sub(vec.copyFrom(vl).normalize().scale(0.5 * vl.lengthSquared * dl));
 
-            // v += (f / m) * dt
+            // v += (f / m + g) * dt
 
-            v.add(vec.copyFrom(f).scale(1 / m).scale(dt));
+            vl.add(vec.copyFrom(f).scale(im).add(gravity).scale(dt));
 
             // p += v * dt
 
-            p.add(vec.copyFrom(v).scale(dt));
+            p.add(vec.copyFrom(vl).scale(dt));
 
             message[offset] = object.position.x;
             message[offset + 1] = object.position.y;
             message[offset + 2] = object.position.z;
 
             f.set([0, 0, 0]);
+            t.set([0, 0, 0]);
         }
 
         postMessage(message);
@@ -86,7 +91,7 @@ var methods = {
 };
 
 onmessage = function(event) {
-    methods[event.data.method](event.data.data);
+    methods[event.data.method](event.data.arguments);
 }
 
 // collision detection

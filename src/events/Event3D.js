@@ -9,6 +9,7 @@ function Event3D(type) {
 Object.defineProperties(Event3D, {
     ADDED: { value: 'added' },
     REMOVED: { value: 'removed' },
+    COLLIDER_CHANGE: { value: 'colliderChange' },
     GEOMETRY_CHANGE: { value: 'geometryChange' },
     MATERIAL_CHANGE: { value: 'materialChange' }
 });

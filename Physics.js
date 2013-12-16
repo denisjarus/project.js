@@ -26,7 +26,7 @@ function Physics() {
             },
             set: function(value) {
                 gravity = value;
-                message('setGravity', value);
+                message('setGravity', value.elements);
             }
         },
         addForce: {
@@ -137,8 +137,8 @@ function Physics() {
 
     // worker communication
 
-    function message(method, data) {
-        worker.postMessage({method: method, data: data});
+    function message(method, args) {
+        worker.postMessage({method: method, arguments: args});
     }
 
     worker.onmessage = function(event) {
