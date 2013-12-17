@@ -194,6 +194,54 @@ Object.defineProperties(Vector3D.prototype, {
             return this;
         }
     },
+    max: {
+        value: function(vector) {
+            if (!(vector instanceof Vector3D)) {
+                throw new TypeError();
+            }
+
+            var a = this.elements,
+                b = vector.elements;
+
+            if (a[0] < b[0]) {
+                a[0] = b[0];
+            }
+
+            if (a[1] < b[1]) {
+                a[1] = b[1];
+            }
+
+            if (a[2] < b[2]) {
+                a[2] = b[2];
+            }
+
+            return this;
+        }
+    },
+    min: {
+        value: function(vector) {
+            if (!(vector instanceof Vector3D)) {
+                throw new TypeError();
+            }
+
+            var a = this.elements,
+                b = vector.elements;
+
+            if (a[0] > b[0]) {
+                a[0] = b[0];
+            }
+
+            if (a[1] > b[1]) {
+                a[1] = b[1];
+            }
+
+            if (a[2] > b[2]) {
+                a[2] = b[2];
+            }
+
+            return this;
+        }
+    },
     x: {
         get: function() {
             return this.elements[0];

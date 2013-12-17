@@ -21,7 +21,9 @@ var rigidBodies = [],
 
 // math
 
-var vec = new Vector3D();
+var vec = new Vector3D(),
+    a = new Vector3D(),
+    b = new Vector3D();
 
 // public api
 
@@ -55,6 +57,12 @@ var methods = {
         rigidBodies[data.index].velocity.set(data.velocity);
     },
     simulate: function(dt) {
+        for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
+            for (var object2, j = i + 1; object2 = rigidBodies[j]; j++) {
+                console.log(aabb(object1.collider, object2.collider, object1.matrix, object2.matrix));
+            }
+        }
+
         for (var object, i = 0; object = rigidBodies[i]; i++) {
             var offset = i * 3,
 
@@ -102,6 +110,10 @@ onmessage = function(event) {
 
 // collision detection
 
-function aabb(a, b, result) {
-
+function aabb(a, b, matrixA, matrixB) {
+    var collide = true;
+    collide = (a.min.x > b.max.x || a.max.x < b.min.x) ? false : collide;
+    collide = (a.min.y > b.max.y || a.max.y < b.min.y) ? false : collide;
+    collide = (a.min.z > b.max.z || a.max.z < b.min.z) ? false : collide;
+    return collide;
 }
