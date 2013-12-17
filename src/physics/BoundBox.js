@@ -26,6 +26,44 @@ BoundBox.prototype = Object.create(Collider.prototype, {
             return this;
         }
     },
+    transform: {
+        value: (function() {
+            var currentMin = new Float32Array(3),
+                currentMax = new Float32Array(3);
+
+            return function(matrix) {
+                if (!(matrix instanceof Matrix3D)) {
+                    throw new TypeError();
+                }
+
+                var min = this.min.elements,
+                    max = this.max.elements,
+                    mat = matrix.elements;
+
+                currentMin.set(min);
+                currentMax.set(max);
+
+                for (var i = 0; i < 3; i++) {
+                    min[i] = max[i] = mat[12 + i];
+
+                    for (var j = 0; j < 3; j++) {
+                        var a = mat[i * 4 + j] * currentMin[j],
+                            b = mat[i * 4 + j] * currentMax[j];
+
+                        if (a < b) {
+                            min[i] += a;
+                            max[i] += b;
+                        } else {
+                            min[i] += b;
+                            max[i] += a;
+                        }
+                    }
+                }
+
+                return this;
+            }
+        })()
+    },
     getSupport: {
         value: function(direction) {
             var support = new Vector3D();

@@ -22,8 +22,8 @@ var rigidBodies = [],
 // math
 
 var vec = new Vector3D(),
-    a = new Vector3D(),
-    b = new Vector3D();
+    a = new BoundBox(),
+    b = new BoundBox();
 
 // public api
 
@@ -110,10 +110,15 @@ onmessage = function(event) {
 
 // collision detection
 
-function aabb(a, b, matrixA, matrixB) {
+function aabb(boundBoxA, boundBoxB, matrixA, matrixB) {
     var collide = true;
+
+    a.copyFrom(boundBoxA).transform(matrixA);
+    b.copyFrom(boundBoxB).transform(matrixB);
+
     collide = (a.min.x > b.max.x || a.max.x < b.min.x) ? false : collide;
     collide = (a.min.y > b.max.y || a.max.y < b.min.y) ? false : collide;
     collide = (a.min.z > b.max.z || a.max.z < b.min.z) ? false : collide;
+
     return collide;
 }
