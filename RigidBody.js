@@ -1,6 +1,7 @@
 function RigidBody() {
     Object.defineProperties(this, {
         collider: { value: null, writable: true },
+        boundBox: { value: new BoundBox() },
 
         position: { value: new Vector3D() },
         rotation: { value: new Vector3D() },

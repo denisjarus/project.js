@@ -63,8 +63,8 @@ test('Vector3D.add()', vec, new Vector3D([5, 7, 9]));
 // Vector3D.subtract
 
 vec.copyFrom(b);
-vec.subtract(a);
-test('Vector3D.subtract()', vec, new Vector3D([3, 3, 3]));
+vec.sub(a);
+test('Vector3D.sub()', vec, new Vector3D([3, 3, 3]));
 
 // Vector3D.cross
 

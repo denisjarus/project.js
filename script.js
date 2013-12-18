@@ -40,7 +40,7 @@ onload = function() {
 
     camera = stage.addChild(new Camera3D());
     
-    camera.collider = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
+    camera.collider = new BoundBox(new Vector3D([-10, -5, -5]), new Vector3D([10, 5, 5]));
     camera.collider.mass = 10;
 
     // ground
@@ -82,7 +82,7 @@ onload = function() {
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
-    instance.collider = new BoundBox(new Vector3D([-50, -1, -50]), new Vector3D([50, 1, 50]));
+    instance.collider = new BoundBox(new Vector3D([-50, -5, -50]), new Vector3D([50, 5, 50]));
     instance.collider.mass = 0;
 
     // surface
@@ -197,15 +197,6 @@ onload = function() {
     //     vec3 = new Vector3D();
 
     // console.log('vec:', vec3.copyFrom(vec1).scale(vec1.dot(vec2) / vec1.lengthSquared));
-
-    var b1 = new BoundBox(new Vector3D([-10, -5, -5]), new Vector3D([15, 5, 5])),
-        mat = new Matrix3D();
-
-    mat.recompose(0, 0, 0, 0, 0, Math.PI / 2, 1, 1, 1);
-
-    b1.transform(mat)
-
-    console.log('aabb', b1.min.elements, b1.max.elements);
 };
 
 var ap = new Vector3D(),
@@ -589,10 +580,4 @@ function mouseMove(event) {
     camera.rotationX -= 0.2 * event.webkitMovementY * Math.PI / 180;
 
     camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
-
-    // var near = camera.unproject(new Vector3D([0, 0, 0])),
-    //     far = camera.unproject(new Vector3D([0, 0, 1])),
-    //     dir = far.sub(near);
-
-    // console.log(dir.x, dir.y, dir.z);
 }

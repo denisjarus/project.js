@@ -22,8 +22,10 @@ var rigidBodies = [],
 // math
 
 var vec = new Vector3D(),
-    a = new BoundBox(),
-    b = new BoundBox();
+    min = new Vector3D(),
+    max = new Vector3D();
+    // boundBoxA = new BoundBox(),
+    // boundBoxB = new BoundBox();
 
 // public api
 
@@ -59,7 +61,7 @@ var methods = {
     simulate: function(dt) {
         for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
             for (var object2, j = i + 1; object2 = rigidBodies[j]; j++) {
-                console.log(aabb(object1.collider, object2.collider, object1.matrix, object2.matrix));
+                transformAABB(object1.matrix, object1.collider.min, object1.collider.max, min, max);
             }
         }
 
@@ -108,17 +110,25 @@ onmessage = function(event) {
     methods[event.data.method](event.data.arguments);
 }
 
-// collision detection
+// aabb utils
 
-function aabb(boundBoxA, boundBoxB, matrixA, matrixB) {
-    var collide = true;
+var center = new Vector3D(),
+    extent = new Vector3D();
 
-    a.copyFrom(boundBoxA).transform(matrixA);
-    b.copyFrom(boundBoxB).transform(matrixB);
+function transformAABB(matrix, localMin, localMax, globalMin, globalMax) {
+    center.copyFrom(localMax).add(localMin).scale(0.5);
+    extent.copyFrom(localMax).sub(localMin).scale(0.5);
 
-    collide = (a.min.x > b.max.x || a.max.x < b.min.x) ? false : collide;
-    collide = (a.min.y > b.max.y || a.max.y < b.min.y) ? false : collide;
-    collide = (a.min.z > b.max.z || a.max.z < b.min.z) ? false : collide;
+    center.transform(matrix);
 
-    return collide;
+    var ex = extent.dot(vec.set(matrix.elements, 0).absolute()),
+        ey = extent.dot(vec.set(matrix.elements, 4).absolute()),
+        ez = extent.dot(vec.set(matrix.elements, 8).absolute());
+
+    extent[0] = ex;
+    extent[1] = ey;
+    extent[2] = ez;
+
+    globalMin.copyFrom(center).sub(extent);
+    globalMax.copyFrom(center).add(extent);
 }
