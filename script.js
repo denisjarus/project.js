@@ -40,7 +40,7 @@ onload = function() {
 
     camera = stage.addChild(new Camera3D());
     
-    camera.collider = new BoundBox(new Vector3D([-10, -5, -5]), new Vector3D([10, 5, 5]));
+    camera.collider = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
     camera.collider.mass = 10;
 
     // ground
@@ -82,7 +82,7 @@ onload = function() {
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
-    instance.collider = new BoundBox(new Vector3D([-50, -5, -50]), new Vector3D([50, 5, 50]));
+    instance.collider = new BoundBox(new Vector3D([-50, -1, -50]), new Vector3D([50, 1, 50]));
     instance.collider.mass = 0;
 
     // surface

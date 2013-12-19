@@ -26,26 +26,6 @@ BoundBox.prototype = Object.create(Collider.prototype, {
             return this;
         }
     },
-    intersects: {
-        value: function(boundBox) {
-            if (!(boundBox instanceof BoundBox)) {
-                throw new TypeError();
-            }
-
-            var aMin = this.min.elements,
-                aMax = this.max.elements,
-                bMin = boundBox.min.elements,
-                bMax = boundBox.max.elements,
-
-                intersects = true;
-
-            intersects = (aMin[0] > bMax[0] || aMax[0] < bMin[0]) ? false : intersects;
-            intersects = (aMin[1] > bMax[1] || aMax[1] < bMin[1]) ? false : intersects;
-            intersects = (aMin[2] > bMax[2] || aMax[2] < bMin[2]) ? false : intersects;
-
-            return intersects;
-        }
-    },
     getSupport: {
         value: function(direction) {
             var support = new Vector3D();
@@ -55,6 +35,12 @@ BoundBox.prototype = Object.create(Collider.prototype, {
             support.z = direction.z >= 0 ? this.max.z : this.min.z;
 
             return support;
+        }
+    },
+    getAABB: {
+        value: function(min, max) {
+            min.copyFrom(this.min);
+            max.copyFrom(this.max);
         }
     },
     sizeX: {

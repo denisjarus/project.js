@@ -116,11 +116,7 @@ Object.defineProperties(Vector3D.prototype, {
             var a = this.elements,
                 b = vector.elements;
 
-            return (
-                a[0] * b[0] +
-                a[1] * b[1] +
-                a[2] * b[2]
-            );
+            return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
         }
     },
     lengthSquared: {
@@ -133,7 +129,7 @@ Object.defineProperties(Vector3D.prototype, {
             return Math.sqrt(this.dot(this));
         }
     },
-    absolute: {
+    abs: {
         value: function() {
             var vec = this.elements;
 

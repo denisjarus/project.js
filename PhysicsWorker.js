@@ -22,10 +22,10 @@ var rigidBodies = [],
 // math
 
 var vec = new Vector3D(),
-    min = new Vector3D(),
-    max = new Vector3D();
-    // boundBoxA = new BoundBox(),
-    // boundBoxB = new BoundBox();
+    aMin = new Vector3D(),
+    aMax = new Vector3D(),
+    bMin = new Vector3D(),
+    bMax = new Vector3D();
 
 // public api
 
@@ -34,9 +34,9 @@ var methods = {
         var object = new RigidBody();
 
         object.collider = new BoundBox(new Vector3D(data.min.elements), new Vector3D(data.max.elements));
-        object.collider.inverseMass = data.inverseMass;
 
-        console.log(object.collider.inverseMass);
+        object.collider.inverseMass = data.inverseMass;
+        object.collider.getAABB(object.aabbMin, object.aabbMax);
 
         rigidBodies.push(object);
     },
@@ -61,7 +61,9 @@ var methods = {
     simulate: function(dt) {
         for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
             for (var object2, j = i + 1; object2 = rigidBodies[j]; j++) {
-                transformAABB(object1.matrix, object1.collider.min, object1.collider.max, min, max);
+                transformAabb(object1.matrix, object1.collider.min, object1.collider.max, aMin, aMax);
+                transformAabb(object2.matrix, object2.collider.min, object2.collider.max, bMin, bMax);
+                console.log(testAabbAabb(aMin, aMax, bMin, bMax));
             }
         }
 
@@ -115,20 +117,28 @@ onmessage = function(event) {
 var center = new Vector3D(),
     extent = new Vector3D();
 
-function transformAABB(matrix, localMin, localMax, globalMin, globalMax) {
+function transformAabb(matrix, localMin, localMax, globalMin, globalMax) {
     center.copyFrom(localMax).add(localMin).scale(0.5);
-    extent.copyFrom(localMax).sub(localMin).scale(0.5);
+    extent.copyFrom(localMax).sub(center);
 
     center.transform(matrix);
 
-    var ex = extent.dot(vec.set(matrix.elements, 0).absolute()),
-        ey = extent.dot(vec.set(matrix.elements, 4).absolute()),
-        ez = extent.dot(vec.set(matrix.elements, 8).absolute());
+    var ex = extent.dot(vec.set(matrix.elements, 0).abs()),
+        ey = extent.dot(vec.set(matrix.elements, 4).abs()),
+        ez = extent.dot(vec.set(matrix.elements, 8).abs());
 
-    extent[0] = ex;
-    extent[1] = ey;
-    extent[2] = ez;
+    extent.x = ex;
+    extent.y = ey;
+    extent.z = ez;
 
     globalMin.copyFrom(center).sub(extent);
     globalMax.copyFrom(center).add(extent);
+}
+
+function testAabbAabb(aMin, aMax, bMin, bMax) {
+    return !(
+        aMin.x > bMax.x || aMax.x < bMin.x ||
+        aMin.y > bMax.y || aMax.y < bMin.y ||
+        aMin.z > bMax.z || aMax.z < bMin.z
+    );
 }
