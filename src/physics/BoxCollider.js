@@ -1,10 +1,33 @@
-function BoxCollider() {
+function BoxCollider(center, extent) {
 
-	Collider.call(this);
+    Collider.call(this);
 
-	Object.defineProperties(this, {
-
-	});
+    Object.defineProperties(this, {
+        center: { value: center instanceof Vector3D ? center : new Vector3D(), enumerable: true },
+        extent: { value: extent instanceof Vector3D ? extent : new Vector3D(), enumerable: true }
+    });
 }
 
-BoxCollider.prototype = Object.create(Collider.prototype);
+BoxCollider.prototype = Object.create(Collider.prototype, {
+    getSupport: {
+        value: function(direction) {
+            var support = new Vector3D();
+
+            // support.x = direction.x >= 0 ? this.max.x : this.min.x;
+            // support.y = direction.y >= 0 ? this.max.y : this.min.y;
+            // support.z = direction.z >= 0 ? this.max.z : this.min.z;
+
+            return support;
+        }
+    },
+    getAabb: {
+        value: function(min, max) {
+            if (!(min instanceof Vector3D && max instanceof Vector3D)) {
+                throw new TypeError();
+            }
+
+            min.copyFrom(this.center).sub(this.extent);
+            max.copyFrom(this.center).add(this.extent);
+        }
+    }
+});

@@ -7,13 +7,23 @@ function Collider() {
 }
 
 Object.defineProperties(Collider.prototype, {
-	mass: {
-		get: function() {
-			var value = this.inverseMass;
-			return value !== 0 ? 1 / value : 0;
-		},
-		set: function(value) {
-			this.inverseMass = value !== 0 ? 1 / value : 0;
-		}
-	}
+    mass: {
+        get: function() {
+            var value = this.inverseMass;
+            return value !== 0 ? 1 / value : 0;
+        },
+        set: function(value) {
+            this.inverseMass = value !== 0 ? 1 / value : 0;
+        }
+    },
+    getSupport: {
+        value: function() {
+            return;
+        }
+    },
+    getAabb: {
+        value: function(min, max) {
+            return;
+        }
+    }
 });

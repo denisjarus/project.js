@@ -40,7 +40,7 @@ onload = function() {
 
     camera = stage.addChild(new Camera3D());
     
-    camera.collider = new BoundBox(new Vector3D([-5, -5, -5]), new Vector3D([5, 5, 5]));
+    camera.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([5, 5, 5]));
     camera.collider.mass = 10;
 
     // ground
@@ -82,7 +82,7 @@ onload = function() {
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
-    instance.collider = new BoundBox(new Vector3D([-50, -1, -50]), new Vector3D([50, 1, 50]));
+    instance.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([50, 1, 50]));
     instance.collider.mass = 0;
 
     // surface
@@ -186,8 +186,8 @@ onload = function() {
 
     // gjk
 
-    boxOne = new BoundBox(new Vector3D([-20, -10, -20]), new Vector3D([20, 10, 20])),
-    boxTwo = new BoundBox(new Vector3D([0, -10, 0]), new Vector3D([40, 10, 40]));
+    boxOne = new BoxCollider(new Vector3D([-20, -10, -20]), new Vector3D([20, 10, 20])),
+    boxTwo = new BoxCollider(new Vector3D([0, -10, 0]), new Vector3D([40, 10, 40]));
 
     console.log(getSupport(boxOne, boxTwo, new Vector3D([-1, 0, 1])));
     console.log('test:', test(boxOne, boxTwo));

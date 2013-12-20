@@ -4,7 +4,7 @@ importScripts(
     'src/Matrix3D.js',
     'src/Vector3D.js',
     'src/physics/Collider.js',
-    'src/physics/BoundBox.js',
+    'src/physics/BoxCollider.js',
 
     'RigidBody.js'
 );
@@ -33,10 +33,10 @@ var methods = {
     addObject: function(data) {
         var object = new RigidBody();
 
-        object.collider = new BoundBox(new Vector3D(data.min.elements), new Vector3D(data.max.elements));
+        object.collider = new BoxCollider(new Vector3D(data.center.elements), new Vector3D(data.extent.elements));
 
         object.collider.inverseMass = data.inverseMass;
-        object.collider.getAABB(object.aabbMin, object.aabbMax);
+        object.collider.getAabb(object.aabbMin, object.aabbMax);
 
         rigidBodies.push(object);
     },
@@ -59,18 +59,8 @@ var methods = {
         rigidBodies[data.index].velocity.set(data.velocity);
     },
     simulate: function(dt) {
-        for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
-            for (var object2, j = i + 1; object2 = rigidBodies[j]; j++) {
-                transformAabb(object1.matrix, object1.collider.min, object1.collider.max, aMin, aMax);
-                transformAabb(object2.matrix, object2.collider.min, object2.collider.max, bMin, bMax);
-                console.log(testAabbAabb(aMin, aMax, bMin, bMax));
-            }
-        }
-
         for (var object, i = 0; object = rigidBodies[i]; i++) {
-            var offset = i * 3,
-
-                p = object.position,
+            var p = object.position,
                 r = object.rotation,
 
                 vl = object.linearVelocity,
@@ -96,12 +86,24 @@ var methods = {
 
             object.matrix.recompose(p.x, p.y, p.z, r.x, r.y, r.z, 1, 1, 1);
 
+            f.set([0, 0, 0]);
+            t.set([0, 0, 0]);
+        }
+
+        for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
+            for (var object2, j = i + 1; object2 = rigidBodies[j]; j++) {
+                transformAabb(object1.matrix, object1.aabbMin, object1.aabbMax, aMin, aMax);
+                transformAabb(object2.matrix, object2.aabbMin, object2.aabbMax, bMin, bMax);
+                console.log(testAabbAabb(aMin, aMax, bMin, bMax));
+            }
+        }
+
+        for (object, i = 0; object = rigidBodies[i]; i++) {
+            var offset = i * 3;
+
             message[offset] = object.position.x;
             message[offset + 1] = object.position.y;
             message[offset + 2] = object.position.z;
-
-            f.set([0, 0, 0]);
-            t.set([0, 0, 0]);
         }
 
         postMessage(message);
