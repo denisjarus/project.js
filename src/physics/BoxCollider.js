@@ -3,6 +3,8 @@ function BoxCollider(center, extent) {
     Collider.call(this);
 
     Object.defineProperties(this, {
+        type: { value: BoxCollider.COLLIDER_TYPE, enumerable: true },
+
         center: { value: center instanceof Vector3D ? center : new Vector3D(), enumerable: true },
         extent: { value: extent instanceof Vector3D ? extent : new Vector3D(), enumerable: true }
     });
@@ -30,4 +32,8 @@ BoxCollider.prototype = Object.create(Collider.prototype, {
             max.copyFrom(this.center).add(this.extent);
         }
     }
+});
+
+Object.defineProperties(BoxCollider, {
+    COLLIDER_TYPE: { value: 'box' }
 });

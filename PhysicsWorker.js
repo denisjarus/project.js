@@ -5,6 +5,7 @@ importScripts(
     'src/Vector3D.js',
     'src/physics/Collider.js',
     'src/physics/BoxCollider.js',
+    'src/physics/SphereCollider.js',
 
     'RigidBody.js'
 );
@@ -27,13 +28,26 @@ var vec = new Vector3D(),
     bMin = new Vector3D(),
     bMax = new Vector3D();
 
+var vector = new Vector3D,
+    normal = new Vector3D;
+
 // public api
 
 var methods = {
     addObject: function(data) {
         var object = new RigidBody();
 
-        object.collider = new BoxCollider(new Vector3D(data.center.elements), new Vector3D(data.extent.elements));
+        switch (data.type) {
+            case BoxCollider.COLLIDER_TYPE:
+                object.collider = new BoxCollider();
+                object.collider.center.set(data.center.elements);
+                object.collider.extent.set(data.extent.elements);
+                break;
+
+            case SphereCollider.COLLIDER_TYPE:
+                object.collider = new SphereCollider(data.center.elements, data.radius);
+                break;
+        }
 
         object.collider.inverseMass = data.inverseMass;
         object.collider.getAabb(object.aabbMin, object.aabbMax);
@@ -91,10 +105,28 @@ var methods = {
         }
 
         for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
+            transformAabb(object1.matrix, object1.aabbMin, object1.aabbMax, aMin, aMax);
+
             for (var object2, j = i + 1; object2 = rigidBodies[j]; j++) {
-                transformAabb(object1.matrix, object1.aabbMin, object1.aabbMax, aMin, aMax);
                 transformAabb(object2.matrix, object2.aabbMin, object2.aabbMax, bMin, bMax);
-                console.log(testAabbAabb(aMin, aMax, bMin, bMax));
+
+                if (testAabbAabb(aMin, aMax, bMin, bMax) === false) {
+                    continue;
+                }
+
+                if (object1.collider instanceof SphereCollider && object2.collider instanceof BoxCollider) {
+                    console.log(testSphereBox(object1, object2, vector, normal));
+
+                    // console.log('vector');
+                    // console.log(vector.x);
+                    // console.log(vector.y);
+                    // console.log(vector.z);
+                    // console.log('normal');
+                    // console.log(normal.x);
+                    // console.log(normal.y);
+                    // console.log(normal.z);
+                    console.log(normal.length)
+                }
             }
         }
 
@@ -114,7 +146,7 @@ onmessage = function(event) {
     methods[event.data.method](event.data.arguments);
 }
 
-// aabb utils
+// broad phase
 
 var center = new Vector3D(),
     extent = new Vector3D();
@@ -143,4 +175,29 @@ function testAabbAabb(aMin, aMax, bMin, bMax) {
         aMin.y > bMax.y || aMax.y < bMin.y ||
         aMin.z > bMax.z || aMax.z < bMin.z
     );
+}
+
+// narrow phase
+
+var globalToLocal = new Matrix3D(),
+    localPosition = new Vector3D();
+
+function testSphereBox(sphere, box, point, normal) {
+    var sphereCollider = sphere.collider,
+        boxCollider = box.collider;
+
+    globalToLocal.copyFrom(box.matrix).invert();
+    localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal);
+
+    point.copyFrom(localPosition);
+    point.min(vec.copyFrom(boxCollider.center).add(boxCollider.extent));
+    point.max(vec.copyFrom(boxCollider.center).sub(boxCollider.extent));
+
+    normal.copyFrom(localPosition).sub(point);
+
+    if (normal.lengthSquared > sphereCollider.radius * sphereCollider.radius) {
+        return false;
+    }
+
+    return true;
 }
