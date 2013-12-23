@@ -31,6 +31,8 @@ var vec = new Vector3D(),
 var vector = new Vector3D,
     normal = new Vector3D;
 
+var impulse = new Vector3D();
+
 // public api
 
 var methods = {
@@ -125,7 +127,21 @@ var methods = {
                     // console.log(normal.x);
                     // console.log(normal.y);
                     // console.log(normal.z);
-                    console.log(normal.length)
+                    // console.log(normal.length);
+
+                    var restitution = Math.min(object1.collider.restitution, object2.collider.restitution);
+                    console.log(restitution);
+                    if (restitution > 0) {
+                        impulse.copyFrom(normal).scale(restitution);
+
+                        console.log('impulse');
+                        console.log(impulse.x);
+                        console.log(impulse.y);
+                        console.log(impulse.z);
+
+                        object1.linearVelocity.add(vec.copyFrom(impulse).scale(object1.collider.inverseMass));
+                        object2.linearVelocity.sub(vec.copyFrom(impulse).scale(object2.collider.inverseMass));
+                    }
                 }
             }
         }
@@ -186,8 +202,12 @@ function testSphereBox(sphere, box, point, normal) {
     var sphereCollider = sphere.collider,
         boxCollider = box.collider;
 
+    // get sphere position in box's local coordinates
+
     globalToLocal.copyFrom(box.matrix).invert();
     localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal);
+
+    // get closest point on box
 
     point.copyFrom(localPosition);
     point.min(vec.copyFrom(boxCollider.center).add(boxCollider.extent));
@@ -198,6 +218,11 @@ function testSphereBox(sphere, box, point, normal) {
     if (normal.lengthSquared > sphereCollider.radius * sphereCollider.radius) {
         return false;
     }
+
+    // get point and normal in world coordinates
+
+    point.transform(box.matrix);
+    normal.transformDirection(box.matrix);
 
     return true;
 }

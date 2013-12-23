@@ -195,6 +195,23 @@ Object.defineProperties(Vector3D.prototype, {
             return this;
         }
     },
+    transformDirection: {
+        value: function(matrix) {
+            if (!(matrix instanceof Matrix3D)) {
+                throw new TypeError();
+            }
+
+            var vec = this.elements,
+            mat = matrix.elements,
+            x = vec[0],
+            y = vec[1],
+            z = vec[2];
+
+            vec[0] = mat[0] * x + mat[4] * y + mat[ 8] * z;
+            vec[1] = mat[1] * x + mat[5] * y + mat[ 9] * z;
+            vec[2] = mat[2] * x + mat[6] * y + mat[10] * z;
+        }
+    },
     max: {
         value: function(vector) {
             if (!(vector instanceof Vector3D)) {
