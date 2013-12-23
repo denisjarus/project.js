@@ -186,11 +186,11 @@ Object.defineProperties(Vector3D.prototype, {
                 y = vec[1],
                 z = vec[2],
                 
-                w = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
+                d = 1 / (mat[3] * x + mat[7] * y + mat[11] * z + mat[15]);
 
-            vec[0] = (mat[0] * x + mat[4] * y + mat[ 8] * z + mat[12]) * w;
-            vec[1] = (mat[1] * x + mat[5] * y + mat[ 9] * z + mat[13]) * w;
-            vec[2] = (mat[2] * x + mat[6] * y + mat[10] * z + mat[14]) * w;
+            vec[0] = (mat[0] * x + mat[4] * y + mat[ 8] * z + mat[12]) * d;
+            vec[1] = (mat[1] * x + mat[5] * y + mat[ 9] * z + mat[13]) * d;
+            vec[2] = (mat[2] * x + mat[6] * y + mat[10] * z + mat[14]) * d;
 
             return this;
         }

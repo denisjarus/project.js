@@ -17,3 +17,11 @@ function RigidBody() {
         matrix: { value: new Matrix3D() }
     });
 }
+
+Object.defineProperties(RigidBody.prototype, {
+    getVelocityInPoint: {
+        value: function(point, velocity) {
+            velocity.copyFrom(this.angularVelocity).cross(point).add(this.linearVelocity);
+        }
+    }
+});
