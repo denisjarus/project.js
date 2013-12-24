@@ -31,5 +31,10 @@ Object.defineProperties(RigidBody.prototype, {
         value: function(point, velocity) {
             velocity.copyFrom(this.angularVelocity).cross(point).add(this.linearVelocity);
         }
+    },
+    getImpulseDenominator: {
+        value: function() {
+            return this.collider.inverseMass;
+        }
     }
 });

@@ -85,6 +85,7 @@ onload = function() {
     instance.y = -50;
     instance.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([50, 5, 50]));
     instance.collider.mass = 0;
+    // instance.rotationY = Math.PI / 4;
 
     // surface
 

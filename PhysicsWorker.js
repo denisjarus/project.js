@@ -239,20 +239,25 @@ var velocityA = new Vector3D(),
     velocityB = new Vector3D();
 
 function resolveCollision(object1, object2, point, normal, penetration) {
-    var restitution = Math.min(object1.collider.restitution, object2.collider.restitution);
-
     object1.getVelocityInPoint(vec.copyFrom(point).sub(object1.position), velocityA);
-    // console.log('a');
-    // console.log(vec.x);
-    // console.log(vec.y);
-    // console.log(vec.z);
     object2.getVelocityInPoint(vec.copyFrom(point).sub(object2.position), velocityB);
-    // console.log('b');
-    // console.log(vec.x);
-    // console.log(vec.y);
-    // console.log(vec.z);
 
-    var velocity = velocityA.sub(velocityB).dot(normal);
+    // compute combined restitution
+
+    var e = Math.min(object1.collider.restitution, object2.collider.restitution);
+
+    // compute impulse magnitude
+
+    var d1 = object1.getImpulseDenominator(),
+        d2 = object2.getImpulseDenominator(),
+        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) / (d1 + d2);
+
+    // compute impulse
+
+    vec.copyFrom(normal).scale(j);
+
+    object1.applyImpulse(vec);
+    object2.applyImpulse(vec.negate());
 
     // console.log('a');
     // console.log(velocityA.x);
