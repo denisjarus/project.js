@@ -52,6 +52,20 @@ Object.defineProperties(Vector3D.prototype, {
             return this;
         }
     },
+    addScaled: {
+        value: function(vector, scalar) {
+            if (!(vector instanceof Vector3D)) {
+                throw new TypeError();
+            }
+
+            var a = this.elements,
+                b = vector.elements;
+
+            a[0] += b[0] * scalar;
+            a[1] += b[1] * scalar;
+            a[2] += b[2] * scalar;
+        }
+    },
     sub: {
         value: function(vector) {
             if (!(vector instanceof Vector3D)) {

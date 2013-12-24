@@ -6,6 +6,7 @@ importScripts(
     'src/physics/Collider.js',
     'src/physics/BoxCollider.js',
     'src/physics/SphereCollider.js',
+    'src/physics/Constraint.js',
 
     'RigidBody.js'
 );
@@ -94,11 +95,11 @@ var methods = {
 
             // v += (f / m + g) * dt
 
-            vl.add(vec.copyFrom(f).scale(im).scale(dt));
+            vl.addScaled(f, im * dt);
 
             // p += v * dt
 
-            p.add(vec.copyFrom(vl).scale(dt));
+            p.addScaled(vl, dt);
 
             object.matrix.recompose(p.x, p.y, p.z, r.x, r.y, r.z, 1, 1, 1);
 
@@ -117,7 +118,7 @@ var methods = {
                 }
 
                 if (object1.collider instanceof SphereCollider && object2.collider instanceof BoxCollider) {
-                    console.log(testSphereBox(object1, object2, vector, normal));
+                    var penetration = testSphereBox(object1, object2, vector, normal);
 
                     // console.log('vector');
                     // console.log(vector.x);
@@ -129,18 +130,23 @@ var methods = {
                     // console.log(normal.z);
                     // console.log(normal.length);
 
+                    if (penetration < 0) {
+                        resolveCollision(object1, object2, vector, normal, penetration);
+                    } else {
+                        console.log('no penetration');
+                    }
+
                     var restitution = Math.min(object1.collider.restitution, object2.collider.restitution);
-                    console.log(restitution);
                     if (restitution > 0) {
                         impulse.copyFrom(normal).scale(restitution);
 
-                        console.log('impulse');
-                        console.log(impulse.x);
-                        console.log(impulse.y);
-                        console.log(impulse.z);
+                        // console.log('impulse');
+                        // console.log(impulse.x);
+                        // console.log(impulse.y);
+                        // console.log(impulse.z);
 
-                        object1.linearVelocity.add(vec.copyFrom(impulse).scale(object1.collider.inverseMass));
-                        object2.linearVelocity.sub(vec.copyFrom(impulse).scale(object2.collider.inverseMass));
+                        // object1.linearVelocity.add(vec.copyFrom(impulse).scale(object1.collider.inverseMass));
+                        // object2.linearVelocity.sub(vec.copyFrom(impulse).scale(object2.collider.inverseMass));
                     }
                 }
             }
@@ -205,7 +211,7 @@ function testSphereBox(sphere, box, point, normal) {
     // get sphere position in box's local coordinates
 
     globalToLocal.copyFrom(box.matrix).invert();
-    localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal);
+    localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal); // <- replace the first transform?
 
     // get closest point on box
 
@@ -219,10 +225,43 @@ function testSphereBox(sphere, box, point, normal) {
         return false;
     }
 
+    var penetration = normal.length - sphereCollider.radius;
+
     // get point and normal in world coordinates
 
     point.transform(box.matrix);
-    normal.transformDirection(box.matrix);
+    normal.normalize().transformDirection(box.matrix);
 
-    return true;
+    return penetration;
+}
+
+var velocityA = new Vector3D(),
+    velocityB = new Vector3D();
+
+function resolveCollision(object1, object2, point, normal, penetration) {
+    var restitution = Math.min(object1.collider.restitution, object2.collider.restitution);
+
+    object1.getVelocityInPoint(vec.copyFrom(point).sub(object1.position), velocityA);
+    // console.log('a');
+    // console.log(vec.x);
+    // console.log(vec.y);
+    // console.log(vec.z);
+    object2.getVelocityInPoint(vec.copyFrom(point).sub(object2.position), velocityB);
+    // console.log('b');
+    // console.log(vec.x);
+    // console.log(vec.y);
+    // console.log(vec.z);
+
+    var velocity = velocityA.sub(velocityB).dot(normal);
+
+    // console.log('a');
+    // console.log(velocityA.x);
+    // console.log(velocityA.y);
+    // console.log(velocityA.z);
+    // console.log('b');
+    // console.log(velocityB.x);
+    // console.log(velocityB.y);
+    // console.log(velocityB.z);
+
+
 }
