@@ -5,7 +5,8 @@ function Collider() {
         linearDrag: { value: 1, writable: true, enumerable: true },
         angularDrag: { value: 1, writable: true, enumerable: true },
 
-        restitution: { value: 0, writable: true, enumerable: true }
+        restitution: { value: 0.2, writable: true, enumerable: true },
+        friction: { value: 0.5, writable: true, enumerable: true }
     });
 }
 

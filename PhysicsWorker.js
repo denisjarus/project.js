@@ -32,8 +32,6 @@ var vec = new Vector3D(),
 var vector = new Vector3D,
     normal = new Vector3D;
 
-var impulse = new Vector3D();
-
 // public api
 
 var methods = {
@@ -41,13 +39,13 @@ var methods = {
         var object = new RigidBody();
 
         switch (data.type) {
-            case BoxCollider.COLLIDER_TYPE:
+            case BoxCollider.BOX_COLLIDER:
                 object.collider = new BoxCollider();
                 object.collider.center.set(data.center.elements);
                 object.collider.extent.set(data.extent.elements);
                 break;
 
-            case SphereCollider.COLLIDER_TYPE:
+            case SphereCollider.SPHERE_COLLIDER:
                 object.collider = new SphereCollider(data.center.elements, data.radius);
                 break;
         }
@@ -93,7 +91,7 @@ var methods = {
             f.add(vec.copyFrom(gravity));
             // f.sub(vec.copyFrom(vl).normalize().scale(0.5 * vl.lengthSquared * dl));
 
-            // v += (f / m + g) * dt
+            // v += (f / m) * dt
 
             vl.addScaled(f, im * dt);
 
@@ -117,37 +115,14 @@ var methods = {
                     continue;
                 }
 
+                var penetration;
+
                 if (object1.collider instanceof SphereCollider && object2.collider instanceof BoxCollider) {
-                    var penetration = testSphereBox(object1, object2, vector, normal);
+                    penetration = testSphereBox(object1, object2, vector, normal);
+                }
 
-                    // console.log('vector');
-                    // console.log(vector.x);
-                    // console.log(vector.y);
-                    // console.log(vector.z);
-                    // console.log('normal');
-                    // console.log(normal.x);
-                    // console.log(normal.y);
-                    // console.log(normal.z);
-                    // console.log(normal.length);
-
-                    if (penetration < 0) {
-                        resolveCollision(object1, object2, vector, normal, penetration);
-                    } else {
-                        console.log('no penetration');
-                    }
-
-                    var restitution = Math.min(object1.collider.restitution, object2.collider.restitution);
-                    if (restitution > 0) {
-                        impulse.copyFrom(normal).scale(restitution);
-
-                        // console.log('impulse');
-                        // console.log(impulse.x);
-                        // console.log(impulse.y);
-                        // console.log(impulse.z);
-
-                        // object1.linearVelocity.add(vec.copyFrom(impulse).scale(object1.collider.inverseMass));
-                        // object2.linearVelocity.sub(vec.copyFrom(impulse).scale(object2.collider.inverseMass));
-                    }
+                if (penetration !== false) {
+                    resolveCollision(object1, object2, vector, normal, penetration);
                 }
             }
         }
@@ -201,6 +176,10 @@ function testAabbAabb(aMin, aMax, bMin, bMax) {
 
 // narrow phase
 
+function testSphereSphere(sphereA, sphereB, point, normal) {
+
+}
+
 var globalToLocal = new Matrix3D(),
     localPosition = new Vector3D();
 
@@ -211,7 +190,7 @@ function testSphereBox(sphere, box, point, normal) {
     // get sphere position in box's local coordinates
 
     globalToLocal.copyFrom(box.matrix).invert();
-    localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal); // <- replace the first transform?
+    localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal);
 
     // get closest point on box
 
@@ -235,12 +214,17 @@ function testSphereBox(sphere, box, point, normal) {
     return penetration;
 }
 
-var velocityA = new Vector3D(),
+var positionA = new Vector3D(),
+    positionB = new Vector3D(),
+    velocityA = new Vector3D(),
     velocityB = new Vector3D();
 
 function resolveCollision(object1, object2, point, normal, penetration) {
-    object1.getVelocityInPoint(vec.copyFrom(point).sub(object1.position), velocityA);
-    object2.getVelocityInPoint(vec.copyFrom(point).sub(object2.position), velocityB);
+    positionA.copyFrom(point).sub(object1.position);
+    positionB.copyFrom(point).sub(object2.position);
+
+    object1.getVelocityInPoint(positionA, velocityA);
+    object2.getVelocityInPoint(positionB, velocityB);
 
     // compute combined restitution
 
@@ -250,23 +234,12 @@ function resolveCollision(object1, object2, point, normal, penetration) {
 
     var d1 = object1.getImpulseDenominator(),
         d2 = object2.getImpulseDenominator(),
-        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) / (d1 + d2);
+        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) - penetration * 1 / (d1 + d2);
 
     // compute impulse
 
     vec.copyFrom(normal).scale(j);
 
-    object1.applyImpulse(vec);
-    object2.applyImpulse(vec.negate());
-
-    // console.log('a');
-    // console.log(velocityA.x);
-    // console.log(velocityA.y);
-    // console.log(velocityA.z);
-    // console.log('b');
-    // console.log(velocityB.x);
-    // console.log(velocityB.y);
-    // console.log(velocityB.z);
-
-
+    object1.applyImpulse(vec, positionA);
+    object2.applyImpulse(vec.negate(), positionB);
 }

@@ -6,7 +6,6 @@ var canvas,
     renderer,
 
     stage,
-    light,
     camera,
     surface,
     display,
@@ -34,15 +33,15 @@ onload = function() {
     
     stage = new Object3D();
 
-    light = stage.addChild(new Light3D());
-
     // physicsal camera
 
     camera = stage.addChild(new Camera3D());
     
     // camera.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([5, 5, 5]));
     camera.collider = new SphereCollider(null, 5);
-    camera.collider.mass = 10;
+    camera.collider.mass = 1;
+
+    camera.addChild(new Light3D());
 
     // ground
 
@@ -78,12 +77,37 @@ onload = function() {
         requestAnimationFrame(enterFrame);
     };
 
+    // sphere
+
+    var sphere = stage.addChild(new Mesh());
+    sphere.geometry = new SurfaceGeometry();
+    sphere.geometry.parametrize(
+        Geometry.POSITION,
+        function(s, t) {
+            return [
+                5 * Math.sin(s) * Math.cos(t),
+                5 * Math.cos(s),
+                5 * Math.sin(s) * Math.sin(t)
+            ];
+        },
+        0, Math.PI,
+        0, Math.PI * 2
+    );
+
+    sphere.material = new Material();
+    sphere.material.shader = Shader.depthShader;
+
+    sphere.y = -20;
+    sphere.z = -20;
+
+    sphere.collider = new SphereCollider(null, 5);
+
     // second instance of ground
 
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
     instance.y = -50;
-    instance.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([50, 5, 50]));
+    instance.collider = new BoxCollider(new Vector3D([0, -5, 0]), new Vector3D([50, 5, 50]));
     instance.collider.mass = 0;
     // instance.rotationY = Math.PI / 4;
 
@@ -173,7 +197,7 @@ onload = function() {
         function() { right = false; }
     );
     keyboard.bind(KeyboardControls.SPACE,
-        function() { physics.addForce(camera, new Vector3D([0, 10000, 0])); }
+        function() { physics.addForce(camera, new Vector3D([0, 100, 0])); }
     );
     keyboard.bind('C'.charCodeAt(0),
         function() { down = true; },
@@ -524,7 +548,7 @@ function enterFrame(frame) {
 
     var vec = new Vector3D();
 
-    vec.set(camera.localToGlobal.elements, 8).negate().scale(100);
+    vec.set(camera.localToGlobal.elements, 8).negate().scale(10);
 
     if (forwards) {
         physics.addForce(camera, vec);
@@ -533,7 +557,7 @@ function enterFrame(frame) {
         physics.addForce(camera, vec.negate());
     }
 
-    vec.set(camera.localToGlobal.elements, 0).negate().scale(100);
+    vec.set(camera.localToGlobal.elements, 0).negate().scale(10);
 
     if (left) {
         physics.addForce(camera, vec);
@@ -544,13 +568,11 @@ function enterFrame(frame) {
 
     surface.rotationY += 0.1 * Math.PI / 180;
 
-    light.x = camera.x;
-    light.y = camera.y;
-    light.z = camera.z;
-
     //
 
     physics.simulate(stage, delta * 0.001);
+
+    console.log(camera.y);
 
     camera.aspectRatio = 1;
     display.visible = false;

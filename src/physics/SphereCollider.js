@@ -3,7 +3,7 @@ function SphereCollider(center, radius) {
     Collider.call(this);
 
     Object.defineProperties(this, {
-        type: { value: SphereCollider.COLLIDER_TYPE, enumerable: true },
+        type: { value: SphereCollider.SPHERE_COLLIDER, enumerable: true },
 
         center: { value: center instanceof Vector3D ? center : new Vector3D(), enumerable: true },
         radius: { value: radius || 0, writable: true, enumerable: true }
@@ -26,5 +26,5 @@ SphereCollider.prototype = Object.create(Collider.prototype, {
 });
 
 Object.defineProperties(SphereCollider, {
-    COLLIDER_TYPE: { value: 'sphere' }
+    SPHERE_COLLIDER: { value: 1 }
 });
