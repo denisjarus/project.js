@@ -97,7 +97,7 @@ onload = function() {
     sphere.material = new Material();
     sphere.material.shader = Shader.depthShader;
 
-    sphere.y = -20;
+    // sphere.y = -20;
     sphere.z = -20;
 
     sphere.collider = new SphereCollider(null, 5);
@@ -197,7 +197,7 @@ onload = function() {
         function() { right = false; }
     );
     keyboard.bind(KeyboardControls.SPACE,
-        function() { physics.addForce(camera, new Vector3D([0, 100, 0])); }
+        function() { physics.addForce(camera, new Vector3D([0, 500, 0])); }
     );
     keyboard.bind('C'.charCodeAt(0),
         function() { down = true; },
@@ -571,8 +571,6 @@ function enterFrame(frame) {
     //
 
     physics.simulate(stage, delta * 0.001);
-
-    console.log(camera.y);
 
     camera.aspectRatio = 1;
     display.visible = false;

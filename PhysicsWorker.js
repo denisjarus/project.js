@@ -226,6 +226,15 @@ function resolveCollision(object1, object2, point, normal, penetration) {
     object1.getVelocityInPoint(positionA, velocityA);
     object2.getVelocityInPoint(positionB, velocityB);
 
+    var normalVelocity = velocityA.sub(velocityB).dot(normal);
+
+    console.log(normalVelocity)
+
+    if (normalVelocity > 0) {
+        console.log('bjj')
+        return;
+    }
+
     // compute combined restitution
 
     var e = Math.min(object1.collider.restitution, object2.collider.restitution);
@@ -234,7 +243,9 @@ function resolveCollision(object1, object2, point, normal, penetration) {
 
     var d1 = object1.getImpulseDenominator(),
         d2 = object2.getImpulseDenominator(),
-        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) - penetration * 1 / (d1 + d2);
+        j = -(1 + e) * normalVelocity - penetration * 1 / (d1 + d2);
+
+    console.log(j)
 
     // compute impulse
 
