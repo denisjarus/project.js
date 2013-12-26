@@ -2,11 +2,13 @@ function Collider() {
     Object.defineProperties(this, {
         inverseMass: { value: 1, writable: true, enumerable: true },
 
+        restitution: { value: 0.5, writable: true, enumerable: true },
+        friction: { value: 0.5, writable: true, enumerable: true },
+
         linearDrag: { value: 1, writable: true, enumerable: true },
         angularDrag: { value: 1, writable: true, enumerable: true },
 
-        restitution: { value: 0.5, writable: true, enumerable: true },
-        friction: { value: 0.5, writable: true, enumerable: true }
+        sleepVelocity: { value: 0.001, writable: true, enumerable: true }
     });
 }
 

@@ -51,6 +51,9 @@ var methods = {
         }
 
         object.collider.inverseMass = data.inverseMass;
+        object.collider.restitution = data.restitution;
+        object.collider.friction = data.friction;
+
         object.collider.getAabb(object.aabbMin, object.aabbMax);
 
         rigidBodies.push(object);
@@ -88,7 +91,7 @@ var methods = {
                 dl = object.collider.linearDrag,
                 da = object.collider.angularDrag;
 
-            f.add(vec.copyFrom(gravity));
+            f.addScaled(gravity, object.collider.mass);
             // f.sub(vec.copyFrom(vl).normalize().scale(0.5 * vl.lengthSquared * dl));
 
             // v += (f / m) * dt
@@ -119,6 +122,12 @@ var methods = {
 
                 if (object1.collider instanceof SphereCollider && object2.collider instanceof BoxCollider) {
                     penetration = testSphereBox(object1, object2, vector, normal);
+
+                } else if (object1.collider instanceof SphereCollider && object2.collider instanceof SphereCollider) {
+                    penetration = testSphereSphere(object1, object2, vector, normal);
+
+                } else {
+                    penetration = 0;
                 }
 
                 if (penetration !== false) {
@@ -177,7 +186,7 @@ function testAabbAabb(aMin, aMax, bMin, bMax) {
 // narrow phase
 
 function testSphereSphere(sphereA, sphereB, point, normal) {
-
+    return 0;
 }
 
 var globalToLocal = new Matrix3D(),
@@ -192,7 +201,7 @@ function testSphereBox(sphere, box, point, normal) {
     globalToLocal.copyFrom(box.matrix).invert();
     localPosition.copyFrom(sphereCollider.center).transform(sphere.matrix).transform(globalToLocal);
 
-    // get closest point on box
+    // get the closest point on box
 
     point.copyFrom(localPosition);
     point.min(vec.copyFrom(boxCollider.center).add(boxCollider.extent));
@@ -226,15 +235,6 @@ function resolveCollision(object1, object2, point, normal, penetration) {
     object1.getVelocityInPoint(positionA, velocityA);
     object2.getVelocityInPoint(positionB, velocityB);
 
-    var normalVelocity = velocityA.sub(velocityB).dot(normal);
-
-    console.log(normalVelocity)
-
-    if (normalVelocity > 0) {
-        console.log('bjj')
-        return;
-    }
-
     // compute combined restitution
 
     var e = Math.min(object1.collider.restitution, object2.collider.restitution);
@@ -243,9 +243,11 @@ function resolveCollision(object1, object2, point, normal, penetration) {
 
     var d1 = object1.getImpulseDenominator(),
         d2 = object2.getImpulseDenominator(),
-        j = -(1 + e) * normalVelocity - penetration * 1 / (d1 + d2);
+        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) - penetration * 1 / (d1 + d2);
 
-    console.log(j)
+    if (j < 0) {
+        return;
+    }
 
     // compute impulse
 

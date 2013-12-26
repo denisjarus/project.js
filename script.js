@@ -38,23 +38,24 @@ onload = function() {
     camera = stage.addChild(new Camera3D());
     
     // camera.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([5, 5, 5]));
-    camera.collider = new SphereCollider(null, 5);
+    camera.collider = new SphereCollider(null, 1);
     camera.collider.mass = 1;
 
     camera.addChild(new Light3D());
+    camera.getChildAt(0).y = 10;
 
     // ground
 
     var ground = stage.addChild(new Mesh());
-    ground.y = - 200;
+    ground.y = -50;
 
     ground.geometry = new SurfaceGeometry(10, 10);
 
     ground.geometry.parametrize(
         Geometry.POSITION,
         function(x, y) { return [x, 0, y]; },
-        500, -500,
-        -500, 500
+        100, -100,
+        -100, 100
     );
 
     ground.geometry.parametrize(
@@ -80,34 +81,43 @@ onload = function() {
     // sphere
 
     var sphere = stage.addChild(new Mesh());
-    sphere.geometry = new SurfaceGeometry();
+    sphere.geometry = new SurfaceGeometry(30, 30);
     sphere.geometry.parametrize(
         Geometry.POSITION,
         function(s, t) {
             return [
-                5 * Math.sin(s) * Math.cos(t),
-                5 * Math.cos(s),
-                5 * Math.sin(s) * Math.sin(t)
+                1 * Math.sin(s) * Math.cos(t),
+                1 * Math.cos(s),
+                1 * Math.sin(s) * Math.sin(t)
             ];
         },
         0, Math.PI,
         0, Math.PI * 2
     );
 
+    sphere.geometry.parametrize(
+        Geometry.TEXCOORD,
+        function(u, v) { return [u, v] },
+        0, 10,
+        0, 10
+    );
+
+    Geometry.getNormals(sphere.geometry);
+
     sphere.material = new Material();
-    sphere.material.shader = Shader.depthShader;
+    sphere.material = ground.material;
 
-    // sphere.y = -20;
-    sphere.z = -20;
+    sphere.z = -5;
 
-    sphere.collider = new SphereCollider(null, 5);
+    sphere.collider = new SphereCollider(null, 1);
+    sphere.collider.mass = 10;
 
     // second instance of ground
 
     var instance = stage.addChild(new Mesh(ground.geometry, ground.material));
     instance.scaleX = instance.scaleY = instance.scaleZ = 0.1;
-    instance.y = -50;
-    instance.collider = new BoxCollider(new Vector3D([0, -5, 0]), new Vector3D([50, 5, 50]));
+    instance.y = -10;
+    instance.collider = new BoxCollider(new Vector3D([0, -2, 0]), new Vector3D([10, 2, 10]));
     instance.collider.mass = 0;
     // instance.rotationY = Math.PI / 4;
 
@@ -121,13 +131,13 @@ onload = function() {
         Geometry.POSITION,
         function(s, t) {
             return [
-                (150 + t * Math.cos(s / 2)) * Math.cos(s),
-                (150 + t * Math.cos(s / 2)) * Math.sin(s),
+                (30 + t * Math.cos(s / 2)) * Math.cos(s),
+                (30 + t * Math.cos(s / 2)) * Math.sin(s),
                 t * Math.sin(s / 2)
             ];
         },
         -Math.PI, Math.PI,
-        -50, 50
+        -10, 10
     );
 
     surface.geometry.parametrize(
@@ -146,7 +156,7 @@ onload = function() {
     display = stage.addChild(new Mesh());
 
     display.geometry = new SurfaceGeometry(2, 2);
-    display.geometry.parametrize(Geometry.POSITION, function(x, y) { return [x, y, 0]; }, -10, 10, -10, 10);
+    display.geometry.parametrize(Geometry.POSITION, function(x, y) { return [x, y, 0]; }, -2, 2, -2, 2);
     display.geometry.parametrize(Geometry.TEXCOORD, function(u, v) { return [u, v]; }, 0, 1, 0, 1);
     Geometry.getNormals(display.geometry);
 
@@ -157,8 +167,8 @@ onload = function() {
     display.material.shader = Shader.gouraudShader;
     display.material.setProperty('diffuseMap', displayTexture);
 
-    display.y = -30;
-    display.z = -50;
+    display.y = -5;
+    display.z = -10;
 
     // add colored point lights
     var red = stage.addChild(new Light3D([1, 0, 0]));
@@ -571,6 +581,9 @@ function enterFrame(frame) {
     //
 
     physics.simulate(stage, delta * 0.001);
+
+    // console.clear();
+    // console.log(camera.y);
 
     camera.aspectRatio = 1;
     display.visible = false;
