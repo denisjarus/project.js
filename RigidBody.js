@@ -11,9 +11,6 @@ function RigidBody() {
         linearVelocity: { value: new Vector3D() },
         angularVelocity: { value: new Vector3D() },
 
-        linearFactor: { value: 1, writable: true },
-        angularFactor: { value: 1, writable: true },
-
         force: { value: new Vector3D() },
         torque: { value: new Vector3D() },
 
@@ -24,7 +21,7 @@ function RigidBody() {
 Object.defineProperties(RigidBody.prototype, {
     applyImpulse: {
         value: function(impulse, point) {
-            this.linearVelocity.addScaled(impulse, this.collider.inverseMass * this.linearFactor);
+            this.linearVelocity.addScaled(impulse, this.collider.inverseMass);
         }
     },
     getVelocityInPoint: {

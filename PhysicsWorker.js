@@ -17,9 +17,14 @@ var message = [];
 
 var rigidBodies = [],
     colliders = [],
-    constraints = [],
+    constraints = [];
 
-    gravity = new Vector3D();
+// solver
+
+var iterations = 5,
+    contacts = [];
+
+var gravity = new Vector3D();
 
 // math
 
@@ -28,9 +33,6 @@ var vec = new Vector3D(),
     aMax = new Vector3D(),
     bMin = new Vector3D(),
     bMax = new Vector3D();
-
-var vector = new Vector3D,
-    normal = new Vector3D;
 
 // public api
 
@@ -108,6 +110,10 @@ var methods = {
             t.set([0, 0, 0]);
         }
 
+        // get contacts
+
+        var numContacts = 0;
+
         for (var object1, i = 0; object1 = rigidBodies[i]; i++) {
             transformAabb(object1.matrix, object1.aabbMin, object1.aabbMax, aMin, aMax);
 
@@ -118,21 +124,26 @@ var methods = {
                     continue;
                 }
 
-                var penetration;
+                var contact = contacts[numContacts] || (contacts[numContacts] = new Constraint());
 
                 if (object1.collider instanceof SphereCollider && object2.collider instanceof BoxCollider) {
-                    penetration = testSphereBox(object1, object2, vector, normal);
+                    if (testSphereBox(object1, object2, contact)) {
+                        contact.object1 = object1;
+                        contact.object2 = object2;
 
-                } else if (object1.collider instanceof SphereCollider && object2.collider instanceof SphereCollider) {
-                    penetration = testSphereSphere(object1, object2, vector, normal);
-
-                } else {
-                    penetration = 0;
+                        numContacts++;
+                    }
                 }
+            }
+        }
 
-                if (penetration !== false) {
-                    resolveCollision(object1, object2, vector, normal, penetration);
-                }
+        // resolve collisions
+
+        for (var i = 0; i < iterations; i++) {
+            for (var contact, j = 0; j < numContacts; j++) {
+                contact = contacts[j];
+
+                resolveCollision(contact.object1, contact.object2, contact.point, contact.normal, contact.distance);
             }
         }
 
@@ -192,9 +203,12 @@ function testSphereSphere(sphereA, sphereB, point, normal) {
 var globalToLocal = new Matrix3D(),
     localPosition = new Vector3D();
 
-function testSphereBox(sphere, box, point, normal) {
+function testSphereBox(sphere, box, contact) {
     var sphereCollider = sphere.collider,
         boxCollider = box.collider;
+
+    var point = contact.point,
+        normal = contact.normal;
 
     // get sphere position in box's local coordinates
 
@@ -213,14 +227,14 @@ function testSphereBox(sphere, box, point, normal) {
         return false;
     }
 
-    var penetration = normal.length - sphereCollider.radius;
+    contact.distance = normal.length - sphereCollider.radius;
 
     // get point and normal in world coordinates
 
     point.transform(box.matrix);
     normal.normalize().transformDirection(box.matrix);
 
-    return penetration;
+    return true;
 }
 
 var positionA = new Vector3D(),
@@ -228,7 +242,7 @@ var positionA = new Vector3D(),
     velocityA = new Vector3D(),
     velocityB = new Vector3D();
 
-function resolveCollision(object1, object2, point, normal, penetration) {
+function resolveCollision(object1, object2, point, normal, distance) {
     positionA.copyFrom(point).sub(object1.position);
     positionB.copyFrom(point).sub(object2.position);
 
@@ -243,7 +257,7 @@ function resolveCollision(object1, object2, point, normal, penetration) {
 
     var d1 = object1.getImpulseDenominator(),
         d2 = object2.getImpulseDenominator(),
-        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) - penetration * 1 / (d1 + d2);
+        j = -(1 + e) * velocityA.sub(velocityB).dot(normal) - distance * 1 / (d1 + d2);
 
     if (j < 0) {
         return;

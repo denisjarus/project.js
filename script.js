@@ -42,7 +42,7 @@ onload = function() {
     camera.collider.mass = 1;
 
     camera.addChild(new Light3D());
-    camera.getChildAt(0).y = 10;
+    camera.getChildAt(0).y = 5;
 
     // ground
 
@@ -172,19 +172,19 @@ onload = function() {
 
     // add colored point lights
     var red = stage.addChild(new Light3D([1, 0, 0]));
-    red.x = -500;
-    red.z = -500;
-    red.y = -150;
+    red.x = -100;
+    red.z = -100;
+    red.y = -30;
 
     var green = stage.addChild(new Light3D([0, 1, 0]));
-    green.x = 500;
-    green.z = -500;
-    green.y = -150;
+    green.x = 100;
+    green.z = -100;
+    green.y = -30;
 
     var blue = stage.addChild(new Light3D([0, 0, 1]));
-    blue.x = 500;
-    blue.z = 500;
-    blue.y = -150;
+    blue.x = 100;
+    blue.z = 100;
+    blue.y = -30;
 
     // controls
 
