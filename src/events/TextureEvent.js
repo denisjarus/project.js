@@ -3,8 +3,8 @@ function TextureEvent(type, side, data) {
     Event3D.call(this, type);
 
     Object.defineProperties(this, {
-        side: { value: side || null },
-        data: { value: data || null }
+        side: { value: side !== undefined ? side : null },
+        data: { value: data !== undefined ? data : null }
     });
 }
 

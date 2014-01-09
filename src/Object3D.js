@@ -204,6 +204,7 @@ Object3D.prototype = Object.create(EventDispatcher.prototype, {
             if (!(collider instanceof Collider)) {
                 throw new TypeError();
             }
+
             this._collider = collider;
             this.dispatchEvent(new Event3D(Event3D.COLLIDER_CHANGE));
         }

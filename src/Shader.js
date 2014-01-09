@@ -1,11 +1,12 @@
-function Shader(vertexShader, fragmentShader, properties) {
+function Shader(attributes, uniforms, vertexShader, fragmentShader) {
     Object.defineProperties(this, {
         id: { value: Shader._counter++ },
 
         vertexShader: { value: vertexShader },
         fragmentShader: { value: fragmentShader },
 
-        properties: { value: properties || [] },
+        attributes: { value: attributes || [] },
+        uniforms: { value: uniforms || [] },
     });
 
     if (!vertexShader || !fragmentShader) {
@@ -18,6 +19,10 @@ Object.defineProperties(Shader, {
 });
 
 Shader.depthShader = new Shader(
+    [
+        'position'
+    ],
+    null,
     [
         'attribute vec3 position;',
 
@@ -44,10 +49,24 @@ Shader.depthShader = new Shader(
 
         '}'
 
-    ].join('\n')
+    ].join('\n'),
+    {
+        position: Geometry.POSITION,
+        modelViewMatrix: 'modelViewMatrix',
+        projectionMatrix: 'projectionMatrix',
+        far: 'far'
+    }
 );
 
 Shader.gouraudShader = new Shader(
+    [
+        'position',
+        'texcoord',
+        'normal'
+    ],
+    [
+        'diffuseMap'
+    ],
     [
         '#define TWO_SIDED',
         '#define NUM_POINT_LIGHTS 5',
@@ -138,8 +157,48 @@ Shader.gouraudShader = new Shader(
         '   gl_FragColor = texture2D(diffuseMap, uv) * vec4(light, 1.0);',
         '}'
         
+    ].join('\n')
+);
+
+Shader.cubeMap = new Shader(
+    [
+        'position'
+    ],
+    [
+        'cubeMap'
+    ],
+    [
+        'attribute vec3 position;',
+
+        'uniform mat4 modelMatrix;',
+        'uniform mat4 modelViewMatrix;',
+        'uniform mat4 projectionMatrix;',
+
+        'varying vec3 vPosition;',
+
+        'void main(void) {',
+
+            'vec4 world_position = modelMatrix * vec4(position, 1.0);',
+
+            'vPosition = world_position.xyz;',
+
+            'gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+
+        '}'
+
     ].join('\n'),
     [
-        'diffuseMap'
-    ]
+        'precision mediump float;',
+
+        'varying vec3 vPosition;',
+
+        'uniform samplerCube cubeMap;',
+
+        'void main(void) {',
+
+            'gl_FragColor = textureCube(cubeMap, vPosition);',
+
+        '}'
+
+    ].join('\n')
 );

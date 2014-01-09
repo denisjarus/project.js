@@ -2,17 +2,25 @@ function Renderer(context) {
 
     'use strict';
 
+    Object.defineProperties(this, {
+        render: {
+            value: render
+        }
+    });
+
     // webgl context
 
     var gl = context,
         glVertexArrayObject = gl.getExtension('OES_vertex_array_object'),
         glAnisotropicFilter = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
 
+    var depthTest = false,
+        depthMask = false;
+
     // stage
 
     var stage = null,
-        renderList = [],
-        lights = [];
+        renderList = [];
 
     // current state
 
@@ -44,18 +52,70 @@ function Renderer(context) {
 
     // lights
 
-    var pointLightPositions = new Float32Array(0),
-        pointLightColors = new Float32Array(0);
+    var pointLights = [],
+        pointLightPositions = new Float32Array(5 * 3),
+        pointLightColors = new Float32Array(5 * 3),
 
-    // public api
+        spotLights = [],
+        spotLightPositions = new Float32Array(1 * 3),
+        spotLightDirections = new Float32Array(1 * 3),
+        spotLightColors = new Float32Array(1 * 3);
 
-    Object.defineProperties(this, {
-        render: {
-            value: render
-        }
-    });
+    // types
 
-    // internal functions
+    var glSizes = {};
+
+    glSizes[gl.FLOAT] = 1;
+    glSizes[gl.FLOAT_VEC2] = 2;
+    glSizes[gl.FLOAT_VEC3] = 3;
+    glSizes[gl.FLOAT_VEC4] = 4;
+
+    var glTypes = {};
+
+    glTypes[gl.FLOAT] = gl.FLOAT;
+    glTypes[gl.FLOAT_VEC2] = gl.FLOAT;
+    glTypes[gl.FLOAT_VEC3] = gl.FLOAT;
+    glTypes[gl.FLOAT_VEC4] = gl.FLOAT;
+
+    var glUniform = {};
+
+    glUniform[gl.FLOAT] = function(value) {
+        gl.uniform1f(this.location, value);
+    }
+
+    glUniform[gl.FLOAT_VEC2] = function(elements) {
+        gl.uniform2fv(this.location, elements);
+    }
+    
+    glUniform[gl.FLOAT_VEC3] = function(elements) {
+        gl.uniform3fv(this.location, elements);
+    }
+    
+    glUniform[gl.FLOAT_VEC4] = function(elements) {
+        gl.uniform4fv(this.location, elements);
+    }
+
+    glUniform[gl.FLOAT_MAT2] = function(elements) {
+        gl.uniformMatrix2fv(this.location, false, elements);
+    }
+
+    glUniform[gl.FLOAT_MAT3] = function(elements) {
+        gl.uniformMatrix3fv(this.location, false, elements);
+    }
+
+    glUniform[gl.FLOAT_MAT4] = function(elements) {
+        gl.uniformMatrix4fv(this.location, false, elements);
+    }
+
+    glUniform[gl.SAMPLER_2D] = function(texture) {
+        addActiveTexture(this.location);
+        bindTexture2D(texture);
+    }
+
+    glUniform[gl.SAMPLER_CUBE] = function(texture) {
+        addActiveTexture(this.location);
+        bindTextureCube(texture);
+    }
 
     function render(object, camera, target) {
         if (!(object instanceof Object3D)) {
@@ -93,8 +153,7 @@ function Renderer(context) {
         }
 
         if (updateSettings) {
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.enable(gl.DEPTH_TEST);
+            // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             // gl.enable(gl.CULL_FACE);
             // gl.cullFace(gl.BACK);
             gl.frontFace(gl.CW);
@@ -102,14 +161,15 @@ function Renderer(context) {
 
         // lights
 
-        if (pointLightPositions.length !== lights.length * 3) {
-            pointLightPositions = new Float32Array(lights.length * 3);
-            pointLightColors = new Float32Array(lights.length * 3);
-        }
-
-        for (var light, i = 0; light = lights[i]; i++) {
+        for (var light, i = 0; light = pointLights[i]; i++) {
             pointLightPositions.set(light.localToGlobal.position, i * 3);
             pointLightColors.set(light.color, i * 3);
+        }
+
+        for (var light, i = 0; light = spotLights[i]; i++) {
+            spotLightPositions.set(light.localToGlobal.position, i * 3);
+            spotLightDirections.set(light.direction, i * 3);
+            spotLightColors.set(light.color, i * 3);
         }
 
         // set frame
@@ -203,6 +263,9 @@ function Renderer(context) {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
 
+        setDepthTest(true);
+        setDepthMask(true);
+
         gl.useProgram(null);
 
         glVertexArrayObject.bindVertexArrayOES(null);
@@ -216,6 +279,27 @@ function Renderer(context) {
         currentFrame = null;
 
         updateSettings = false;
+    }
+
+
+    function setDepthTest(value) {
+        if (depthTest !== value) {
+            depthTest = value;
+
+            if (depthTest) {
+                gl.enable(gl.DEPTH_TEST);
+            } else {
+                gl.disable(gl.DEPTH_TEST);
+            }
+        }
+    }
+
+    function setDepthMask(value) {
+        if (depthMask !== value) {
+            depthMask = value;
+
+            gl.depthMask(depthMask);
+        }
     }
 
     // stage management
@@ -232,8 +316,11 @@ function Renderer(context) {
 
             sortRenderList = true;
 
-        } else if (object instanceof Light3D) {
-            lights.push(object);
+        } else if (object instanceof PointLight) {
+            pointLights.push(object);
+
+        } else if (object instanceof SpotLight) {
+            spotLights.push(object);
         }
 
         for (var child, i = 0; child = object.getChildAt(i); i++) {
@@ -249,8 +336,11 @@ function Renderer(context) {
         if (object instanceof Mesh) {
             renderList.splice(renderList.indexOf(object), 1);
 
-        } else if (object instanceof Light3D) {
-            lights.splice(lights.indexOf(object), 1);
+        } else if (object instanceof PointLight) {
+            pointLights.splice(pointLights.indexOf(object), 1);
+
+        } else if (object instanceof SpotLight) {
+            spotLights.splice(spotLights.indexOf(object), 1);
         }
 
         for (var child, i = 0; child = object.getChildAt(i); i++) {
@@ -306,8 +396,8 @@ function Renderer(context) {
 
                 glShader.attributes[i] = {
                     name: attribute.name,
-                    size: getAttributeSize(attribute),
-                    type: getAttributeType(attribute)
+                    size: glSizes[attribute.type],
+                    type: glTypes[attribute.type]
                 };
             }
 
@@ -316,7 +406,7 @@ function Renderer(context) {
 
                 glShader.uniforms[uniform.name] = {
                     location: gl.getUniformLocation(glShader.program, uniform.name),
-                    set: getUniformFunction(uniform)
+                    set: glUniform[uniform.type]
                 };
             }
         }
@@ -346,41 +436,6 @@ function Renderer(context) {
         }
 
         return shader;
-    }
-
-    function getAttributeSize(attribute) {
-        switch (attribute.type) {
-            case gl.FLOAT: return 1;
-            case gl.FLOAT_VEC2: return 2;
-            case gl.FLOAT_VEC3: return 3;
-            case gl.FLOAT_VEC4: return 4;
-        }
-    }
-
-    function getAttributeType(attribute) {
-        switch (attribute.type) {
-            case gl.FLOAT: return gl.FLOAT;
-            case gl.FLOAT_VEC2: return gl.FLOAT;
-            case gl.FLOAT_VEC3: return gl.FLOAT;
-            case gl.FLOAT_VEC4: return gl.FLOAT;
-        }
-    }
-
-    function getUniformFunction(uniform) {
-        switch (uniform.type) {
-            case gl.FLOAT: return uniformFloat;
-
-            case gl.FLOAT_VEC2: return uniformVector2;
-            case gl.FLOAT_VEC3: return uniformVector3;
-            case gl.FLOAT_VEC4: return uniformVector4;
-
-            case gl.FLOAT_MAT2: return uniformMatrix2;
-            case gl.FLOAT_MAT3: return uniformMatrix3;
-            case gl.FLOAT_MAT4: return uniformMatrix4;
-
-            case gl.SAMPLER_2D: return uniformTexture2D;
-            case gl.SAMPLER_CUBE: return uniformTextureCube;
-        }
     }
 
     function enableAttributes(count) {
@@ -475,51 +530,15 @@ function Renderer(context) {
     // materials
 
     function setMaterial(material) {
-        for (var property, i = 0; property = currentShader.properties[i]; i++) {
-            activeUniforms[property].set(material.getProperty(property));
+        setDepthTest(material.depthTest);
+        setDepthMask(material.depthMask);
+
+        for (var uniform, i = 0; uniform = currentShader.uniforms[i]; i++) {
+            activeUniforms[uniform].set(material.getProperty(uniform));
         }
 
         currentMaterial = material;
         activeTextures = 0;
-    }
-
-
-    function uniformFloat(value) {
-        gl.uniform1f(this.location, value);
-    }
-
-    function uniformVector2(elements) {
-        gl.uniform2fv(this.location, elements);
-    }
-    
-    function uniformVector3(elements) {
-        gl.uniform3fv(this.location, elements);
-    }
-    
-    function uniformVector4(elements) {
-        gl.uniform4fv(this.location, elements);
-    }
-
-    function uniformMatrix2(elements) {
-        gl.uniformMatrix2fv(this.location, false, elements);
-    }
-
-    function uniformMatrix3(elements) {
-        gl.uniformMatrix3fv(this.location, false, elements);
-    }
-
-    function uniformMatrix4(elements) {
-        gl.uniformMatrix4fv(this.location, false, elements);
-    }
-
-    function uniformTexture2D(texture) {
-        addActiveTexture(this.location);
-        bindTexture2D(texture);
-    }
-
-    function uniformTextureCube(texture) {
-        addActiveTexture(this.location);
-        bindTextureCube(texture);
     }
 
     function addActiveTexture(location) {
@@ -552,7 +571,7 @@ function Renderer(context) {
     function bindTextureCube(texture) {
         var glTexture = textureCache[texture.id];
 
-        if (glTexture !== undefined) {
+        if (glTexture === undefined) {
             glTexture = textureCache[texture.id] = gl.createTexture();
 
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, glTexture);

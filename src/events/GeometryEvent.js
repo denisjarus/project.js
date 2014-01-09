@@ -3,8 +3,8 @@ function GeometryEvent(type, attribute, data) {
     Event3D.call(this, type);
 
     Object.defineProperties(this, {
-        attribute: { value: attribute || null },
-        data: { value: data || null }
+        attribute: { value: attribute !== undefined ? attribute : null },
+        data: { value: data !== undefined ? data : null }
     });
 }
 

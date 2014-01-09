@@ -36,13 +36,44 @@ onload = function() {
     // physicsal camera
 
     camera = stage.addChild(new Camera3D());
-    
-    // camera.collider = new BoxCollider(new Vector3D([0, 0, 0]), new Vector3D([5, 5, 5]));
+
     camera.collider = new SphereCollider(null, 1);
     camera.collider.mass = 1;
 
-    camera.addChild(new Light3D());
-    camera.getChildAt(0).y = 5;
+    // point light
+
+    camera.addChild(new PointLight());
+
+    // skydome
+
+    var sky = stage.addChild(new Mesh());
+
+    sky.geometry = new SurfaceGeometry(30, 30);
+    sky.geometry.parametrize(
+        Geometry.POSITION,
+        function(s, t) {
+            return [
+                1000 * Math.sin(s) * Math.cos(t),
+                1000 * Math.cos(s),
+                1000 * Math.sin(s) * Math.sin(t)
+            ];
+        },
+        0, Math.PI,
+        0, Math.PI * 2
+    );
+
+    sky.material = new Material();
+    sky.material.shader = Shader.cubeMap;
+    sky.material.setProperty('cubeMap', loadTextureCube([
+        'img/skyBox1.jpg',
+        'img/skyBox2.jpg',
+        'img/skyBox3.jpg',
+        'img/skyBox4.jpg',
+        'img/skyBox5.jpg',
+        'img/skyBox6.jpg'
+    ]));
+
+    sky.material.depthMask = false;
 
     // ground
 
@@ -69,14 +100,7 @@ onload = function() {
 
     ground.material = new Material();
     ground.material.shader = Shader.gouraudShader;
-    ground.material.setProperty('diffuseMap', new Texture());
-
-    var img = new Image();
-    img.src = 'diffuseMap.bmp';
-    img.onload = function() {
-        ground.material.getProperty('diffuseMap').setData(0, img);
-        requestAnimationFrame(enterFrame);
-    };
+    ground.material.setProperty('diffuseMap', loadTexture2D('img/diffuseMap.bmp'));
 
     // sphere
 
@@ -171,17 +195,17 @@ onload = function() {
     display.z = -10;
 
     // add colored point lights
-    var red = stage.addChild(new Light3D([1, 0, 0]));
+    var red = stage.addChild(new PointLight([1, 0, 0]));
     red.x = -100;
     red.z = -100;
     red.y = -30;
 
-    var green = stage.addChild(new Light3D([0, 1, 0]));
+    var green = stage.addChild(new PointLight([0, 1, 0]));
     green.x = 100;
     green.z = -100;
     green.y = -30;
 
-    var blue = stage.addChild(new Light3D([0, 0, 1]));
+    var blue = stage.addChild(new PointLight([0, 0, 1]));
     blue.x = 100;
     blue.z = 100;
     blue.y = -30;
@@ -219,6 +243,8 @@ onload = function() {
     );
 
     onresize();
+
+    requestAnimationFrame(enterFrame);
 
     // gjk
 
@@ -615,4 +641,34 @@ function mouseMove(event) {
     camera.rotationX -= 0.2 * event.webkitMovementY * Math.PI / 180;
 
     camera.rotationX = Math.max(-Math.PI / 2, Math.min(camera.rotationX, Math.PI / 2));
+}
+
+function loadTexture2D(url) {
+    var texture = new Texture(),
+        image = new Image();
+
+    image.src = url;
+
+    image.onload = function() {
+        texture.setData(0, image);
+    };
+
+    return texture;
+}
+
+function loadTextureCube(urls) {
+    var texture = new Texture(),
+        images = [];
+
+    for (var i = 0; i < 6; i++) {
+        var image = images[i] = new Image();
+
+        image.src = urls[i];
+
+        image.onload = function(event) {
+            texture.setData(images.indexOf(event.target), event.target);
+        };
+    }
+
+    return texture;
 }

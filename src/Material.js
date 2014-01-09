@@ -5,6 +5,9 @@ function Material() {
     Object.defineProperties(this, {
         id: { value: Material._counter++ },
 
+        depthTest: { value: true, writable: true },
+        depthMask: { value: true, writable: true },
+
         _properties: { value: {} },
 
         _shader: { value: Shader.depthShader, writable: true }
