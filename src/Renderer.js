@@ -15,12 +15,7 @@ function Renderer(context) {
         glAnisotropicFilter = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
 
     var depthTest = false,
-        depthMask = false;
-
-    // stage
-
-    var stage = null,
-        renderList = [];
+        depthMask = true;
 
     // current state
 
@@ -45,14 +40,13 @@ function Renderer(context) {
 
     var updateSettings = true,
         sortRenderList = true;
-        
-    // temporary matrix
 
-    var matrix = new Matrix3D();
+    // stage
 
-    // lights
+    var stage = null,
+        renderList = [],
 
-    var pointLights = [],
+        pointLights = [],
         pointLightPositions = new Float32Array(5 * 3),
         pointLightColors = new Float32Array(5 * 3),
 
@@ -60,6 +54,10 @@ function Renderer(context) {
         spotLightPositions = new Float32Array(1 * 3),
         spotLightDirections = new Float32Array(1 * 3),
         spotLightColors = new Float32Array(1 * 3);
+
+    // temporary matrix
+
+    var matrix = new Matrix3D();
 
     // types
 
